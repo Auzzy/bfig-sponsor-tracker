@@ -1,0 +1,1 @@
+from sponsortracker.dealtracker import app, views

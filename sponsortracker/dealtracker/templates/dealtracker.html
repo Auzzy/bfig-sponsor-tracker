@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block title %}Deal Tracker Home{% endblock %}
+
+{% block content %}
+<p><a href="{{ url_for('dealtracker.configure_sponsor') }}">New Sponsor</a></p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Level</th>
+            <th>Cash Amount</th>
+            <th>In-Kind Amount</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for sponsor in sponsors %}
+        <tr>
+            <td><a href="{{ url_for('dealtracker.configure_sponsor', id=sponsor.id) }}">{{ sponsor.name }}</a></td>
+            <td>{{ sponsor.level.label }}</td>
+            <td>{% if sponsor.cash %}${{ sponsor.cash }}{% endif %}</td>
+            <td>{% if sponsor.inkind %}${{ sponsor.inkind }}{% endif %}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block title %}Asset Tracker - View Assets{% endblock %}
+
+{% block content %}
+<h2>Assets</h2>
+    {% for type in sponsor.assets_by_type %}
+    <h3>{{ type.label }}</h3>
+        {% for asset in sponsor.assets_by_type[type] %}
+        {% if asset.url %}
+        <a href="{{ asset.url }}"><img src="{{ asset.url }}" width="100" height="100" alt="{{ asset.url.split('/')[-1] }}"></img></a>
+        {% endif %}
+        {% endfor %}
+    {% endfor %}
+</p>
+{% endblock %}

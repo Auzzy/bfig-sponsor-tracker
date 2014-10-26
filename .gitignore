@@ -1,0 +1,9 @@
+### COMPILED PYTHON ###
+*.pyo
+*.pyc
+
+### VIM FILES ###
+*.py~
+
+### CLOUD9 ###
+.c9/
