@@ -1,3 +1,6 @@
+### APP SPECIFIC ###
+uploads/
+
 ### COMPILED PYTHON ###
 *.pyo
 *.pyc
