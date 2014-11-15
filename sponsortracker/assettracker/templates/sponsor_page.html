@@ -1,0 +1,93 @@
+{% extends "layout.html" %}
+
+{% block title %}Asset Tracker - {{ sponsor.name }}{% endblock %}
+
+{% block css %}
+.missing {
+    background-color:red;
+}
+
+.received {
+    background-color:lime;
+}
+
+.error {
+    color:red;
+}
+{% endblock %}
+
+{% block content %}
+<h1>{{ sponsor.name }}</h1>
+<div><span style="font-weight:bold">Level</span>: {{ sponsor.level.label }}</div>
+
+{% for form in info_forms %}
+    {% set form_id = "info_form_" ~ loop.index %}
+    <form id="{{ form_id }}" method="POST" action="{{ url_for('assettracker.sponsor_page', id=sponsor.id) }}">
+        {% for field in form %}
+            {% if field.type in ("CSRFTokenField", "HiddenField") %}
+                {{ field }}
+            {% else %}
+            <div>
+                <span style="display:inline; font-weight:bold">{{ field.label }}</span>&nbsp;
+                <div id="{{ field.id }}_wrapper" style="display:none;">
+                    {{ field(style="display:inline; vertical-align: text-top", value=(field.data or "")) }}&nbsp;
+                    <a href="javascript:void(0);" onclick="save('{{ form_id }}');"><img style="display:inline;" src="{{ url_for('assettracker.static', filename='save.png') }}" /></a>
+                    <a href="javascript:void(0);" onclick="cancel('{{ field.id }}');"><img style="display:inline;" src="{{ url_for('assettracker.static', filename='cancel.png') }}" /></a>
+                </div>
+                <div id="{{ field.id }}_edit" style="display:inline;">
+                    <span id="{{ field.id }}_value">{{ field.data or "" }}</span>
+                    <a href="javascript:void(0);" onclick="edit('{{ field.id }}');"><img style="display:inline;" src="{{ url_for('assettracker.static', filename='edit.png') }}" /></a>
+                </div>
+                
+                {% for error in field.errors %}
+                  <br />{{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endfor %}
+    </form>
+{% endfor %}
+
+<h2>Assets</h2>
+<p>
+    <a href="{{ url_for('assettracker.upload_asset', id=sponsor.id) }}">Upload Assets</a><br />
+    <a href="{{ url_for('assettracker.view_assets', id=sponsor.id) }}">View Assets</a>
+</p>
+<table border="1">
+    <thead>
+        <tr>
+            {% for type in sponsor.level.assets|sort(attribute="label") %}
+            <th>{{ type.label }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            {% for type in sponsor.level.assets|sort(attribute="label") %}
+            {% if type in sponsor.assets_by_type %}
+            <td class="received">{{ sponsor.asset_type_by_date[type].date }}</td>
+            {% else %}
+            <td class="missing"></td>
+            {% endif %}
+            {% endfor %}
+        </tr>
+    </tbody>
+</table>
+
+{% endblock %}
+
+{% block js %}
+function save(formId) {
+    document.getElementById(formId).submit();
+}
+
+function cancel(fieldId) {
+    document.getElementById(fieldId + "_wrapper").style.display = "none";
+    document.getElementById(fieldId + "_edit").style.display = "inline";
+}
+
+function edit(fieldId) {
+    document.getElementById(fieldId + "_wrapper").style.display = "inline";
+    document.getElementById(fieldId + "_edit").style.display = "none";
+}
+{% endblock %}

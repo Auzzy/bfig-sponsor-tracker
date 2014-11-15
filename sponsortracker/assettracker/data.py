@@ -18,6 +18,7 @@ class Sponsor:
             self.assets_by_type[asset.type].append(asset)
         
         self.asset_type_by_date = {type:min(self.assets_by_type[type], key=lambda asset: asset.date) for type in self.assets_by_type}
+        self.missing_assets = any(type not in self.assets_by_type for type in self.level.assets) or not self.info.link or not self.info.description
     
     @staticmethod
     def from_model(sponsor):

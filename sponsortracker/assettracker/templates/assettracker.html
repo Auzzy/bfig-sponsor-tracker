@@ -3,11 +3,11 @@
 {% block title %}Asset Tracker Home{% endblock %}
 
 {% block css %}
-.required {
+.missing {
     background-color:red;
 }
 
-.submitted {
+.received {
     background-color:lime;
 }
 {% endblock %}
@@ -16,17 +16,38 @@
 {% for level in sponsors_by_level %}
 {% if sponsors_by_level[level] %}
 <h2>{{ level.label }}</h2>
+<table border="0">
+    <thead>
+        <th style="min-width:100px;"></th>
+        <th style="width:150px;">Last Request</th>
+        <th style="width:150px;">Missing Assets</th>
+    </thead>
+    <tbody>
+        {% for sponsor in sponsors_by_level[level]|sort(attribute="name") %}
+        <tr>
+            <td><a href="{{ url_for('assettracker.sponsor_page', id=sponsor.id) }}">{{ sponsor.name }}</a></td>
+            <td></td>
+            {% if sponsor.missing_assets %}
+            <td class="missing">Yes</td>
+            {% else %}
+            <td class="received">No</td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!--
 <table border="1">
     <thead>
         <tr>
             <th rowspan="2">Name</th>
-            <th rowspan="2">Level</th>
             <th rowspan="2">Link</th>
             <th rowspan="2">Description</th>
             <th colspan="{{ level.assets|length }}">Required Assets</th>
         </tr>
         <tr>
-            {% for type in level.assets %}
+            {% for type in level.assets|sort(attribute="label") %}
             <td>{{ type.label }}</td>
             {% endfor %}
         </tr>
@@ -34,21 +55,21 @@
     <tbody>
         {% for sponsor in sponsors_by_level[level]|sort(attribute="name") %}
         <tr>
-            <td><a href="{{ url_for('assettracker.upload_asset', id=sponsor.id) }}">{{ sponsor.name }}</a></td>
-            <td>{{ sponsor.level.label }}</td>
+            <td><a href="{{ url_for('assettracker.sponsor_page', id=sponsor.id) }}">{{ sponsor.name }}</a></td>
             <td>{% if sponsor.info.link %}{{ sponsor.info.link }}{% endif %}</td>
             <td>{% if sponsor.info.description %}{{ sponsor.info.description }}{% endif %}</td>
-            {% for type in level.assets %}
+            {% for type in level.assets|sort(attribute="label") %}
             {% if type in sponsor.assets_by_type %}
-            <td class="submitted">{{ sponsor.asset_type_by_date[type].date }}</td>
+            <td class="received">{{ sponsor.asset_type_by_date[type].date }}</td>
             {% else %}
-            <td class="required"></td>
+            <td class="missing"></td>
             {% endif %}
             {% endfor %}
         </tr>
         {% endfor %}
     </tbody>
 </table>
+-->
 {% endif %}
 {% endfor %}
 {% endblock %}
