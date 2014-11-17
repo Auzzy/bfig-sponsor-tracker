@@ -16,6 +16,9 @@
         {% endif %}
         
         {{ field }}
+        {% for error in field.errors %}
+          <br />{{ error }}
+        {% endfor %}
     </p>
     {% endfor %}
     

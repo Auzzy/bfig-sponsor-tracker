@@ -67,7 +67,7 @@
             {% if type in sponsor.assets_by_type %}
             <td class="received">{{ sponsor.asset_type_by_date[type].date }}</td>
             {% else %}
-            <td class="missing"></td>
+            <td class="missing" style="height:20px;"></td>
             {% endif %}
             {% endfor %}
         </tr>
