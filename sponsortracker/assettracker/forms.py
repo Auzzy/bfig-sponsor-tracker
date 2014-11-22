@@ -3,42 +3,32 @@ from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms import HiddenField, SelectField, StringField, TextAreaField
 from wtforms.validators import InputRequired, Optional, URL, ValidationError
 
-from wand.image import Image
-from PIL import Image as PillowImage
+# from wand.image import Image
 
-from sponsortracker import data
+from sponsortracker.data import AssetType
+from sponsortracker.assettracker.data import load_image
 from sponsortracker.assettracker.app import asset_uploader
 
-_ASSET_CHOICES = [(type.name, type.label) for type in sorted(data.AssetType, key=lambda type: type.label)]
+_ASSET_CHOICES = [(type.name, type.label) for type in sorted(AssetType, key=lambda type: type.label)]
 
 
 def validate_asset(form, field):
-    image = Image(file=field.data.stream)
-    spec = data.AssetType[form.type.data].spec
-    
-    print("SIZE: " + str(image.size))
-    print("FORMAT: " + str(image.format))
-    print("COLORSPACE: " + str(image.colorspace))
-    print("RESOLUTION: " + str(image.resolution))
-    print("ALPHA: " + str(image.alpha_channel))
-    
-    if image.format not in spec.formats:
-        raise ValidationError("Unexpected file format. Expected: {0}, but is {1}.".format(spec.formats_as_str(), image.format))
-    if image.colorspace in spec.color_modes:
-        raise ValidationError("Unexpected color mode. Expected: {0}, but is {1}".format(spec.color_modes_as_str(), image.colorspace))
-    if image.resolution == (spec.dpi, spec.dpi):
-        raise ValidationError("Expected image resolution to be {0} dpi, but is {1} dpi.")
+    image = load_image(field)
+    spec = AssetType[form.type.data].spec
     
     if spec.transparent and not image.alpha_channel:
         raise ValidationError("Expected a transparent background.")
     elif spec.transparent is False and image.alpha_channel:
         raise ValidationError("Expected an opaque background.")
     
-    if image.width == spec.width and image.height == spec.height:
+    if image.width != spec.width or image.height != spec.height:
+        # raise ValidationError("Expected image size to be {0}x{1}, but provided image was {2}x{3}".format(image.width, image.height, spec.width, spec.height)
         pass
     
-    raise ValidationError("Validation succeeded")
+    # raise ValidationError("Validation succeeded (ignoring size)")
 
+class PreviewAssetForm(flask_wtf.Form):
+    pass
 
 class UploadAssetForm(flask_wtf.Form):
     type = SelectField(choices=_ASSET_CHOICES, validators=[InputRequired("You must select an asset type.")])
