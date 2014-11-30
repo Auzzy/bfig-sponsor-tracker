@@ -3,17 +3,14 @@ from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms import HiddenField, SelectField, StringField, TextAreaField
 from wtforms.validators import InputRequired, Optional, URL, ValidationError
 
-# from wand.image import Image
-
 from sponsortracker.data import AssetType
-from sponsortracker.assettracker.data import load_image
+from sponsortracker.assettracker.images import Image
 from sponsortracker.assettracker.app import asset_uploader
 
 _ASSET_CHOICES = [(type.name, type.label) for type in sorted(AssetType, key=lambda type: type.label)]
 
-
 def validate_asset(form, field):
-    image = load_image(field)
+    image = Image.load(field.data)
     spec = AssetType[form.type.data].spec
     
     if spec.transparent and not image.alpha_channel:
@@ -24,11 +21,6 @@ def validate_asset(form, field):
     if image.width != spec.width or image.height != spec.height:
         # raise ValidationError("Expected image size to be {0}x{1}, but provided image was {2}x{3}".format(image.width, image.height, spec.width, spec.height)
         pass
-    
-    # raise ValidationError("Validation succeeded (ignoring size)")
-
-class PreviewAssetForm(flask_wtf.Form):
-    pass
 
 class UploadAssetForm(flask_wtf.Form):
     type = SelectField(choices=_ASSET_CHOICES, validators=[InputRequired("You must select an asset type.")])

@@ -1,13 +1,8 @@
-from collections import defaultdict
-from datetime import datetime
-from io import BytesIO
-
-from werkzeug.datastructures import FileStorage
-
-from wand.image import Image
+import collections
+import datetime
 
 from sponsortracker import data
-from sponsortracker.assettracker.app import asset_uploader
+from sponsortracker.assettracker.app import asset_uploader, thumb_uploader
 
 class Sponsor:
     def __init__(self, id, name, email, level, info, assets):
@@ -18,7 +13,7 @@ class Sponsor:
         self.info = info
         self.assets = assets
         
-        self.assets_by_type = defaultdict(list)
+        self.assets_by_type = collections.defaultdict(list)
         for asset in self.assets:
             self.assets_by_type[asset.type].append(asset)
         
@@ -49,16 +44,15 @@ class Asset:
         self.type = data.AssetType[type]
         self.filename = filename
         self.url = asset_uploader.url(self.filename)
+        self.thumbnail_url = thumb_uploader.url(self.filename)
+    
+    @staticmethod
+    def new(sponsor_id, type, filename):
+        return Asset(None, sponsor_id, datetime.datetime.today().date(), type, filename)
     
     @staticmethod
     def from_model(asset):
         return Asset(asset.id, asset.sponsor_id, asset.date, asset.type, asset.filename)
-    
-    @staticmethod
-    def from_form(form, sponsor_id):
-        filename = asset_uploader.save(form.asset.data, folder=str(sponsor_id))
-        thumb_filename = thumb_uploader.save(form.asset.data, folder=str(sponsor_id))
-        return Asset(None, sponsor_id, datetime.today().date(), form.type.data, filename)
     
     def to_model(self, id=None):
         from sponsortracker import model
@@ -69,15 +63,3 @@ class Asset:
             return asset_model
         else:
             return model.Asset(self.sponsor_id, self.date, self.type.name, self.filename)
-
-def load_image(field):
-    img = Image(file=field.data.stream)
-    field.data.stream.seek(0)
-    return img
-    
-def save_image(img, upload_set, folder=None, name=None):
-    byte_stream = BytesIO()
-    img.save(file=byte_stream)
-    byte_stream.seek(0)
-    file_storage = FileStorage(stream=byte_stream, filename=name)
-    return upload_set.save(file_storage, folder=folder)

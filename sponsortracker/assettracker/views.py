@@ -1,5 +1,6 @@
 from flask import redirect, render_template, request, url_for
 
+from sponsortracker.data import AssetType
 from sponsortracker.assettracker import assets, data, forms, sponsors
 from sponsortracker.assettracker.app import asset_tracker
 
@@ -24,21 +25,33 @@ def upload_asset(id):
     if form.validate_on_submit():
         filename = assets.preview(id, form)
         if filename:
-            return redirect(url_for("assettracker.preview_asset", id=id, filename=filename))
+            return redirect(url_for("assettracker.preview_asset", id=id, filename=filename, type=form.type.data))
         else:
+            # assets.save(id, form)
             return redirect(url_for("assettracker.sponsor_page", id=id))
     
     sponsor = sponsors.load(id)
     return render_template("upload-asset.html", id=id, form=form, sponsor=sponsor, assets=sponsor.assets)
 
-@asset_tracker.route("/sponsor/<int:id>/preview-asset/<filename>")
-def preview_asset(id, filename):
-    form = forms.PreviewAssetForm()
-    if form.validate_on_submit():
-        pass
+@asset_tracker.route("/sponsor/<int:id>/preview-asset/", methods=["GET", "POST"])
+def preview_asset(id):
+    filename = request.args.get("filename") or request.values.get("filename")
+    type = request.args.get("type") or request.values.get("type")
     
-    orig_url,preview_url = assets.preview_urls(id, filename)
-    return render_template("preview-asset.html", id=id, original=orig_url, preview=preview_url)
+    if not filename or type not in AssetType.__members__:
+        return redirect(url_for("assettracker.sponsor_page", id=id))
+    
+    if request.method == "POST":
+        if "cancel" in request.form:
+            assets.discard_preview(id, filename)
+            return redirect(url_for("assettracker.upload_asset", id=id))
+        elif "save" in request.form:
+            assets.save_preview(id, type, filename)
+            return redirect(url_for("assettracker.sponsor_page", id=id))
+    
+    asset_type = AssetType[type]
+    url = assets.preview_url(id, filename)
+    return render_template("preview-asset.html", id=id, filename=filename, preview=url, type=asset_type)
 
 @asset_tracker.route("/sponsor/<int:id>/view-assets/")
 def view_assets(id):

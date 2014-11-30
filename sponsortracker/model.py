@@ -1,11 +1,16 @@
 from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.user import SQLAlchemyAdapter, UserManager
 
 from sponsortracker import data
 from sponsortracker.app import app
 
-_ASSET_TYPES = [asset_type.name for asset_type in data.AssetType]
-
 db = SQLAlchemy(app)
+
+from sponsortracker.usermodel import User, UserEmail, UserAuth, Role, UserRoles, init as init_usermodel, _init_data as _init_usermodel_data
+
+db_adapter, user_manager = init_usermodel(app)
+
+_ASSET_TYPES = [asset_type.name for asset_type in data.AssetType]
 
 class Sponsor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -93,3 +98,4 @@ class AssetRequest(db.Model):
 
 if not db.engine.table_names():
     db.create_all()
+    _init_usermodel_data()

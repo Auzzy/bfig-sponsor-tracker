@@ -8,7 +8,7 @@
 <h3>{{ type.label }}</h3>
     {% for asset in sponsor.assets_by_type[type] %}
     {% if asset.url %}
-    <a href="{{ asset.url }}"><img src="{{ asset.url }}" width="100" height="100" alt="{{ asset.url.split('/')[-1] }}"></img></a>
+    <a href="{{ asset.url }}"><img src="{{ asset.thumbnail_url }}" alt="{{ asset.url.split('/')[-1] }}"></img></a>
     {% endif %}
     {% endfor %}
 {% endfor %}
