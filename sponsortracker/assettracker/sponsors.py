@@ -2,13 +2,8 @@ from sponsortracker import model
 from sponsortracker.data import AssetType, Level
 from sponsortracker.assettracker import data, forms
 
-def load_all_by_level():
-    sponsors = [data.Sponsor.from_model(sponsor) for sponsor in model.Sponsor.query.all()]
-    sponsors_by_level = {level:[] for level in Level}
-    for sponsor in sponsors:
-        if sponsor.level:
-            sponsors_by_level[sponsor.level].append(sponsor)
-    return sponsors_by_level
+def load_all():
+    return [data.Sponsor.from_model(sponsor) for sponsor in model.Sponsor.query.all()]
 
 def load(id):
     return data.Sponsor.from_model(_load_model(id))
@@ -30,3 +25,8 @@ def save_description(id, form):
 def load_info(id):
     sponsor = load(id)
     return {info:sponsor.info.get(info) for info in data.InfoData}
+
+def delete_asset(id, asset_id):
+    model.db.session.delete(model.Asset.query.get(asset_id))
+    model.db.session.commit()
+    

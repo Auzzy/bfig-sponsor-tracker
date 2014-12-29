@@ -110,5 +110,5 @@ class Asset:
     def stash(sponsor_id, file_storage):
         asset_filename = asset_uploader.save(file_storage, folder=str(sponsor_id))
         file_storage.filename = relpath(asset_filename, str(sponsor_id))
-        Thumbnail.create(file_storage, sponsor_id, size={"height": None})
+        Thumbnail.create(file_storage, sponsor_id, size={"width": None})
         return asset_filename

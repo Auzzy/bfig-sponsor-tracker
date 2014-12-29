@@ -74,6 +74,7 @@ class Asset:
         self.filename = filename
         self.url = asset_uploader.url(self.filename)
         self.thumbnail_url = thumb_uploader.url(self.filename)
+        self.name = self.filename.rsplit('/', maxsplit=1)[-1].rsplit('.', maxsplit=1)[0]
     
     @staticmethod
     def new(sponsor_id, type, filename):

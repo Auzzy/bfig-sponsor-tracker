@@ -14,6 +14,14 @@
 .error {
     color:red;
 }
+
+.removable {
+    display:none;
+}
+
+div.asset a:hover + a.removable, div.asset a.removable:hover {
+    display:inline;
+}
 {% endblock %}
 
 {% block content %}
@@ -59,26 +67,43 @@
     {% if not readonly %}<a href="{{ url_for('assettracker.upload_asset', id=sponsor.id) }}">Upload Assets</a><br />{% endif %}
     <a href="{{ url_for('assettracker.view_assets', id=sponsor.id) }}">View Assets</a>
 </p>
+
+{% for type in sponsor.level.assets|sort(attribute="label") %}
+<div style="float:left; width:200px;">
+    {% if type in sponsor.assets_by_type %} {% set cls="received" %} {% else %} {% set cls="missing" %} {% endif %}
+    <p class="{{ cls }}" style="text-align:center; padding-left:5px; padding-right:5px;">{{ type.label }}</p>
+    {% for asset in sponsor.assets_by_type[type] %}
+    <div class="asset" style="position:relative; left:50px;">
+        <a href="{{ asset.url }}" target="_blank"><img src="{{ asset.thumbnail_url }}" alt="{{ asset.name }}"></img></a>
+        <a class="removable" href="javascript:void(0);" onclick="delete_asset({{ asset.id }})">
+            <img style="vertical-align:top; position:relative; left:-20px;" src="{{ url_for('assettracker.static', filename='delete.png') }}"></img>
+        </a>
+    </div>
+    <br />
+    {% endfor %}
+</div>
+
+<div style="float:left; width:20px;">&nbsp;</div>
+{% endfor %}
+
+<!--
+{#
 <table border="1">
-    <thead>
-        <tr>
-            {% for type in sponsor.level.assets|sort(attribute="label") %}
-            <th>{{ type.label }}</th>
-            {% endfor %}
-        </tr>
-    </thead>
     <tbody>
+        {% for type in sponsor.level.assets|sort(attribute="label") %}
         <tr>
-            {% for type in sponsor.level.assets|sort(attribute="label") %}
+            <th>{{ type.label }}</th>
             {% if type in sponsor.assets_by_type %}
             <td class="received">{{ sponsor.asset_type_by_date[type].date }}</td>
             {% else %}
-            <td class="missing" style="height:20px;"></td>
+            <td class="missing" style="width:150px;"></td>
             {% endif %}
-            {% endfor %}
         </tr>
+        {% endfor %}
     </tbody>
 </table>
+#}
+-->
 
 {% endblock %}
 
@@ -100,6 +125,28 @@ function edit(fieldId) {
     document.getElementById(fieldId + "_field_button").style.display = "inline";
     document.getElementById(fieldId + "_edit").style.display = "none";
     document.getElementById(fieldId + "_edit_button").style.display = "none";
+}
+
+function delete_asset(id) {
+    var form = document.createElement("form");
+    form.setAttribute("method", "POST");
+    form.setAttribute("action", "{{ url_for('assettracker.delete_asset', id=sponsor.id) }}");
+    
+    var csrfField = document.createElement("input");
+    csrfField.setAttribute("type", "hidden");
+    csrfField.setAttribute("name", "csrf_token");
+    csrfField.setAttribute("value", "{{ csrf_token() }}");
+    form.appendChild(csrfField);
+    
+    var hiddenField = document.createElement("input");
+    hiddenField.setAttribute("type", "hidden");
+    hiddenField.setAttribute("name", "asset-id");
+    hiddenField.setAttribute("value", id);
+    form.appendChild(hiddenField);
+    
+    document.body.appendChild(form);
+    
+    form.submit();
 }
 {% endif %}
 {% endblock %}

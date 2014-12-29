@@ -1,5 +1,6 @@
-from flask.ext.user import SQLAlchemyAdapter, UserManager
 from flask.ext.mail import Mail
+from flask.ext.user import SQLAlchemyAdapter, UserManager
+from flask.ext.wtf.csrf import CsrfProtect
 
 from sponsortracker.app import app
 
@@ -12,5 +13,7 @@ from sponsortracker.usermodel import User, UserAuth
 
 app.register_blueprint(asset_tracker, url_prefix="/assettracker")
 app.register_blueprint(deal_tracker, url_prefix="/dealtracker")
+
+csrf = CsrfProtect(app)
 
 mail = Mail(app)

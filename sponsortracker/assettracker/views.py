@@ -9,8 +9,7 @@ from sponsortracker.assettracker.app import asset_tracker
 @asset_tracker.route("/")
 @roles_required([RoleType.AT_READ, RoleType.AT_WRITE])
 def home():
-    sponsors_by_level = sponsors.load_all_by_level()
-    return render_template("assettracker.html", sponsors_by_level=sponsors_by_level)
+    return render_template("assettracker.html", sponsors=sponsors.load_all())
 
 @asset_tracker.route("/sponsor/<int:id>/")
 @roles_required([RoleType.AT_READ, RoleType.AT_WRITE])
@@ -23,6 +22,7 @@ def sponsor_page(id):
     return render_template("sponsor-page.html", sponsor=sponsor, forms=forms, readonly=readonly, errors=errors)
 
 @asset_tracker.route("/sponsor/<int:id>/link/", methods=["POST"])
+@roles_required([RoleType.AT_WRITE])
 def info_link(id):
     form = forms.LinkForm()
     print("LINK: " + str(form.link.data))
@@ -33,6 +33,7 @@ def info_link(id):
     return redirect(url_for("assettracker.sponsor_page", id=id))
 
 @asset_tracker.route("/sponsor/<int:id>/description/", methods=["POST"])
+@roles_required([RoleType.AT_WRITE])
 def info_description(id):
     form = forms.DescriptionForm()
     if form.validate_on_submit():
@@ -50,11 +51,17 @@ def upload_asset(id):
         if filename:
             return redirect(url_for("assettracker.preview_asset", id=id, filename=filename, type=form.type.data))
         else:
-            # assets.save(id, form)
             return redirect(url_for("assettracker.sponsor_page", id=id))
     
     sponsor = sponsors.load(id)
     return render_template("upload-asset.html", id=id, form=form, sponsor=sponsor, assets=sponsor.assets)
+
+@asset_tracker.route("/sponsor/<int:id>/delete-asset", methods=["POST"])
+@roles_required([RoleType.AT_WRITE])
+def delete_asset(id):
+    asset_id = request.form["asset-id"]
+    sponsors.delete_asset(id, asset_id)
+    return redirect(url_for("assettracker.sponsor_page", id=id))
 
 @asset_tracker.route("/sponsor/<int:id>/preview-asset/", methods=["GET", "POST"])
 @roles_required([RoleType.AT_WRITE])
