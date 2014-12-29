@@ -1,10 +1,31 @@
 import collections
 import datetime
+from enum import Enum
 
 from sponsortracker import data
+from sponsortracker.assettracker import forms
 from sponsortracker.assettracker.app import asset_uploader, thumb_uploader
 
+class InfoData(Enum):
+    LINK = ("link", "Home Page", forms.LinkForm, "assettracker.info_link")
+    DESCRIPTION = ("description", "Description", forms.DescriptionForm, "assettracker.info_description")
+    
+    def __init__(self, id, label, form_cls, view_name):
+        self.id = id
+        self.label = label
+        self.form_cls = form_cls
+        self.view_name = view_name
+    
+    @staticmethod
+    def from_id(id):
+        for info in InfoData:
+            if info.id == id:
+                return info
+        return None
+
 class Sponsor:
+    INFO_LIST = [InfoData.LINK, InfoData.DESCRIPTION]
+    
     def __init__(self, id, name, email, level, info, assets):
         self.id = id
         self.name = name
@@ -13,12 +34,13 @@ class Sponsor:
         self.info = info
         self.assets = assets
         
-        self.assets_by_type = collections.defaultdict(list)
-        for asset in self.assets:
-            self.assets_by_type[asset.type].append(asset)
-        
-        self.asset_type_by_date = {type:min(self.assets_by_type[type], key=lambda asset: asset.date) for type in self.assets_by_type}
-        self.missing_assets = any(type not in self.assets_by_type for type in self.level.assets) or not self.info.link or not self.info.description
+        if self.level:
+            self.assets_by_type = collections.defaultdict(list)
+            for asset in self.assets:
+                self.assets_by_type[asset.type].append(asset)
+            
+            self.asset_type_by_date = {type:min(self.assets_by_type[type], key=lambda asset: asset.date) for type in self.assets_by_type}
+            self.missing_assets = any(type not in self.assets_by_type for type in self.level.assets) or not self.info.link or not self.info.description
     
     @staticmethod
     def from_model(sponsor):
@@ -35,6 +57,13 @@ class Info:
     @staticmethod
     def from_model(info):
         return Info(info.id, info.link, info.description)
+    
+    def get(self, info_data):
+        if info_data == InfoData.LINK:
+            return self.link
+        elif info_data == InfoData.DESCRIPTION:
+            return self.description
+        return None
 
 class Asset:
     def __init__(self, id, sponsor_id, date, type, filename):

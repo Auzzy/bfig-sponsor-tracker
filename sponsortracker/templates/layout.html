@@ -3,11 +3,27 @@
 <head>
     {% block head %}
     <title>{% block title %}{% endblock %}</title>
-    <style>{% block css %}{% endblock %}</style>
+    <style>
+        /* Sortable tables */
+        table.sortable thead {
+            background-color:#bbb;
+            font-weight: bold;
+            cursor: default;
+        }
+        
+        table.zebra tbody tr:nth-child(odd) {
+            background-color:#fff;
+        }
+        
+        table.zebra tbody tr:nth-child(even) {
+            background-color:#eee;
+        }
+        {% block css %}{% endblock %}</style>
     <script type="text/javascript">{% block js %}{% endblock %}</script>
     {% endblock %}
 </head>
 <body>
+    <script type=text/javascript src="{{ url_for('static', filename='sorttable.js') }}"></script>
     <div id="content">
         {% block content %}{% endblock %}
     </div>

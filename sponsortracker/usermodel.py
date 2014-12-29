@@ -1,30 +1,38 @@
 from enum import Enum
 
 from flask.ext.user import SQLAlchemyAdapter, UserManager, UserMixin
+from sqlalchemy import event
 
+from sponsortracker import data
 from sponsortracker.model import db
 
 _DB_ADAPTER = None
 _USER_MANAGER = None
 
-class RoleTypes(Enum):
-    ADMIN = "admin"
-    EXEC = "exec"
-    SALES = "sales"
-    MARKETING = "marketing"
-    COORD = "coord"
+_USER_TYPES = [user_type.type for user_type in data.UserType]
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(50), nullable=False, default='')
     last_name = db.Column(db.String(50), nullable=False, default='')
     enabled = db.Column(db.Boolean(), nullable=False, default=False)
+    type = db.Column(db.Enum(name="UserType", *_USER_TYPES), nullable=False)
     emails = db.relationship('UserEmail')
     roles = db.relationship('Role', secondary='user_roles', backref=db.backref('users', lazy='dynamic'))
     user_auth = db.relationship('UserAuth', uselist=False)
-
+    
     def is_active(self):
-      return self.enabled
+        return self.enabled
+    
+    def has_roles(self, *roles):
+        return super(User, self).has_roles(*data.RoleType.types(roles))
+
+@event.listens_for(User.type, 'set')
+def handle_type_change(user, type, old_type, initiator):
+    if type != old_type:
+        roles = data.UserType.from_type(type).roles
+        role_types = data.RoleType.types(roles)
+        user.roles = Role.query.filter(Role.type.in_(role_types)).all()
 
 class UserEmail(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -44,7 +52,12 @@ class UserAuth(db.Model, UserMixin):
 
 class Role(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(50), unique=True)
+    type = db.Column(db.String(50), unique=True)
+    
+    def __getattr__(self, name):
+        if name == "name":
+            return self.type
+        return super(Role, self).__getattr__(self, name)
     
 class UserRoles(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
@@ -58,15 +71,17 @@ def init(app):
     
     return _DB_ADAPTER, _USER_MANAGER
 
-# This should be moved into a migration file
+# TODO: Move into a migration file
 def _init_data():
-    for role_type in RoleTypes:
-        role = Role(name=role_type.value)
-        email_address = "bfigreceiver@gmail.com" if role_type == RoleTypes.ADMIN else "{0}@example.com".format(role_type.value)
+    for role in data.RoleType:
+        db.session.add(Role(type=role.type))
+    
+    role_dict = {role:Role(type=role.type) for role in data.RoleType}
+    for user_type in data.UserType:
+        email_address = "bfigreceiver@gmail.com" if user_type == data.UserType.ADMIN else "{0}@example.com".format(user_type.type)
         email = UserEmail(email=email_address, is_primary=True)
-        auth = UserAuth(username=role_type.value, password=_USER_MANAGER.hash_password(role_type.value))
-        user = User(first_name=role_type.value.title(), enabled=True, user_auth=auth)
-        user.roles.append(role)
+        auth = UserAuth(username=user_type.type, password=_USER_MANAGER.hash_password(user_type.type))
+        user = User(first_name=user_type.type.title(), enabled=True, type=user_type.type, user_auth=auth)
         user.emails.append(email)
         db.session.add(user)
     

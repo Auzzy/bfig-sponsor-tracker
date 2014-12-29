@@ -1,5 +1,44 @@
+from collections.abc import Iterable
 from enum import Enum
 
+from flask.ext.user import roles_required
+
+class RoleType(Enum):
+    DT_READ = "deal-read"
+    DT_WRITE = "deal-write"
+    AT_READ = "asset-read"
+    AT_WRITE = "asset-write"
+    
+    def __init__(self, type):
+        self.type = type
+
+    @staticmethod
+    def types(roles):
+        types = []
+        for role in roles:
+            if isinstance(role, Iterable):
+                types.append(RoleType.types(role))
+            elif isinstance(role, RoleType):
+                types.append(role.type)
+        return types
+        
+class UserType(Enum):
+    ADMIN = ("admin", RoleType.DT_READ, RoleType.DT_WRITE, RoleType.AT_READ, RoleType.AT_WRITE)
+    COORD = ("coord", RoleType.AT_READ, RoleType.AT_WRITE)
+    EXEC = ("exec", RoleType.DT_READ, RoleType.DT_WRITE)
+    MARKETING = ("marketing", RoleType.AT_READ)
+    SALES = ("sales", RoleType.DT_READ, RoleType.DT_WRITE)
+    
+    def __init__(self, type, *roles):
+        self.type = type
+        self.roles = roles
+    
+    @staticmethod
+    def from_type(type):
+        for user_type in UserType:
+            if type == user_type.type:
+                return user_type
+    
 class _Format(Enum):
     def __init__(self, format, ext):
         self.format = format

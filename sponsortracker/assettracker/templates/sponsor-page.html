@@ -20,37 +20,43 @@
 <h1>{{ sponsor.name }}</h1>
 <div><span style="font-weight:bold">Level</span>: {{ sponsor.level.label }}</div>
 
-{% for form in info_forms %}
-    {% set form_id = "info_form_" ~ loop.index %}
-    <form id="{{ form_id }}" method="POST" action="{{ url_for('assettracker.sponsor_page', id=sponsor.id) }}">
-        {% for field in form %}
-            {% if field.type in ("CSRFTokenField", "HiddenField") %}
-                {{ field }}
-            {% else %}
-            <div>
-                <span style="display:inline; font-weight:bold">{{ field.label }}</span>&nbsp;
-                <div id="{{ field.id }}_wrapper" style="display:none;">
-                    {{ field(style="display:inline; vertical-align: text-top", value=(field.data or "")) }}&nbsp;
-                    <a href="javascript:void(0);" onclick="save('{{ form_id }}');"><img style="display:inline;" src="{{ url_for('assettracker.static', filename='save.png') }}" /></a>
-                    <a href="javascript:void(0);" onclick="cancel('{{ field.id }}');"><img style="display:inline;" src="{{ url_for('assettracker.static', filename='cancel.png') }}" /></a>
+{% for info in sponsor.INFO_LIST %}
+    <span style="display:inline; font-weight:bold">{{ info.label }}</span>:&nbsp;
+    <div id="{{ info.id }}_edit" style="display:inline;">
+        <span id="{{ info.id }}_value" style="display:inline;">{{ sponsor.info.get(info) or "" }}</span>
+    </div>
+    
+    {% if not readonly %}
+        <div id="{{ info.id }}_edit_button" style="display:inline;">
+            <a href="javascript:void(0);" onclick="edit('{{ info.id }}');"><img style="display:inline;" src="{{ url_for('assettracker.static', filename='edit.png') }}" /></a>
+        </div>
+        <form id="{{ info.id }}_form" style="display:inline;" method="POST" action="{{ url_for(info.view_name, id=sponsor.id) }}">
+            {% for field in forms[info] %}
+                {% if field == forms[info].data_field() %}
+                <div id="{{ info.id }}_field" style="display:none;">
+                    {{ field(style="display:inline; vertical-align: text-top") }}&nbsp;
                 </div>
-                <div id="{{ field.id }}_edit" style="display:inline;">
-                    <span id="{{ field.id }}_value">{{ field.data or "" }}</span>
-                    <a href="javascript:void(0);" onclick="edit('{{ field.id }}');"><img style="display:inline;" src="{{ url_for('assettracker.static', filename='edit.png') }}" /></a>
-                </div>
-                
-                {% for error in field.errors %}
-                  <br />{{ error }}
-                {% endfor %}
-            </div>
-            {% endif %}
-        {% endfor %}
-    </form>
+                {% elif field.type in ("CSRFTokenField", "HiddenField") %}
+                    {{ field }}
+                {% endif %}
+            {% endfor %}
+        </form>
+        
+        <div id="{{ info.id }}_field_button" style="display:none;">
+            <a href="javascript:void(0);" onclick="save('{{ info.id }}');"><img style="display:inline;" src="{{ url_for('assettracker.static', filename='save.png') }}" /></a>
+            <a href="javascript:void(0);" onclick="cancel('{{ info.id }}');"><img style="display:inline;" src="{{ url_for('assettracker.static', filename='cancel.png') }}" /></a>
+        </div>
+    {% endif %}
+    <br />
+{% endfor %}
+
+{% for error in errors %}
+  <br />{{ error }}
 {% endfor %}
 
 <h2>Assets</h2>
 <p>
-    <a href="{{ url_for('assettracker.upload_asset', id=sponsor.id) }}">Upload Assets</a><br />
+    {% if not readonly %}<a href="{{ url_for('assettracker.upload_asset', id=sponsor.id) }}">Upload Assets</a><br />{% endif %}
     <a href="{{ url_for('assettracker.view_assets', id=sponsor.id) }}">View Assets</a>
 </p>
 <table border="1">
@@ -77,17 +83,23 @@
 {% endblock %}
 
 {% block js %}
+{% if not readonly %}
 function save(formId) {
-    document.getElementById(formId).submit();
+    document.getElementById(formId + "_form").submit();
 }
 
 function cancel(fieldId) {
-    document.getElementById(fieldId + "_wrapper").style.display = "none";
+    document.getElementById(fieldId + "_field").style.display = "none";
+    document.getElementById(fieldId + "_field_button").style.display = "none";
     document.getElementById(fieldId + "_edit").style.display = "inline";
+    document.getElementById(fieldId + "_edit_button").style.display = "inline";
 }
 
 function edit(fieldId) {
-    document.getElementById(fieldId + "_wrapper").style.display = "inline";
+    document.getElementById(fieldId + "_field").style.display = "inline";
+    document.getElementById(fieldId + "_field_button").style.display = "inline";
     document.getElementById(fieldId + "_edit").style.display = "none";
+    document.getElementById(fieldId + "_edit_button").style.display = "none";
 }
+{% endif %}
 {% endblock %}

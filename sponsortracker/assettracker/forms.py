@@ -25,11 +25,24 @@ def validate_asset(form, field):
 class UploadAssetForm(flask_wtf.Form):
     type = SelectField(choices=_ASSET_CHOICES, validators=[InputRequired("You must select an asset type.")])
     asset = FileField(validators=[FileRequired(), FileAllowed(asset_uploader, "The uploaded asset must be an image file."), validate_asset])
-    
-class LinkForm(flask_wtf.Form):
-    form_type = HiddenField(default="LinkForm")
-    link = StringField("Home page", validators=[URL(), Optional()])
 
-class DescriptionForm(flask_wtf.Form):
-    form_type = HiddenField(default="DescriptionForm")
+class _InfoForm(flask_wtf.Form):
+    def __init__(self, *args, **kwargs):
+        info_data = kwargs.pop("info", None)
+        
+        super(_InfoForm, self).__init__(*args, **kwargs)
+        
+        if info_data:
+            self.data_field().data = info_data
+
+class LinkForm(_InfoForm):
+    link = StringField("Home page", validators=[URL(), Optional()])
+    
+    def data_field(self):
+        return self.link
+
+class DescriptionForm(_InfoForm):
     description = TextAreaField(validators=[Optional()])
+    
+    def data_field(self):
+        return self.description

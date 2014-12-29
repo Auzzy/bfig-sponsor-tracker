@@ -17,17 +17,16 @@ def _load_model(id, raise_404=True):
     get = "get_or_404" if raise_404 else "get"
     return getattr(model.Sponsor.query, get)(id)
 
-def save_info(id, form):
-    sponsor = model.Sponsor.query.get(id)
-    if hasattr(form, "link"):
-        sponsor.info.link = form.link.data or ""
-    if hasattr(form, "description"):
-        sponsor.info.description = form.description.data or ""
+def save_link(id, form):
+    sponsor = _load_model(id)
+    sponsor.info.link = form.link.data or ""
+    model.db.session.commit()
+    
+def save_description(id, form):
+    sponsor = _load_model(id)
+    sponsor.info.description = form.description.data or ""
     model.db.session.commit()
 
 def load_info(id):
-    sponsor = model.Sponsor.query.get(id)
-    return (
-        forms.LinkForm(link=sponsor.info.link) if sponsor.info.link else forms.LinkForm(),
-        forms.DescriptionForm(description=sponsor.info.description) if sponsor.info.description else forms.DescriptionForm()
-    )
+    sponsor = load(id)
+    return {info:sponsor.info.get(info) for info in data.InfoData}

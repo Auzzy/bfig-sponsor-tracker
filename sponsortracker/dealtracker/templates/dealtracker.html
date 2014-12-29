@@ -5,19 +5,19 @@
 {% block content %}
 <p><a href="{{ url_for('dealtracker.configure_sponsor') }}">New Sponsor</a></p>
 
-<table>
+<table class="sortable zebra">
     <thead>
         <tr>
-            <th>Name</th>
-            <th>Level</th>
-            <th>Cash Amount</th>
-            <th>In-Kind Amount</th>
+            <th style="min-width:150px;">Name</th>
+            <th style="width:125px;">Level</th>
+            <th style="min-width:125px;">Cash Amount</th>
+            <th style="min-width:125px;">In-Kind Amount</th>
         </tr>
     </thead>
     <tbody>
         {% for sponsor in sponsors %}
-        <tr>
-            <td><a href="{{ url_for('dealtracker.configure_sponsor', id=sponsor.id) }}">{{ sponsor.name }}</a></td>
+        <tr style="text-align:center;">
+            <td style="text-align:left;"><a href="{{ url_for('dealtracker.configure_sponsor', id=sponsor.id) }}">{{ sponsor.name }}</a></td>
             <td>{{ sponsor.level.label }}</td>
             <td>{% if sponsor.cash %}${{ sponsor.cash }}{% endif %}</td>
             <td>{% if sponsor.inkind %}${{ sponsor.inkind }}{% endif %}</td>

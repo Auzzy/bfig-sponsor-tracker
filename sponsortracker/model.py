@@ -19,8 +19,8 @@ class Sponsor(db.Model):
     level = db.Column(db.String(16))
     cash = db.Column(db.Integer)
     inkind = db.Column(db.Integer)
-    info = db.relationship("Info", uselist=False, backref="sponsor")
-    assets = db.relationship("Asset")
+    info = db.relationship("Info", uselist=False, backref="sponsor", cascade="all, delete-orphan", passive_updates=False)
+    assets = db.relationship("Asset", cascade="all, delete-orphan", passive_updates=False)
     requests = db.relationship("Requests", uselist=False, backref="sponsor")
     
     def __init__(self, name, email, level=None, cash=None, inkind=None):

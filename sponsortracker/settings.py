@@ -14,7 +14,9 @@ UPLOADS_DEFAULT_DEST = os.path.join(basedir, "uploads")
 
 # Flask-Users
 USER_APP_NAME = "Sponsor Tracker"
+USER_ENABLE_CHANGE_USERNAME = False
 USER_ENABLE_REGISTRATION = False
+USER_ENABLE_CONFIRM_EMAIL = False
 
 # Flask-Mail
 MAIL_USERNAME = "bfigtest@gmail.com"
