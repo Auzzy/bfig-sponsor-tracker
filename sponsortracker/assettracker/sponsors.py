@@ -25,8 +25,4 @@ def save_description(id, form):
 def load_info(id):
     sponsor = load(id)
     return {info:sponsor.info.get(info) for info in data.InfoData}
-
-def delete_asset(id, asset_id):
-    model.db.session.delete(model.Asset.query.get(asset_id))
-    model.db.session.commit()
     

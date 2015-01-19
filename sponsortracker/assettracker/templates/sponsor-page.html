@@ -64,8 +64,7 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
 
 <h2>Assets</h2>
 <p>
-    {% if not readonly %}<a href="{{ url_for('assettracker.upload_asset', id=sponsor.id) }}">Upload Assets</a><br />{% endif %}
-    <a href="{{ url_for('assettracker.view_assets', id=sponsor.id) }}">View Assets</a>
+    {% if not readonly %}<a href="{{ url_for('assettracker.upload_asset', id=sponsor.id) }}">Upload Asset</a><br />{% endif %}
 </p>
 
 {% for type in sponsor.level.assets|sort(attribute="label") %}
@@ -85,25 +84,6 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
 
 <div style="float:left; width:20px;">&nbsp;</div>
 {% endfor %}
-
-<!--
-{#
-<table border="1">
-    <tbody>
-        {% for type in sponsor.level.assets|sort(attribute="label") %}
-        <tr>
-            <th>{{ type.label }}</th>
-            {% if type in sponsor.assets_by_type %}
-            <td class="received">{{ sponsor.asset_type_by_date[type].date }}</td>
-            {% else %}
-            <td class="missing" style="width:150px;"></td>
-            {% endif %}
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-#}
--->
 
 {% endblock %}
 

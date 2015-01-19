@@ -7,7 +7,7 @@ from sponsortracker.data import AssetType
 from sponsortracker.assettracker.images import Image
 from sponsortracker.assettracker.app import asset_uploader
 
-_ASSET_CHOICES = [(type.name, type.label) for type in sorted(AssetType, key=lambda type: type.label)]
+# _ASSET_CHOICES = [(type.name, type.label) for type in sorted(AssetType, key=lambda type: type.label)]
 
 def validate_asset(form, field):
     image = Image.load(field.data)
@@ -23,8 +23,14 @@ def validate_asset(form, field):
         pass
 
 class UploadAssetForm(flask_wtf.Form):
-    type = SelectField(choices=_ASSET_CHOICES, validators=[InputRequired("You must select an asset type.")])
+    type = SelectField(validators=[InputRequired("You must select an asset type.")])
     asset = FileField(validators=[FileRequired(), FileAllowed(asset_uploader, "The uploaded asset must be an image file."), validate_asset])
+    
+    def __init__(self, asset_types=[], *args, **kwargs):
+        super(UploadAssetForm, self).__init__(*args, **kwargs)
+        
+        asset_types = asset_types or list(AssetType)
+        self.type.choices = [(type.name, type.label) for type in sorted(asset_types, key=lambda type: type.label)]
 
 class _InfoForm(flask_wtf.Form):
     def __init__(self, *args, **kwargs):

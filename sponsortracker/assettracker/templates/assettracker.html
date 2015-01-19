@@ -13,6 +13,25 @@
 {% endblock %}
 
 {% block content %}
+<p>
+    <a href="#downloadModal">Download...</a>
+
+    <div id="downloadModal" class="modalDialog">
+        <div>
+            <h2>Download Options</h2>
+            <a href="#close" title="Close" class="close">X</a>
+            <a href="{{ url_for('assettracker.download_all') }}">Download All</a><br />
+            <a href="{{ url_for('assettracker.download_logo_cloud') }}">Logo Cloud</a><br />
+            <a href="javascript:void(0);" id="website-updates">Website Updates</a>
+            <input type="hidden" id="website-updates-date" name="website-updates-date" />
+            <!--
+            <input type="text" id="website-updates-test" name="website-updates-test" />
+            -->
+            <div id="website-updates-calendar"></div>
+        </div>
+    </div>
+</p>
+
 <table class="sortable zebra" border="0">
     <thead>
         <th style="min-width:150px;">Name</th>
@@ -36,4 +55,25 @@
     </tbody>
 </table>
 
+{% endblock %}
+
+{% block js %}
+    window.addEventListener('load', function() {
+        
+        var picker = new Pikaday(
+        {
+            field: document.getElementById('website-updates-date'),
+            trigger: document.getElementById('website-updates'),
+            container: document.getElementById('website-updates-calendar'),
+            minDate: new Date('{{ min_asset_date.strftime("%Y-%m-%d") }}'),
+            yearRange: [{{ min_asset_date.year }}],
+            onSelect: function() {
+                xmlHttp = new XMLHttpRequest();
+                xmlHttp.open("GET", "{{ url_for('assettracker.download_website_updates') }}?date=" + document.getElementById('website-updates-date').value, true);
+                xmlHttp.send();
+                response = xmlHttp.responseText;
+                return response;
+            }
+        });
+    }, false);
 {% endblock %}

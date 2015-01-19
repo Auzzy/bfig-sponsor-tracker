@@ -20,9 +20,9 @@ class Image(wand.image.Image):
         
         self.filename = filename
     
-    @staticmethod
-    def load(field):
-        return Image(field.filename, file=field.stream)
+    @classmethod
+    def load(cls, file_storage):
+        return cls(file_storage.filename, file=file_storage.stream)
     
     def __setattr__(self, name, value):
         super(Image, self).__setattr__(name, value)
@@ -30,32 +30,32 @@ class Image(wand.image.Image):
             self.filename = "{file}.{ext}".format(file=splitext(self.filename)[0], ext=self.format.lower())
     
     def save(self, sponsor_id):
-        if not self.uploader:
+        if not hasattr(self, "UPLOADER") or not self.UPLOADER:
             raise AttributeError("To save this image, an uploader must be defined.")
         
         byte_stream = io.BytesIO()
         super(Image, self).save(file=byte_stream)
         byte_stream.seek(0)
         file_storage = FileStorage(stream=byte_stream, filename=self.filename)
-        filename = self.uploader.save(file_storage, folder=str(sponsor_id))
-        return relpath(filename, str(sponsor_id))
+        return self.UPLOADER.save(file_storage, folder=str(sponsor_id))
+    
+    @classmethod
+    def url(cls, sponsor_id, filename):
+        return cls.UPLOADER.url(join(str(sponsor_id), filename))
+    
+    @classmethod
+    def _path(cls, sponsor_id, filename):
+        return cls.UPLOADER.path(join(str(sponsor_id), filename))
+    
+    @classmethod
+    def discard(cls, sponsor_id, filename):
+        os.remove(cls._path(sponsor_id, filename))
 
 class Preview(Image):
+    UPLOADER = preview_uploader
+    
     def __init__(self, filename, *args, **kwargs):
         super(Preview, self).__init__(filename, *args, **kwargs)
-        self.uploader = preview_uploader
-    
-    @staticmethod
-    def get(file_storage):
-        return Preview(file_storage.filename, file=file_storage.stream)
-    
-    @staticmethod
-    def url(sponsor_id, filename):
-        return preview_uploader.url(Preview._relpath(sponsor_id, filename))
-    
-    @staticmethod
-    def discard(sponsor_id, filename):
-        os.remove(Preview._path(sponsor_id, filename))
     
     @staticmethod
     def stash(sponsor_id, filename):
@@ -65,22 +65,15 @@ class Preview(Image):
         
         os.remove(Preview._path(sponsor_id, filename))
         return asset_filename
-    
-    @staticmethod
-    def _path(sponsor_id, filename):
-        return preview_uploader.path(Preview._relpath(sponsor_id, filename))
-    
-    @staticmethod
-    def _relpath(sponsor_id, filename):
-        return join(str(sponsor_id), filename)
 
 class Thumbnail(Image):
     DEFAULT_WIDTH = 100
     DEFAULT_HEIGHT = 100
     
+    UPLOADER = thumb_uploader
+    
     def __init__(self, filename, *args, **kwargs):
         super(Thumbnail, self).__init__(filename, *args, **kwargs)
-        self.uploader = thumb_uploader
     
     @staticmethod
     def create(file_storage, sponsor_id, size=None):
@@ -105,10 +98,21 @@ class Thumbnail(Image):
             transform = "{0}x{1}!".format(Thumbnail.DEFAULT_WIDTH, Thumbnail.DEFAULT_HEIGHT)
         self.transform(resize=transform)
 
-class Asset:
+class Asset(Image):
+    UPLOADER = asset_uploader
+    
+    def __init__(self, filename, *args, **kwargs):
+        super(Asset, self).__init__(filename, *args, **kwargs)
+    
     @staticmethod
     def stash(sponsor_id, file_storage):
-        asset_filename = asset_uploader.save(file_storage, folder=str(sponsor_id))
+        asset_filename = Asset.load(file_storage).save(sponsor_id)
         file_storage.filename = relpath(asset_filename, str(sponsor_id))
         Thumbnail.create(file_storage, sponsor_id, size={"width": None})
         return asset_filename
+    
+    @staticmethod
+    def delete(sponsor_id, filename):
+        relfilename = relpath(filename, str(sponsor_id))
+        Asset.discard(sponsor_id, relfilename)
+        Thumbnail.discard(sponsor_id, relfilename)
