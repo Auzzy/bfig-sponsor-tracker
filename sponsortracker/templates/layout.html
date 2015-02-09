@@ -48,10 +48,7 @@
         	margin: 10% auto;
         	padding: 5px 20px 13px 20px;
         	border-radius: 10px;
-        	background: #fff;
-        	background: -moz-linear-gradient(#fff, #999);
-        	background: -webkit-linear-gradient(#fff, #999);
-        	background: -o-linear-gradient(#fff, #999);
+        	background: #ddd;
         }
         
         .close {
@@ -82,6 +79,18 @@
     {% endblock %}
 </head>
 <body>
+    <div id="navheader" style="height: 50px; max-height: 30px;">
+        <div id="appnav" style="float:left;">
+            {% block appnav %}{% endblock %}
+        </div>
+        <div id="usernav" style="float:right;">
+            {% block usernav %}
+            <a href="{{ url_for('user.change_password') }}">Change Password</a>
+            <a href="{{ url_for('user.logout') }}">Sign Out</a>
+            {% endblock %}
+        </div>
+    </div>
+    <hr style="clear:both;" />
     <div id="content">
         {% block content %}{% endblock %}
     </div>

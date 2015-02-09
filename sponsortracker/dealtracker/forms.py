@@ -9,6 +9,6 @@ _SPONSOR_LEVEL_CHOICES = [("", "")] + [(level.name, level.label) for level in da
 class SponsorForm(flask_wtf.Form):
     name = StringField(validators=[DataRequired()])
     email = StringField(validators=[DataRequired(), Email()])
-    level = SelectField(choices=_SPONSOR_LEVEL_CHOICES, validators=[Optional()])
+    level_name = SelectField("Level", choices=_SPONSOR_LEVEL_CHOICES, validators=[Optional()])
     cash = IntegerField("Cash Amount (whole USD)", validators=[Optional()])
     inkind = IntegerField("In-kind Amount (whole USD)", validators=[Optional()])

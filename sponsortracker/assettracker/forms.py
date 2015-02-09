@@ -7,7 +7,6 @@ from sponsortracker.data import AssetType
 from sponsortracker.assettracker.images import Image
 from sponsortracker.assettracker.app import asset_uploader
 
-# _ASSET_CHOICES = [(type.name, type.label) for type in sorted(AssetType, key=lambda type: type.label)]
 
 def validate_asset(form, field):
     image = Image.load(field.data)

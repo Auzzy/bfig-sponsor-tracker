@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "dealtracker-layout.html" %}
 
 {% block title %}Deal Tracker Home{% endblock %}
 
@@ -12,6 +12,7 @@
             <th style="width:125px;">Level</th>
             <th style="min-width:125px;">Cash Amount</th>
             <th style="min-width:125px;">In-Kind Amount</th>
+            <th style="background:white;"></th>
         </tr>
     </thead>
     <tbody>
@@ -21,8 +22,37 @@
             <td>{{ sponsor.level.label }}</td>
             <td>{% if sponsor.cash %}${{ sponsor.cash }}{% endif %}</td>
             <td>{% if sponsor.inkind %}${{ sponsor.inkind }}{% endif %}</td>
+            <td style="background:white;">
+                <a href="javascript:void(0);" onclick="delete_sponsor({{ sponsor.id }})">
+                    <img src="{{ url_for('assettracker.static', filename='delete.png') }}"></img>
+                </a>
+            </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+{% endblock %}
+
+{% block js %}
+function delete_sponsor(id) {
+    var form = document.createElement("form");
+    form.setAttribute("method", "POST");
+    form.setAttribute("action", "{{ url_for('dealtracker.delete_sponsor') }}");
+    
+    var csrfField = document.createElement("input");
+    csrfField.setAttribute("type", "hidden");
+    csrfField.setAttribute("name", "csrf_token");
+    csrfField.setAttribute("value", "{{ csrf_token() }}");
+    form.appendChild(csrfField);
+    
+    var hiddenField = document.createElement("input");
+    hiddenField.setAttribute("type", "hidden");
+    hiddenField.setAttribute("name", "sponsor-id");
+    hiddenField.setAttribute("value", id);
+    form.appendChild(hiddenField);
+    
+    document.body.appendChild(form);
+    
+    form.submit();
+}
 {% endblock %}
