@@ -58,7 +58,7 @@ def load_sponsor(target, context):
     # For use by the views and controllers - not in the DB
     target.assets_by_type = {}
     target.asset_type_by_date = {}
-    target.missing_assets = True
+    target.received_assets = True
     target.level = data.Level[target.level_name] if target.level_name else None
     if target.level:
         target.assets_by_type = collections.defaultdict(list)
@@ -66,7 +66,7 @@ def load_sponsor(target, context):
             target.assets_by_type[asset.type].append(asset)
         
         target.asset_type_by_date = {type:min(target.assets_by_type[type], key=lambda asset: asset.date) for type in target.assets_by_type}
-        target.missing_assets = any(type not in target.assets_by_type for type in target.level.assets) or not target.info.link or not target.info.description
+        target.received_assets = all(type in target.assets_by_type for type in target.level.assets) and target.info.link and target.info.description
 
 class Info(db.Model):
     id = db.Column(db.Integer, primary_key=True)

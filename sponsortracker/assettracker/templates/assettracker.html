@@ -26,9 +26,6 @@
             <form id="website-updater" action="{{ url_for('assettracker.download_website_updates') }}" method="GET">
                 <input type="hidden" id="website-updates-date" name="website-updates-date" />
             </form>
-            <!--
-            <input type="text" id="website-updates-test" name="website-updates-test" />
-            -->
             <div id="website-updates-calendar"></div>
         </div>
     </div>
@@ -38,19 +35,19 @@
     <thead>
         <th style="min-width:150px;">Name</th>
         <th style="width:125px;">Level</th>
-        <th style="width:150px;">Last Request</th>
-        <th style="width:150px;">Missing Assets</th>
+        <!-- <th style="width:150px;">Last Request</th> -->
+        <th style="width:150px;">Received All Assets</th>
     </thead>
     <tbody>
         {% for sponsor in sponsors|sort(attribute="name") %}
         <tr>
             <td><a href="{{ url_for('assettracker.sponsor_page', id=sponsor.id) }}">{{ sponsor.name }}</a></td>
             <td>{{ sponsor.level.label }}</td>
-            <td></td>
-            {% if sponsor.missing_assets %}
-            <td class="missing">Yes</td>
+            <!-- <td></td> -->
+            {% if sponsor.received_assets %}
+            <td class="received">Yes</td>
             {% else %}
-            <td class="received">No</td>
+            <td class="missing">No</td>
             {% endif %}
         </tr>
         {% endfor %}
