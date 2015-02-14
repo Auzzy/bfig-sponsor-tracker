@@ -10,3 +10,6 @@ uploads/
 
 ### CLOUD9 ###
 .c9/
+
+### DB ###
+*.db
