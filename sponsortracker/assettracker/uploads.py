@@ -61,10 +61,10 @@ class Preview(Image):
         super(Preview, self).__init__(filename, *args, **kwargs)
     
     @staticmethod
-    def stash(sponsor_id, filename):
+    def stash(sponsor_id, type, filename):
         with open(Preview._path(sponsor_id, filename), 'rb') as preview_file:
             file_storage = FileStorage(stream=preview_file, filename=filename)
-            asset_filename = Asset.stash(sponsor_id, file_storage)
+            asset_filename = Asset.stash(sponsor_id, type, file_storage)
         
         os.remove(Preview._path(sponsor_id, filename))
         return asset_filename
@@ -108,20 +108,35 @@ class Asset(Image):
         super(Asset, self).__init__(filename, *args, **kwargs)
     
     @staticmethod
-    def stash(sponsor_id, file_storage):
+    def stash(sponsor_id, type, file_storage):
         asset_filename = Asset.load(file_storage).save(sponsor_id)
         file_storage.filename = relpath(asset_filename, str(sponsor_id))
         Thumbnail.create(file_storage, sponsor_id, size={"width": None})
+        
+        Asset._store(sponsor_id, type, asset_filename)
+        
         return asset_filename
     
     @staticmethod
-    def delete(sponsor_id, filename):
-        relfilename = relpath(filename, str(sponsor_id))
+    def _store(sponsor_id, type, filename):
+        asset_model = model.Asset(sponsor_id, type, filename)
+        model.db.session.add(asset_model)
+        model.db.session.commit()
+    
+    @staticmethod
+    def delete(id):
+        asset_model = model.Asset.query.get(id)
+        sponsor_id = asset_model.sponsor.id
+        
+        relfilename = relpath(asset_model.filename, str(sponsor_id))
         Asset.discard(sponsor_id, relfilename)
         Thumbnail.discard(sponsor_id, relfilename)
+        
+        model.db.session.delete(asset_model)
+        model.db.session.commit()
 
 
-def preview(sponsor_id, form):
+def verify(sponsor_id, form):
     preview = Preview.load(form.asset.data)
     spec = AssetType[form.type.data].spec
     
@@ -139,36 +154,20 @@ def preview(sponsor_id, form):
         preview.resolution = (spec.dpi, spec.dpi)
     
     if preview.width != spec.width or preview.height != spec.height:
-        # For now, don't do anything about sizes that don't match. Marketing will handle it.
+        # Don't do anything about sizes that don't match. Marketing will handle it.
         pass
     
     if preview.dirty:
         filename = preview.save(sponsor_id)
         return filename.split('/')[-1]
     else:
-        save(sponsor_id, form)
-        # Need to actually do something here
+        Asset.stash(sponsor_id, form.type.data, form.asset.data)
         return None
-
-def save_preview(sponsor_id, type, basename):
-    filename = Preview.stash(sponsor_id, basename)
-    _save(sponsor_id, type, filename)
-
-def discard_preview(sponsor_id, filename):
-    Preview.discard(sponsor_id, filename)
-
-def save(sponsor_id, form):
-    filename = Asset.stash(sponsor_id, form.asset.data)
-    _save(sponsor_id, form.type.data, filename)
-
-def _save(sponsor_id, type, filename):
-    asset_model = model.Asset(sponsor_id, type, filename)
-    model.db.session.add(asset_model)
-    model.db.session.commit()
-
-def delete(asset_id):
-    asset_model = model.Asset.query.get(asset_id)
+'''
+def delete_asset(id):
+    asset_model = model.Asset.query.get(id)
     Asset.delete(asset_model.sponsor.id, asset_model.filename)
     
     model.db.session.delete(asset_model)
     model.db.session.commit()
+'''

@@ -6,7 +6,7 @@ from datetime import datetime
 
 from sponsortracker.data import AssetType, RoleType
 from sponsortracker.model import Asset, Sponsor
-from sponsortracker.assettracker import download, forms, images
+from sponsortracker.assettracker import download, forms, uploads
 from sponsortracker.assettracker.app import asset_tracker
 
 UPDATE_DATE_FORMAT = "%a %b %d %Y"
@@ -80,7 +80,7 @@ def upload_asset(id):
     
     form = forms.UploadAssetForm(sponsor.level.assets)
     if form.validate_on_submit():
-        filename = images.preview(id, form)
+        filename = uploads.verify(id, form)
         if filename:
             return redirect(url_for("assettracker.preview_asset", id=id, filename=filename, type=form.type.data))
         else:
@@ -92,7 +92,7 @@ def upload_asset(id):
 @roles_required([RoleType.AT_WRITE])
 def delete_asset(id):
     asset_id = request.form["asset-id"]
-    images.delete(asset_id)
+    uploads.Asset.delete(asset_id)
     return redirect(url_for("assettracker.sponsor_page", id=id))
 
 @asset_tracker.route("/sponsor/<int:id>/preview-asset/", methods=["GET", "POST"])
@@ -106,12 +106,12 @@ def preview_asset(id):
     
     if request.method == "POST":
         if "cancel" in request.form:
-            images.discard_preview(id, filename)
+            uploads.Preview.discard(id, filename)
             return redirect(url_for("assettracker.upload_asset", id=id))
         elif "save" in request.form:
-            images.save_preview(id, type, filename)
+            uploads.Preview.stash(id, type, filename)
             return redirect(url_for("assettracker.sponsor_page", id=id))
     
     asset_type = AssetType[type]
-    url = images.Preview.url(id, filename)
+    url = uploads.Preview.url(id, filename)
     return render_template("preview-asset.html", id=id, filename=filename, preview=url, type=asset_type)

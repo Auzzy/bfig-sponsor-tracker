@@ -4,7 +4,7 @@ from wtforms import HiddenField, SelectField, StringField, TextAreaField
 from wtforms.validators import InputRequired, Optional, URL, ValidationError
 
 from sponsortracker.data import AssetType
-from sponsortracker.assettracker.images import Image
+from sponsortracker.assettracker.uploads import Image
 from sponsortracker.assettracker.app import asset_uploader
 
 
@@ -16,10 +16,6 @@ def validate_asset(form, field):
         raise ValidationError("Expected a transparent background.")
     elif spec.transparent is False and image.alpha_channel:
         raise ValidationError("Expected an opaque background.")
-    
-    if image.width != spec.width or image.height != spec.height:
-        # raise ValidationError("Expected image size to be {0}x{1}, but provided image was {2}x{3}".format(image.width, image.height, spec.width, spec.height)
-        pass
 
 class UploadAssetForm(flask_wtf.Form):
     type = SelectField(validators=[InputRequired("You must select an asset type.")])
