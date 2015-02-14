@@ -139,12 +139,14 @@ def preview(sponsor_id, form):
         preview.resolution = (spec.dpi, spec.dpi)
     
     if preview.width != spec.width or preview.height != spec.height:
+        # For now, don't do anything about sizes that don't match. Marketing will handle it.
         pass
     
     if preview.dirty:
         filename = preview.save(sponsor_id)
         return filename.split('/')[-1]
     else:
+        save(sponsor_id, form)
         # Need to actually do something here
         return None
 
