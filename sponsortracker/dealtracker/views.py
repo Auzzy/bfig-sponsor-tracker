@@ -1,5 +1,6 @@
 from flask import redirect, render_template, request, url_for
 from flask.ext.user import roles_required
+from flask.ext.login import current_user
 
 from sponsortracker import model
 from sponsortracker.data import RoleType
@@ -9,7 +10,8 @@ from sponsortracker.dealtracker.app import deal_tracker
 @deal_tracker.route("/")
 @roles_required([RoleType.DT_READ, RoleType.DT_WRITE])
 def home():
-    return render_template("dealtracker.html", sponsors=model.Sponsor.query.all())
+    readonly = not current_user.has_roles(RoleType.DT_WRITE)
+    return render_template("dealtracker.html", sponsors=model.Sponsor.query.all(), readonly=readonly)
 
 @deal_tracker.route("/sponsor/", methods=["GET", "POST"])
 @deal_tracker.route("/sponsor/<int:id>/", methods=["GET", "POST"])

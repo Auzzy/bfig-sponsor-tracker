@@ -27,7 +27,7 @@ def download(zipname=ZIPNAME, by_sponsor=True, info=True, asset_filter=lambda sp
         zipdir = join(tempdir, zipname)
         os.makedirs(zipdir)
         
-        for sponsor in Sponsor.query.filter(Sponsor.level_name != None):
+        for sponsor in Sponsor.query.filter(Sponsor.level_name != ""):
             target = join(*[zipdir, sponsor.level.name.lower()] + ([sponsor.name] if by_sponsor else []))
             os.makedirs(target, exist_ok=True)
             

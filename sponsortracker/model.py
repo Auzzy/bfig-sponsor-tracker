@@ -57,7 +57,6 @@ class Sponsor(db.Model):
 def load_sponsor(target, context):
     # For use by the views and controllers - not in the DB
     target.assets_by_type = {}
-    target.asset_type_by_date = {}
     target.received_assets = True
     target.level = data.Level[target.level_name] if target.level_name else None
     if target.level:
@@ -65,7 +64,6 @@ def load_sponsor(target, context):
         for asset in target.assets:
             target.assets_by_type[asset.type].append(asset)
         
-        target.asset_type_by_date = {type:min(target.assets_by_type[type], key=lambda asset: asset.date) for type in target.assets_by_type}
         target.received_assets = all(type in target.assets_by_type for type in target.level.assets) and target.info.link and target.info.description
 
 class Info(db.Model):

@@ -88,6 +88,8 @@
             <a href="{{ url_for('user.change_password') }}">Change Password</a>
             <a href="{{ url_for('user.logout') }}">Sign Out</a>
             {% endblock %}
+            <br />
+            <span>User: {{ current_user.user_auth.username }}</span>
         </div>
     </div>
     <hr style="clear:both;" />

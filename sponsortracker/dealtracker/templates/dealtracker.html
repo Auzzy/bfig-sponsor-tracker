@@ -12,7 +12,9 @@
             <th style="width:125px;">Level</th>
             <th style="min-width:125px;">Cash Amount</th>
             <th style="min-width:125px;">In-Kind Amount</th>
+            {% if not readonly %}
             <th style="background:white;"></th>
+            {% endif %}
         </tr>
     </thead>
     <tbody>
@@ -22,11 +24,13 @@
             <td>{{ sponsor.level.label }}</td>
             <td>{% if sponsor.cash %}${{ sponsor.cash }}{% endif %}</td>
             <td>{% if sponsor.inkind %}${{ sponsor.inkind }}{% endif %}</td>
+            {% if not readonly %}
             <td style="background:white;">
                 <a href="javascript:void(0);" onclick="delete_sponsor({{ sponsor.id }})">
                     <img src="{{ url_for('assettracker.static', filename='delete.png') }}"></img>
                 </a>
             </td>
+            {% endif %}
         </tr>
         {% endfor %}
     </tbody>

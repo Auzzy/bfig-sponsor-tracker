@@ -14,6 +14,7 @@ UPDATE_DATE_FORMAT = "%a %b %d %Y"
 @asset_tracker.route("/")
 @roles_required([RoleType.AT_READ, RoleType.AT_WRITE])
 def home():
+    print(dir(current_user))
     min_asset_date = min(Asset.query.all(), key=lambda asset: asset.date).date
     sponsors = Sponsor.query.filter(Sponsor.level_name != None).filter(Sponsor.level_name != '')
     return render_template("assettracker.html", sponsors=sponsors, min_asset_date=min_asset_date)

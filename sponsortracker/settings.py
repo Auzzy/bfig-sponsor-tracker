@@ -17,6 +17,7 @@ USER_APP_NAME = "Sponsor Tracker"
 USER_ENABLE_CHANGE_USERNAME = False
 USER_ENABLE_REGISTRATION = False
 USER_ENABLE_CONFIRM_EMAIL = False
+USER_ENABLE_FORGOT_PASSWORD = True
 
 # Flask-Mail
 MAIL_USERNAME = "bfigtest@gmail.com"
@@ -25,4 +26,6 @@ MAIL_DEFAULT_SENDER = ("BFIG Test", "bfigtest@gmail.com")
 DEFAULT_MAIL_SENDER = ("BFIG Test", "bfigtest@gmail.com")
 MAIL_SERVER = "smtp.gmail.com"
 MAIL_PORT = 465
+# MAIL_PORT = 587
 MAIL_USE_SSL = True
+# MAIL_USE_TLS = True

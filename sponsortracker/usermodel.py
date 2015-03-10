@@ -1,6 +1,7 @@
 from enum import Enum
 
 from flask.ext.user import SQLAlchemyAdapter, UserManager, UserMixin
+from wtforms.validators import ValidationError
 from sqlalchemy import event
 
 from sponsortracker import data
@@ -61,15 +62,20 @@ class Role(db.Model):
     
 class UserRoles(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
-    user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
-    role_id = db.Column(db.Integer(), db.ForeignKey('role.id', ondelete='CASCADE'))
+    user_id = db.Column(db.Integer(), db.ForeignKey("user.id", ondelete="CASCADE"))
+    role_id = db.Column(db.Integer(), db.ForeignKey("role.id", ondelete="CASCADE"))
 
 def init(app):
     global _DB_ADAPTER, _USER_MANAGER
     _DB_ADAPTER = _DB_ADAPTER or SQLAlchemyAdapter(db, User, UserAuthClass=UserAuth, UserEmailClass=UserEmail)
-    _USER_MANAGER = _USER_MANAGER or UserManager(_DB_ADAPTER, app)
+    _USER_MANAGER = _USER_MANAGER or UserManager(_DB_ADAPTER, app, password_validator=password_validator)
     
     return _DB_ADAPTER, _USER_MANAGER
+
+def password_validator(form, field):
+    password = field.data
+    if len(password) < 6:
+        raise ValidationError("Password must have at least 6 characters.")
 
 # TODO: Move into a migration file
 def _init_data():
