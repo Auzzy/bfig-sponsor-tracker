@@ -1,3 +1,7 @@
+# Patch uploads lack of support for Python 3
+from flask.ext.upload
+
+
 from flask.ext.user import SQLAlchemyAdapter, UserManager
 
 from sponsortracker.app import app
