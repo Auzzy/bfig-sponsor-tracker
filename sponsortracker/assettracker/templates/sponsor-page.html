@@ -64,7 +64,14 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
 
 <h2>Assets</h2>
 <p>
-    {% if not readonly %}<a href="{{ url_for('assettracker.upload_asset', id=sponsor.id) }}">Upload Asset</a><br />{% endif %}
+    {% if not readonly %}
+    <a href="{{ url_for('assettracker.upload_asset', id=sponsor.id) }}">Upload Asset</a><br />
+    <form method="POST" action="{{ url_for('assettracker.send_asset_request', id=sponsor.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        
+        <!-- <input type="submit" value="Send Asset Request" /> -->
+    </form>
+    {% endif %}
 </p>
 
 {% for type in sponsor.level.assets|sort(attribute="label") %}

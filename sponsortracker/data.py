@@ -112,19 +112,30 @@ class ImageSpec:
             "{0} dpi".format(self.dpi_as_str())
         ])
 
+class AssetLabel:
+    def __init__(self, what, where=None):
+        self.what = what
+        self.where = where
+    
+    def __str__(self):
+        return "{0} - {1}".format(self.where, self.what) if self.where else self.what
+    
+    def __lt__(self, other):
+        return str(self) < str(other)
+
 # Each value should also contain details about each asset's required specs
 class AssetType(Enum):
-    DIGITAL_BANNER = ("Digital Guide - Banner", ImageSpec(72, 640, 240, _DimUnits.PX, [_ColorMode.SRGB, _ColorMode.RGB], [_DigitalFormat.PNG]))
-    DIGITAL_MENU = ("Digital Guide - Menu", ImageSpec(72, 600, 110, _DimUnits.PX, [_ColorMode.SRGB, _ColorMode.RGB], [_DigitalFormat.PNG]))
-    LOGO = ("Logo", ImageSpec(300, 150, 150, _DimUnits.PX, [_ColorMode.SRGB, _ColorMode.RGB], [_DigitalFormat.PNG, _LogoFormat.EPS, _PrintFormat.PSD], True))
-    NEWSLETTER_HEADER = ("Newsletter - Header", ImageSpec(72, 728, 90, _DimUnits.PX, [_ColorMode.SRGB, _ColorMode.RGB], list(_DigitalFormat)))
-    NEWSLETTER_SIDEBAR = ("Newsletter - Sidebar", ImageSpec(72, 250, 300, _DimUnits.PX,  [_ColorMode.SRGB, _ColorMode.RGB],list(_DigitalFormat)))
-    NEWSLETTER_FOOTER = ("Newsletter - Footer", ImageSpec(72, 728, 90, _DimUnits.PX, [_ColorMode.SRGB, _ColorMode.RGB], list(_DigitalFormat)))
-    PROGRAM_QUARTER = ("Program - Quarter Page", ImageSpec(300, 5, 2, _DimUnits.IN, [_ColorMode.BW], list(_PrintFormat)))
-    PROGRAM_HALF = ("Program - Half Page", ImageSpec(300, 5, 4, _DimUnits.IN, [_ColorMode.BW], list(_PrintFormat)))
-    PROGRAM_WHOLE = ("Program - Single Page", ImageSpec(300, 5, 8, _DimUnits.IN, [_ColorMode.CMYK], list(_PrintFormat)))
-    PROGRAM_DOUBLE = ("Program - Two Page", ImageSpec(300, 10.5, 8, _DimUnits.IN, [_ColorMode.CMYK], list(_PrintFormat)))
-    WEBSITE_SIDEBAR = ("Website - Sidebar", ImageSpec(72, 640, 240, _DimUnits.PX, [_ColorMode.SRGB, _ColorMode.RGB], [_DigitalFormat.PNG]))
+    DIGITAL_BANNER = (AssetLabel("Banner Ad", "Digital Guide"), ImageSpec(72, 640, 240, _DimUnits.PX, [_ColorMode.SRGB, _ColorMode.RGB], [_DigitalFormat.PNG]))
+    DIGITAL_MENU = (AssetLabel("Menu Ad", "Digital Guide"), ImageSpec(72, 600, 110, _DimUnits.PX, [_ColorMode.SRGB, _ColorMode.RGB], [_DigitalFormat.PNG]))
+    LOGO = (AssetLabel("Logo"), ImageSpec(300, 150, 150, _DimUnits.PX, [_ColorMode.SRGB, _ColorMode.RGB], [_DigitalFormat.PNG, _LogoFormat.EPS, _PrintFormat.PSD], True))
+    NEWSLETTER_HEADER = (AssetLabel("Header Ad", "Newsletter"), ImageSpec(72, 728, 90, _DimUnits.PX, [_ColorMode.SRGB, _ColorMode.RGB], list(_DigitalFormat)))
+    NEWSLETTER_SIDEBAR = (AssetLabel("Sidebar Ad", "Newsletter"), ImageSpec(72, 250, 300, _DimUnits.PX,  [_ColorMode.SRGB, _ColorMode.RGB],list(_DigitalFormat)))
+    NEWSLETTER_FOOTER = (AssetLabel("Footer Ad", "Newsletter"), ImageSpec(72, 728, 90, _DimUnits.PX, [_ColorMode.SRGB, _ColorMode.RGB], list(_DigitalFormat)))
+    PROGRAM_QUARTER = (AssetLabel("Quarter Page Ad", "Program"), ImageSpec(300, 5, 2, _DimUnits.IN, [_ColorMode.BW], list(_PrintFormat)))
+    PROGRAM_HALF = (AssetLabel("Half Page Ad", "Program"), ImageSpec(300, 5, 4, _DimUnits.IN, [_ColorMode.BW], list(_PrintFormat)))
+    PROGRAM_WHOLE = (AssetLabel("Single Page Ad", "Program"), ImageSpec(300, 5, 8, _DimUnits.IN, [_ColorMode.CMYK], list(_PrintFormat)))
+    PROGRAM_DOUBLE = (AssetLabel("Two Page Ad", "Program"), ImageSpec(300, 10.5, 8, _DimUnits.IN, [_ColorMode.CMYK], list(_PrintFormat)))
+    WEBSITE_SIDEBAR = (AssetLabel("Sidebar Ad", "Website"), ImageSpec(72, 640, 240, _DimUnits.PX, [_ColorMode.SRGB, _ColorMode.RGB], [_DigitalFormat.PNG]))
     
     def __init__(self, label, spec):
         self.label = label
