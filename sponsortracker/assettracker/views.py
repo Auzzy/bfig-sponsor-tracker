@@ -2,7 +2,7 @@ from flask import flash, get_flashed_messages, redirect, render_template, reques
 from flask.ext.login import current_user
 from flask.ext.user import roles_required
 
-from datetime import datetime
+import datetime
 
 from sponsortracker.data import AssetType, RoleType
 from sponsortracker.model import Asset, Sponsor
@@ -14,7 +14,8 @@ UPDATE_DATE_FORMAT = "%a %b %d %Y"
 @asset_tracker.route("/")
 @roles_required([RoleType.AT_READ, RoleType.AT_WRITE])
 def home():
-    min_asset_date = min(Asset.query.all(), key=lambda asset: asset.date).date
+    assets = Asset.query.all()
+    min_asset_date = min(assets, key=lambda asset: asset.date).date if assets else datetime.date.today()
     sponsors = Sponsor.query.filter(Sponsor.level_name != None).filter(Sponsor.level_name != '')
     return render_template("assettracker.html", sponsors=sponsors, min_asset_date=min_asset_date)
 
@@ -33,7 +34,7 @@ def download_logo_cloud():
 @asset_tracker.route("/download/website_updates/")
 @roles_required([RoleType.AT_READ])
 def download_website_updates():
-    date = datetime.strptime(request.args["website-updates-date"], UPDATE_DATE_FORMAT).date()
+    date = datetime.datetime.strptime(request.args["website-updates-date"], UPDATE_DATE_FORMAT).date()
     zipfilename = download.website_updates(date)
     return send_file(zipfilename, as_attachment=True)
 
