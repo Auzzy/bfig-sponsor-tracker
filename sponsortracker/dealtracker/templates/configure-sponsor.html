@@ -1,0 +1,110 @@
+{% extends "dealtracker-layout.html" %}
+
+{% block content %}
+{# {% from 'contact-field.html' import contact_field %} #}
+
+<form action="{{ url_for('dealtracker.configure_sponsor', id=id) }}" method="POST">
+    {% for field in form %}
+    <p>
+        {% if field.type not in ("CSRFTokenField", "HiddenField") %}
+        {% if field.flags.required %}
+        {{ field.label(text=field.label.text ~ "*") }}<br />
+        {% else %}
+        {{ field.label }}<br />
+        {% endif %}
+        {% endif %}
+        
+        {{ field }}
+    </p>
+    {% endfor %}
+    
+    <div id="contacts_container"></div>
+    
+    <input type="button" value="Add Contact" onclick="addContact();" />
+    
+    <br style="clear:both;" /><br />
+    
+    <div>
+        <input type="submit" value="Submit" />
+        <a href="{% if id %}{{ url_for('dealtracker.sponsor_info', id=id) }}{% else %}{{ url_for('dealtracker.home') }}{% endif %}">
+            <input type="button" value="Cancel" />
+        </a>
+    </div>
+</form>
+{% endblock %}
+
+{% block js %}
+function addContact(email, name) {
+    var contact = document.createElement("div");
+    contact.id = "contact_" + index;
+    
+    var end = document.createElement("div");
+    end.style.clear = "both";
+    end.innerHTML = "&nbsp;&nbsp;";
+    
+    contact.appendChild(createContainer("{{ email_basename }}", index, email));
+    contact.appendChild(createBuffer());
+    contact.appendChild(createContainer("{{ name_basename }}", index, name));
+    contact.appendChild(end);
+    
+    var contacts_container = document.getElementById("contacts_container");
+    contacts_container.appendChild(contact);
+    
+    index += 1;
+}
+
+function createBuffer() {
+    var buffer = document.createElement("div");
+    buffer.style.float = "left";
+    buffer.innerHTML = "&nbsp;&nbsp;";
+    return buffer;
+}
+
+function createContainer(basename, index, value) {
+    var container = document.createElement("div");
+    container.id = basename + "_container_" + index;
+    container.style.float = "left";
+    
+    var textField = createTextField(basename, index);
+    if (typeof(value) !== "undefined") {
+        textField.value = value;
+        textField.style.color = "#000000";
+    }
+    container.appendChild(textField);
+    
+    return container;
+}
+
+function createTextField(basename, index) {
+    var input = document.createElement("input");
+    input.id = basename + "_" + index;
+    input.name = input.id;
+    input.value = basename;
+    input.defaultValue = basename;
+    input.type = "text";
+    input.style.color = '#888888';
+    input.onfocus = function() {
+        if (this.value == this.defaultValue) {
+            this.value = "";
+            this.style.color = "#000000";
+        }
+    };
+    input.onblur = function() {
+        if (this.value == "") {
+            this.value = this.defaultValue;
+            this.style.color = "#888888";
+        }
+    };
+    
+    return input;
+}
+
+var index = 0;
+window.onload = function() {
+    {% for contact in contacts %}
+    addContact("{{ contact.email }}", "{{ contact.name }}");
+    {% endfor %}
+    addContact();
+};
+
+{% endblock %}

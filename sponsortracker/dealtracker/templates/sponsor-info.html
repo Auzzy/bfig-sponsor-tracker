@@ -1,0 +1,130 @@
+{% extends "dealtracker-layout.html" %}
+
+{% block title %}{{ sponsor.name }}{% endblock %}
+
+{% block css %}
+.missing {
+    background-color:red;
+}
+
+.received {
+    background-color:lime;
+}
+
+.error {
+    color:red;
+}
+
+.removable {
+    display:none;
+}
+
+div.asset a:hover + a.removable, div.asset a.removable:hover {
+    display:inline;
+}
+{% endblock %}
+
+{% block content %}
+<h1>{{ sponsor.name }}</h1>
+
+<h2 style="display: inline;">Info</h2>
+<span><a href="{{ url_for('dealtracker.configure_sponsor', id=sponsor.id) }}">Edit...</a></span>
+
+<p>
+    
+    <span style="font-weight:bold">Sponsor type</span>: {{ sponsor.type.value or "" }}<br />
+    <span style="font-weight:bold">Contact(s)</span>: {{ sponsor.contacts|join('; ', attribute='email') }}<br />
+    <span style="font-weight:bold">Home page</span>: {{ sponsor.info.link or ""}}<br />
+    <span style="font-weight:bold">Description</span>: {{ sponsor.info.description or "" }}<br />
+    <span style="font-weight:bold">Notes</span>: {{ sponsor.notes or ""}}
+</p>
+
+<h2 style="display: inline;">Current Deal</h2>
+<span><a href="{{ url_for('dealtracker.edit_current_deal', id=sponsor.id) }}">Edit...</a></span>
+
+<p>
+    <span style="font-weight:bold">Account owner</span>: {{ sponsor.current.owner or "" }}<br />
+    <span style="font-weight:bold">Level</span>: {{ sponsor.level.label or "" }}<br />
+    <span style="font-weight:bold">Cash</span>: ${{ sponsor.current.cash }}<br />
+    <span style="font-weight:bold">Inkind</span>: ${{ sponsor.current.inkind }}<br />
+</p>
+
+{% if sponsor.deals[1:] %}
+<h2>Previous Deals</h2>
+{% for deal in sponsor.deals[1:] %}
+<p>
+    <span style="font-weight:bold">Year</span>: {{ deal.year }}<br />
+    <span style="font-weight:bold">Account owner</span>: {{ deal.owner or "" }}<br />
+    <span style="font-weight:bold">Cash</span>: ${{ deal.cash }}<br />
+    <span style="font-weight:bold">Inkind</span>: ${{ deal.inkind }}<br />
+</p>
+{% endfor %}
+{% endif %}
+
+{% if sponsor.level %}
+<h2>Assets</h2>
+
+{% for type in sponsor.level.assets|sort(attribute="label") %}
+<div style="float:left; width:200px;">
+    {% if type in sponsor.assets_by_type %} {% set cls="received" %} {% else %} {% set cls="missing" %} {% endif %}
+    <p class="{{ cls }}" style="text-align:center; padding-left:5px; padding-right:5px;">{{ type.label }}</p>
+    {% for asset in sponsor.assets_by_type[type] %}
+    <div class="asset" style="position:relative; left:50px;">
+        <a href="{{ asset.url }}" target="_blank"><img src="{{ asset.thumbnail_url }}" alt="{{ asset.name }}"></img></a>
+        <a class="removable" href="javascript:void(0);" onclick="delete_asset({{ asset.id }})">
+            <img style="vertical-align:top; position:relative; left:-20px;" src="{{ url_for('assettracker.static', filename='delete.png') }}"></img>
+        </a>
+    </div>
+    <br />
+    {% endfor %}
+</div>
+
+<div style="float:left; width:20px;">&nbsp;</div>
+{% endfor %}
+{% endif %}
+
+{% endblock %}
+
+{% block js %}
+{% if not readonly %}
+function save(formId) {
+    document.getElementById(formId + "_form").submit();
+}
+
+function cancel(fieldId) {
+    document.getElementById(fieldId + "_field").style.display = "none";
+    document.getElementById(fieldId + "_field_button").style.display = "none";
+    document.getElementById(fieldId + "_edit").style.display = "inline";
+    document.getElementById(fieldId + "_edit_button").style.display = "inline";
+}
+
+function edit(fieldId) {
+    document.getElementById(fieldId + "_field").style.display = "inline";
+    document.getElementById(fieldId + "_field_button").style.display = "inline";
+    document.getElementById(fieldId + "_edit").style.display = "none";
+    document.getElementById(fieldId + "_edit_button").style.display = "none";
+}
+
+function delete_asset(id) {
+    var form = document.createElement("form");
+    form.setAttribute("method", "POST");
+    form.setAttribute("action", "{{ url_for('assettracker.delete_asset', id=sponsor.id) }}");
+    
+    var csrfField = document.createElement("input");
+    csrfField.setAttribute("type", "hidden");
+    csrfField.setAttribute("name", "csrf_token");
+    csrfField.setAttribute("value", "{{ csrf_token() }}");
+    form.appendChild(csrfField);
+    
+    var hiddenField = document.createElement("input");
+    hiddenField.setAttribute("type", "hidden");
+    hiddenField.setAttribute("name", "asset-id");
+    hiddenField.setAttribute("value", id);
+    form.appendChild(hiddenField);
+    
+    document.body.appendChild(form);
+    
+    form.submit();
+}
+{% endif %}
+{% endblock %}

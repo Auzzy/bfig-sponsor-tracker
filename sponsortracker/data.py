@@ -68,8 +68,6 @@ class _LogoFormat(_Format):
     def preferred(self):
         return _LogoFormat.EPS
 
-ASSET_FORMATS_EXT = [fmt.ext for fmt in list(_PrintFormat) + list(_DigitalFormat) + list(_LogoFormat)]
-
 class _ColorMode(Enum):
     SRGB = "srgb"
     RGB = "rgb"
@@ -153,6 +151,20 @@ class Level(Enum):
     def __init__(self, label, *assets):
         self.label = label
         self.assets = set(assets)
+
+class SponsorType(Enum):
+    DIGITAL_AAA_DEV = "Digital AAA Dev"
+    DIGITAL_INDIE_DEV = "Digital Indie Dev"
+    DIGITAL_PUBLISHER = "Digital Publisher"
+    MEDIA = "Media"
+    PRODUCTS = "Products"
+    SCHOOLS_INSTITUTIONS = "Schools and Institutions"
+    TABLETOP_DESIGNER = "Tabletop Designer"
+    TABLETOP_INDIE_DEV = "Tabletop Indie Dev"
+    TABLETOP_PUBLISHER = "Tabletop Publisher"
+
+
+ASSET_FORMATS_EXT = [fmt.ext for fmt in list(_PrintFormat) + list(_DigitalFormat) + list(_LogoFormat)]
 
 _BASE_ASSETS = (AssetType.LOGO, AssetType.DIGITAL_BANNER)
 for level in Level:
