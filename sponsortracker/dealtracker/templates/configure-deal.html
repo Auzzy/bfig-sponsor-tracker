@@ -1,7 +1,7 @@
 {% extends "dealtracker-layout.html" %}
 
 {% block content %}
-<form action="{{ url_for('dealtracker.configure_sponsor', id=id) }}" method="POST">
+<form action="{{ url_for(view, id=id) }}" method="POST">
     {% for field in form %}
     <p>
         {% if field.type not in ("CSRFTokenField", "HiddenField") %}
