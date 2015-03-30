@@ -2,7 +2,8 @@ import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 # Flask-SQLAlchemy
-SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(basedir, "sponsortracker.db")
+# SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(basedir, "sponsortracker.db")
+SQLALCHEMY_DATABASE_URI = os.get('DATABASE_URL', "sqlite:///" + os.path.join(basedir, "sponsortracker.db"))
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, "db_repository")
 
 # Flask-WTForms
