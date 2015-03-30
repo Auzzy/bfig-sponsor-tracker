@@ -31,6 +31,5 @@ class CurrentDealForm(flask_wtf.Form):
         if "obj" in kwargs:
             self.level_name.data = kwargs["obj"].sponsor.level_name
 
-
 def validate_email(email):
     return bool(_EMAIL_RE.match(email))
