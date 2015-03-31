@@ -1,0 +1,15 @@
+Cameron,Mack:mack@bostonfig.com
+Cherbak,Fiona:fiona@bostonfig.com
+Dalrymple,Jack:jack@bostonfig.com
+De La Cruz,Christian:christian@bostonfig.com
+DelBuono,Tony:tony@bostonfig.com
+Diaz,Rafi:rafi@bostonfig.com
+Ginsparg,Jacob:jacob@bostonfig.com
+Grigas,Breeze:breeze@bostonfig.com 
+Hampton,Amber:amber@bostonfig.com
+Heredia,Renzo:renzo@bostonfig.com
+Johnston,Jeff:jeff@bostonfig.com
+Katzman,Tom:tom@bostonfig.com
+Kilgore,Aislynn:aislynn@bostonfig.com
+Merenkov,Khadeja:khadeja@bostonfig.com
+Ninohira,Yuka:yuka@bostonfig.com

@@ -2,8 +2,7 @@ import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 # Flask-SQLAlchemy
-SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', "sqlite:///" + os.path.join(basedir, "sponsortracker.db"))
-SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, "db_repository")
+SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', "sqlite:///" + os.path.join(basedir, os.pardir, "sponsortracker.db"))
 
 # Flask-WTForms
 WTF_CSRF_ENABLED = True
@@ -26,6 +25,7 @@ MAIL_DEFAULT_SENDER = ("BFIG Test", "bfigtest@gmail.com")
 DEFAULT_MAIL_SENDER = ("BFIG Test", "bfigtest@gmail.com")
 MAIL_SERVER = "smtp.gmail.com"
 MAIL_PORT = 465
-# MAIL_PORT = 587
 MAIL_USE_SSL = True
-# MAIL_USE_TLS = True
+
+# Custom
+MIGRATIONS_DIRECTORY = "migrations"
