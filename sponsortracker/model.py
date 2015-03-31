@@ -2,22 +2,26 @@ import collections
 import datetime
 import re
 
+from flask.ext.migrate import Migrate, MigrateCommand
+from flask.ext.script import Manager
 from flask.ext.sqlalchemy import event, SQLAlchemy
-from flask.ext.user import SQLAlchemyAdapter, UserManager
+from flask.ext.user import SQLAlchemyAdapter, UserManager, UserMixin
+from wtforms.validators import ValidationError
 
 from sponsortracker import data
 from sponsortracker.app import app
 from sponsortracker.assettracker.app import asset_uploader, thumb_uploader
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db, directory=app.config["MIGRATIONS_DIRECTORY"])
+manager = Manager(app)
+manager.add_command('db', MigrateCommand)
 
-from sponsortracker.usermodel import User, UserEmail, UserAuth, Role, UserRoles, init as init_usermodel, _init_data as _init_usermodel_data
-
-db_adapter, user_manager = init_usermodel(app)
 
 _ASSET_TYPES = [asset_type.name for asset_type in data.AssetType]
 _LEVEL_TYPES = [level.name for level in data.Level]
 _SPONSOR_TYPES = [sponsor_type.name for sponsor_type in data.SponsorType]
+_USER_TYPES = [user_type.type for user_type in data.UserType]
 
 class Sponsor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -206,6 +210,72 @@ class AssetRequest(db.Model):
         self.date = date
 '''
 
-if not db.engine.table_names():
-    db.create_all()
-    _init_usermodel_data()
+
+######################
+##### USER MODEL #####
+######################
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(50), nullable=False, default='')
+    last_name = db.Column(db.String(50), nullable=False, default='')
+    enabled = db.Column(db.Boolean(), nullable=False, default=False)
+    type = db.Column(db.Enum(name="UserType", *_USER_TYPES), nullable=False)
+    emails = db.relationship("UserEmail")
+    roles = db.relationship("Role", secondary='user_roles', backref=db.backref('users', lazy='dynamic'))
+    user_auth = db.relationship("UserAuth", uselist=False)
+    
+    def is_active(self):
+        return self.enabled
+    
+    def has_roles(self, *roles):
+        return super(User, self).has_roles(*data.RoleType.types(roles))
+
+@event.listens_for(User.type, 'set')
+def handle_type_change(user, type, old_type, initiator):
+    if type != old_type:
+        roles = data.UserType.from_type(type).roles
+        role_types = data.RoleType.types(roles)
+        user.roles = Role.query.filter(Role.type.in_(role_types)).all()
+
+class UserEmail(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    email = db.Column(db.String(255), nullable=False, unique=True)
+    is_primary = db.Column(db.Boolean(), nullable=False, default=False)
+    confirmed_at = db.Column(db.DateTime())
+    user = db.relationship('User', uselist=False)
+
+class UserAuth(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
+    username = db.Column(db.String(50), nullable=False, unique=True)
+    password = db.Column(db.String(255), nullable=False, default='')
+    reset_password_token = db.Column(db.String(100), nullable=False, default='')
+    user = db.relationship('User', uselist=False, foreign_keys=user_id)
+
+class Role(db.Model):
+    id = db.Column(db.Integer(), primary_key=True)
+    type = db.Column(db.String(50), unique=True)
+    
+    def __getattr__(self, name):
+        if name == "name":
+            return self.type
+        return super(Role, self).__getattr__(self, name)
+    
+class UserRoles(db.Model):
+    id = db.Column(db.Integer(), primary_key=True)
+    user_id = db.Column(db.Integer(), db.ForeignKey("user.id", ondelete="CASCADE"))
+    role_id = db.Column(db.Integer(), db.ForeignKey("role.id", ondelete="CASCADE"))
+
+def password_validator(form, field):
+    password = field.data
+    if len(password) < 6:
+        raise ValidationError("Password must have at least 6 characters.")
+
+if not hasattr(app, "user_manager"):
+    db_adapter = SQLAlchemyAdapter(db, User, UserAuthClass=UserAuth, UserEmailClass=UserEmail)
+    user_manager = UserManager(db_adapter, app, password_validator=password_validator)
+
+
+if __name__ == '__main__':
+    manager.run()
