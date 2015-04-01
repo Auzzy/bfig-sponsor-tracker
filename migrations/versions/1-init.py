@@ -1,4 +1,4 @@
-"""empty message
+"""Create the initial database schema
 
 Revision ID: init
 Revises: None
