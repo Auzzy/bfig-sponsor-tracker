@@ -1,9 +1,6 @@
 from flask.ext.user import SQLAlchemyAdapter, UserManager
 
 from sponsortracker.app import app
-
-app.config.from_object("sponsortracker.settings")
-
 from sponsortracker.assettracker.app import asset_tracker
 from sponsortracker.dealtracker.app import deal_tracker
 from sponsortracker import views, model
