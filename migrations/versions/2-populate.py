@@ -1,4 +1,4 @@
-"""empty message
+"""Populate the DB with users
 
 Revision ID: populate
 Revises: init
