@@ -42,8 +42,10 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
     <span style="font-weight:bold">Notes</span>: {{ sponsor.notes or ""}}
 </p>
 
+{% if sponsor.current.contract or sponsor.current.invoice %}
 <h2>Status</h2>
 {% include 'sponsor-status.html' %}
+{% endif %}
 
 <p>
     {% if sponsor.contract %}
@@ -67,7 +69,7 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
 <div>
     <span style="font-weight:bold">Contract</span>:
     <form id="contract-sent-form" style="display:inline;" action="{{ url_for('dealtracker.contract_sent', id=sponsor.id) }}" method="POST">
-        <input type="checkbox" name="{{ request_id }}" id="contract-sent" {% if contract.sent %}checked{% endif %} />Sent
+        <input type="checkbox" name="{{ request_id }}" id="contract-sent" {% if contract.sent %}checked{% endif %} {% if not sponsor.current.inkind and not sponsor.current.cash %}disabled{% endif %} />Sent
     </form>
     &nbsp;&nbsp;
     <form id="contract-received-form" style="display:inline;" action="{{ url_for('dealtracker.contract_received', id=sponsor.id) }}" method="POST">
@@ -78,7 +80,7 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
 <div>
     <span style="font-weight:bold">Invoice</span>:
     <form id="invoice-sent-form" style="display:inline;" action="{{ url_for('dealtracker.invoice_sent', id=sponsor.id) }}" method="POST">
-        <input type="checkbox" name="{{ request_id }}" id="invoice-sent" {% if invoice.sent %}checked{% endif %} />Sent
+        <input type="checkbox" name="{{ request_id }}" id="invoice-sent" {% if invoice.sent %}checked{% endif %} {% if not sponsor.current.inkind and not sponsor.current.cash %}disabled{% endif %} />Sent
     </form>
     &nbsp;&nbsp;
     <form id="invoice-received-form" style="display:inline;" action="{{ url_for('dealtracker.invoice_received', id=sponsor.id) }}" method="POST">
@@ -98,6 +100,7 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
 {% endfor %}
 {% endif %}
 
+{#
 {% if sponsor.level %}
 <h2>Assets</h2>
 
@@ -119,6 +122,7 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
 <div style="float:left; width:20px;">&nbsp;</div>
 {% endfor %}
 {% endif %}
+#}
 
 {% endblock %}
 

@@ -156,8 +156,8 @@ class Deal(db.Model):
     def update(self, year=None, owner=None, cash=None, inkind=None):
         self.year = year or self.year
         self.owner = owner or self.owner
-        self.cash = cash or self.cash
-        self.inkind = inkind or self.inkind
+        self.cash = cash if cash is not None else self.cash
+        self.inkind = inkind if inkind is not None else self.inkind
     
     def init_contract_invoice(self):
         if not self.contract:
@@ -167,9 +167,9 @@ class Deal(db.Model):
     
     def remove_contract_invoice(self):
         if self.contract:
-            self.contract.delete()
+            db.session.delete(self.contract)
         if self.invoice:
-            self.invoice.delete()
+            db.session.delete(self.invoice)
         db.session.commit()
 
 class Contract(db.Model):
