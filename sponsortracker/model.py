@@ -22,6 +22,8 @@ _ASSET_TYPES = [asset_type.name for asset_type in data.AssetType]
 _LEVEL_TYPES = [level.name for level in data.Level]
 _SPONSOR_TYPES = [sponsor_type.name for sponsor_type in data.SponsorType]
 _USER_TYPES = [user_type.type for user_type in data.UserType]
+_CONTRACT_OVERDUE_DAYS = 14
+_INVOICE_OVERDUE_DAYS = 14
 
 class Sponsor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -86,21 +88,16 @@ class Sponsor(db.Model):
             self.deals.append(deal)
         return deal
 
-@event.listens_for(Sponsor, 'load')
-def load_sponsor(target, context):
-    # For use by the views and controllers - not in the DB
-    target.current = target.deals[0]
+class Info(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsor.id'))
+    link = db.Column(db.String(2000))
+    description = db.Column(db.Text())
     
-    target.assets_by_type = {}
-    target.received_assets = True
-    target.type = data.SponsorType[target.type_name] if target.type_name else None
-    target.level = data.Level[target.level_name] if target.level_name else None
-    if target.level:
-        target.assets_by_type = collections.defaultdict(list)
-        for asset in target.assets:
-            target.assets_by_type[asset.type].append(asset)
-        
-        target.received_assets = all(type in target.assets_by_type for type in target.level.assets) and target.info.link and target.info.description
+    def __init__(self, sponsor_id, link=None, description=None):
+        self.sponsor_id = sponsor_id
+        self.link = link
+        self.description = description
 
 class Contact(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -117,17 +114,6 @@ class Contact(db.Model):
     def update(self, email=None, name=None):
         self.email = email or self.email
         self.name = name or self.name
-
-class Info(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsor.id'))
-    link = db.Column(db.String(2000))
-    description = db.Column(db.Text())
-    
-    def __init__(self, sponsor_id, link=None, description=None):
-        self.sponsor_id = sponsor_id
-        self.link = link
-        self.description = description
 
 class Asset(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -150,14 +136,6 @@ class Asset(db.Model):
         self.type = type or self.type
         self.filename = filename or self.filename
 
-@event.listens_for(Asset, 'load')
-def load_asset(target, context):
-    # For use by the views and controllers - not in the DB
-    target.type = data.AssetType[target.type_name]
-    target.url = asset_uploader.url(target.filename)
-    target.thumbnail_url = thumb_uploader.url(target.filename)
-    target.name = target.filename.rsplit('/', maxsplit=1)[-1].rsplit('.', maxsplit=1)[0]
-
 class Deal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsor.id'))
@@ -165,6 +143,8 @@ class Deal(db.Model):
     owner = db.Column(db.String(60))
     cash = db.Column(db.Integer)
     inkind = db.Column(db.Integer)
+    contract = db.relationship("Contract", uselist=False, cascade="all, delete-orphan", passive_updates=False, backref="deal")
+    invoice = db.relationship("Invoice", uselist=False, cascade="all, delete-orphan", passive_updates=False, backref="deal")
     
     def __init__(self, sponsor_id, year, owner=None, cash=0, inkind=0):
         self.sponsor_id = sponsor_id
@@ -178,7 +158,41 @@ class Deal(db.Model):
         self.owner = owner or self.owner
         self.cash = cash or self.cash
         self.inkind = inkind or self.inkind
+    
+    def init_contract_invoice(self):
+        if not self.contract:
+            self.contract = Contract(self.id)
+        if not self.invoice:
+            self.invoice = Invoice(self.id)
+    
+    def remove_contract_invoice(self):
+        if self.contract:
+            self.contract.delete()
+        if self.invoice:
+            self.invoice.delete()
+        db.session.commit()
 
+class Contract(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'))
+    sent = db.Column(db.Date)
+    received = db.Column(db.Date)
+    
+    def __init__(self, deal_id, sent=None, received=None):
+        self.deal_id = deal_id
+        self.sent = sent
+        self.received = received
+
+class Invoice(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'))
+    sent = db.Column(db.Date)
+    received = db.Column(db.Date)
+    
+    def __init__(self, deal_id, sent=None, received=None):
+        self.deal_id = deal_id
+        self.sent = sent
+        self.received = received
 
 
 '''
@@ -211,9 +225,7 @@ class AssetRequest(db.Model):
 '''
 
 
-######################
-##### USER MODEL #####
-######################
+
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(50), nullable=False, default='')
@@ -229,13 +241,6 @@ class User(db.Model, UserMixin):
     
     def has_roles(self, *roles):
         return super(User, self).has_roles(*data.RoleType.types(roles))
-
-@event.listens_for(User.type, 'set')
-def handle_type_change(user, type, old_type, initiator):
-    if type != old_type:
-        roles = data.UserType.from_type(type).roles
-        role_types = data.RoleType.types(roles)
-        user.roles = Role.query.filter(Role.type.in_(role_types)).all()
 
 class UserEmail(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -267,10 +272,58 @@ class UserRoles(db.Model):
     user_id = db.Column(db.Integer(), db.ForeignKey("user.id", ondelete="CASCADE"))
     role_id = db.Column(db.Integer(), db.ForeignKey("role.id", ondelete="CASCADE"))
 
+
+@event.listens_for(Sponsor, 'load')
+def load_sponsor(target, context):
+    # For use by the views and controllers - not in the DB
+    target.current = target.deals[0]
+    
+    target.assets_by_type = {}
+    target.received_assets = True
+    target.type = data.SponsorType[target.type_name] if target.type_name else None
+    target.level = data.Level[target.level_name] if target.level_name else None
+    if target.level:
+        target.assets_by_type = collections.defaultdict(list)
+        for asset in target.assets:
+            target.assets_by_type[asset.type].append(asset)
+        
+        target.received_assets = all(type in target.assets_by_type for type in target.level.assets) and target.info.link and target.info.description
+
+@event.listens_for(Contract, 'load')
+def load_contract(target, context):
+    if target.sent:
+        target.overdue = target.sent <= datetime.date.today() - datetime.timedelta(days=_CONTRACT_OVERDUE_DAYS)
+    else:
+        target.overdue = None
+
+@event.listens_for(Invoice, 'load')
+def load_invoice(target, context):
+    if target.sent:
+        target.overdue = target.sent <= datetime.date.today() - datetime.timedelta(days=_INVOICE_OVERDUE_DAYS)
+    else:
+        target.overdue = None
+
+@event.listens_for(Asset, 'load')
+def load_asset(target, context):
+    # For use by the views and controllers - not in the DB
+    target.type = data.AssetType[target.type_name]
+    target.url = asset_uploader.url(target.filename)
+    target.thumbnail_url = thumb_uploader.url(target.filename)
+    target.name = target.filename.rsplit('/', maxsplit=1)[-1].rsplit('.', maxsplit=1)[0]
+
+@event.listens_for(User.type, 'set')
+def handle_type_change(user, type, old_type, initiator):
+    if type != old_type:
+        roles = data.UserType.from_type(type).roles
+        role_types = data.RoleType.types(roles)
+        user.roles = Role.query.filter(Role.type.in_(role_types)).all()
+
+
 def password_validator(form, field):
     password = field.data
     if len(password) < 6:
         raise ValidationError("Password must have at least 6 characters.")
+
 
 if not hasattr(app, "user_manager"):
     db_adapter = SQLAlchemyAdapter(db, User, UserAuthClass=UserAuth, UserEmailClass=UserEmail)

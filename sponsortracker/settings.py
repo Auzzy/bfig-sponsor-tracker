@@ -19,10 +19,10 @@ USER_ENABLE_CONFIRM_EMAIL = False
 USER_ENABLE_FORGOT_PASSWORD = True
 
 # Flask-Mail
-MAIL_USERNAME = "bfigtest@gmail.com"
-MAIL_PASSWORD = "bfig-test"
-MAIL_DEFAULT_SENDER = ("BFIG Test", "bfigtest@gmail.com")
-DEFAULT_MAIL_SENDER = ("BFIG Test", "bfigtest@gmail.com")
+MAIL_USERNAME = "sponsors@bostonfig.com"
+MAIL_PASSWORD = "2015bfig!"
+MAIL_DEFAULT_SENDER = ("Boston FIG Sponsor Coordinator", "sponsors@bostonfig.com")
+DEFAULT_MAIL_SENDER = ("Boston FIG Sponsor Coordinator", "sponsors@bostonfig.com")
 MAIL_SERVER = "smtp.gmail.com"
 MAIL_PORT = 465
 MAIL_USE_SSL = True
