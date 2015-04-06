@@ -25,6 +25,9 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
 {% endblock %}
 
 {% block content %}
+{% set contract = sponsor.current.contract %}
+{% set invoice = sponsor.current.invoice %}
+
 <h1>{{ sponsor.name }}</h1>
 
 <h2 style="display: inline;">Info</h2>
@@ -39,15 +42,49 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
     <span style="font-weight:bold">Notes</span>: {{ sponsor.notes or ""}}
 </p>
 
+<h2>Status</h2>
+{% include 'sponsor-status.html' %}
+
+<p>
+    {% if sponsor.contract %}
+    <span style="font-weight:bold">Contract</span>:  {{ sponsor.contract.date or "" }}<br />
+    {% endif %}
+    {% if sponsor.invoice %}
+    <span style="font-weight:bold">Invoice</span>: {{ sponsor.invoice.date or "" }}<br />
+    {% endif %}
+</p>
+
 <h2 style="display: inline;">Current Deal</h2>
 <span><a href="{{ url_for('dealtracker.edit_current_deal', id=sponsor.id) }}">Edit...</a></span>
 
-<p>
+<p style="margin-bottom:0px;">
     <span style="font-weight:bold">Account owner</span>: {{ sponsor.current.owner or "" }}<br />
     <span style="font-weight:bold">Level</span>: {{ sponsor.level.label or "" }}<br />
     <span style="font-weight:bold">Cash</span>: ${{ sponsor.current.cash }}<br />
     <span style="font-weight:bold">Inkind</span>: ${{ sponsor.current.inkind }}<br />
 </p>
+
+<div>
+    <span style="font-weight:bold">Contract</span>:
+    <form id="contract-sent-form" style="display:inline;" action="{{ url_for('dealtracker.contract_sent', id=sponsor.id) }}" method="POST">
+        <input type="checkbox" name="{{ request_id }}" id="contract-sent" {% if contract.sent %}checked{% endif %} />Sent
+    </form>
+    &nbsp;&nbsp;
+    <form id="contract-received-form" style="display:inline;" action="{{ url_for('dealtracker.contract_received', id=sponsor.id) }}" method="POST">
+        <input type="checkbox" name="{{ request_id }}" id="contract-received" {% if contract.received %}checked{% elif not contract.sent %}disabled{% endif %} />Received
+    </form>
+</div>
+
+<div>
+    <span style="font-weight:bold">Invoice</span>:
+    <form id="invoice-sent-form" style="display:inline;" action="{{ url_for('dealtracker.invoice_sent', id=sponsor.id) }}" method="POST">
+        <input type="checkbox" name="{{ request_id }}" id="invoice-sent" {% if invoice.sent %}checked{% endif %} />Sent
+    </form>
+    &nbsp;&nbsp;
+    <form id="invoice-received-form" style="display:inline;" action="{{ url_for('dealtracker.invoice_received', id=sponsor.id) }}" method="POST">
+        <input type="checkbox" name="{{ request_id }}" id="invoice-received" {% if invoice.received %}checked{% elif not invoice.sent %}disabled{% endif %} />Received
+    </form>
+</div>
 
 {% if sponsor.deals[1:] %}
 <h2>Previous Deals</h2>
@@ -86,45 +123,47 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
 {% endblock %}
 
 {% block js %}
-{% if not readonly %}
-function save(formId) {
-    document.getElementById(formId + "_form").submit();
-}
+{% set contract = sponsor.current.contract %}
+{% set invoice = sponsor.current.invoice %}
 
-function cancel(fieldId) {
-    document.getElementById(fieldId + "_field").style.display = "none";
-    document.getElementById(fieldId + "_field_button").style.display = "none";
-    document.getElementById(fieldId + "_edit").style.display = "inline";
-    document.getElementById(fieldId + "_edit_button").style.display = "inline";
-}
-
-function edit(fieldId) {
-    document.getElementById(fieldId + "_field").style.display = "inline";
-    document.getElementById(fieldId + "_field_button").style.display = "inline";
-    document.getElementById(fieldId + "_edit").style.display = "none";
-    document.getElementById(fieldId + "_edit_button").style.display = "none";
-}
-
-function delete_asset(id) {
-    var form = document.createElement("form");
-    form.setAttribute("method", "POST");
-    form.setAttribute("action", "{{ url_for('assettracker.delete_asset', id=sponsor.id) }}");
-    
+function submit_form(id) {
+    var form = document.getElementById(id + "-form");
+                        
     var csrfField = document.createElement("input");
     csrfField.setAttribute("type", "hidden");
     csrfField.setAttribute("name", "csrf_token");
     csrfField.setAttribute("value", "{{ csrf_token() }}");
     form.appendChild(csrfField);
     
-    var hiddenField = document.createElement("input");
-    hiddenField.setAttribute("type", "hidden");
-    hiddenField.setAttribute("name", "asset-id");
-    hiddenField.setAttribute("value", id);
-    form.appendChild(hiddenField);
-    
-    document.body.appendChild(form);
-    
     form.submit();
 }
-{% endif %}
+
+function setup_datepicker(id) {
+    var datepicker = new Pikaday({
+        field: document.getElementById(id),
+        maxDate: new Date(),
+        onSelect: function(date) {
+            submit_form(id);
+        }
+    });
+    document.getElementById(id).onclick = function() {
+        if (!this.checked) {
+            datepicker.hide();
+            submit_form(id);
+        }
+    };
+    return datepicker;
+}
+
+var datepickers = {};
+window.addEventListener('load', function() {
+    datepickers["contract-sent"] = setup_datepicker("contract-sent");
+    datepickers["contract-received"] = setup_datepicker("contract-received");
+    {% if contract.sent %}datepickers["contract-received"].setMinDate(new Date('{{ contract.sent.strftime("%Y-%m-%d") }}'));{% endif %}
+    
+    datepickers["invoice-sent"] = setup_datepicker("invoice-sent");
+    datepickers["invoice-received"] = setup_datepicker("invoice-received");
+    {% if invoice.sent %}datepickers["invoice-received"].setMinDate(new Date('{{ invoice.sent.strftime("%Y-%m-%d") }}'));{% endif %}
+});
+
 {% endblock %}
