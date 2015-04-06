@@ -58,7 +58,6 @@ def edit_current_deal(id):
 
 @deal_tracker.route("/sponsor/<int:id>/edit/contract-sent", methods=["POST"])
 def contract_sent(id):
-    print("CONTRACT SENT")
     return _update_request(id, lambda sponsor, val: setattr(sponsor.current.contract, "sent", val))
 
 @deal_tracker.route("/sponsor/<int:id>/edit/contract-received", methods=["POST"])
