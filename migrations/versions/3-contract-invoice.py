@@ -1,14 +1,14 @@
 """Create tables to track invoices and contracts
 
-Revision ID: 35a062df1f7
-Revises: populate
+Revision ID: contract-invoice
+Revises: users
 Create Date: 2015-04-02 01:45:03.281993
 
 """
 
 # revision identifiers, used by Alembic.
 revision = 'contract-invoice'
-down_revision = 'populate'
+down_revision = 'users'
 
 from alembic import op
 import sqlalchemy as sa
