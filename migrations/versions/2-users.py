@@ -33,7 +33,7 @@ def upgrade():
     model.db.session.commit()
     
     # Create admin user
-    _add_user(data.UserType.ADMIN.type, "Admin", "Admin", "admin", "austin@bostonfig.com")
+    _add_user(data.UserType.ADMIN.type, "Admin", "Admin", "admin", "sponsors@bostonfig.com")
     
     model.db.session.commit()
 

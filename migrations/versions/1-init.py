@@ -117,4 +117,10 @@ def downgrade():
     op.drop_table('sponsor')
     op.drop_table('user')
     op.drop_table('role')
+    
+    sa.Enum(name='UserType').drop(op.get_bind())
+    sa.Enum(name='SponsorType').drop(op.get_bind())
+    sa.Enum(name='LevelType').drop(op.get_bind())
+    sa.Enum(name='AssetType').drop(op.get_bind())
+        
     ### end Alembic commands ###
