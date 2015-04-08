@@ -3,8 +3,10 @@ import datetime
 import itertools
 import re
 
-from sponsortracker import model
-from sponsortracker import data
+import os.path
+import sys
+sys.path += [os.path.abspath(os.path.pardir)]
+from sponsortracker import data, model
 
 VALUE_DELIMS = [';', ',', '&']
 FILE = "leads.csv"

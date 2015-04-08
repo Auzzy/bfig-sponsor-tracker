@@ -156,6 +156,7 @@ class SponsorType(Enum):
     DIGITAL_AAA_DEV = "Digital AAA Dev"
     DIGITAL_INDIE_DEV = "Digital Indie Dev"
     DIGITAL_PUBLISHER = "Digital Publisher"
+    DIGITAL_MEDIA_COMPANY = "Digital Media Company"
     MEDIA = "Media"
     PRODUCTS = "Products"
     SCHOOLS_INSTITUTIONS = "Schools and Institutions"
