@@ -38,9 +38,9 @@ def upgrade():
 
 
 def downgrade():
-    model.User.query.delete()
     model.UserAuth.query.delete()
     model.UserEmail.query.delete()
     model.Role.query.delete()
+    model.User.query.delete()
     
     model.db.session.commit()
