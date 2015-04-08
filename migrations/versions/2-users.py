@@ -6,11 +6,10 @@ Create Date: 2015-03-31 01:15:55.339077
 
 """
 
-import os
 import random
 import string
 
-from sponsortracker import app, data, model
+from sponsortracker import data, model
 
 # revision identifiers, used by Alembic.
 revision = 'users'
@@ -31,8 +30,10 @@ def upgrade():
     for role in data.RoleType:
         model.db.session.add(model.Role(type=role.type))
     
+    model.db.session.commit()
+    
     # Create admin user
-    _add_user(data.UserType.ADMIN.type, "Admin", "Admin", "admin", "austin@bostonfig.com")
+    _add_user(data.UserType.ADMIN.type, "Admin", "Admin", "admin", "sponsors@bostonfig.com")
     
     model.db.session.commit()
 
