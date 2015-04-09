@@ -52,8 +52,8 @@ def _deals(sponsor, row):
     
     years = YEAR_RE.findall(years_val)
     owner_map = _map_values(owner_val, years)
-    cash_map = _map_values(cash_val.replace('$', ''), years)
-    inkind_map = _map_values(inkind_val.replace('$', ''), years)
+    cash_map = _map_values(cash_val.replace('$', '').replace(',', ''), years)
+    inkind_map = _map_values(inkind_val.replace('$', '').replace(',', ''), years)
     
     for year in years:
         sponsor.add_deal(year, owner_map.get(year), cash_map.get(year, 0), inkind_map.get(year, 0))
