@@ -31,7 +31,7 @@ def _map_values(value_str, years):
             value_map[deal_year.group(1)] = _remove_parens(value).strip() or 0
     
     if not value_map and len(years) == 1:
-        value_map[years[0]] = value_str.strip() or 0
+        value_map[years[0]] = _remove_parens(value_str).strip() or 0
     
     return value_map
 
@@ -42,10 +42,10 @@ def _remove_parens(value):
 
 
 def _notes(sponsor, row):
-    sponsor.notes = row["Notes"]
+    sponsor.notes = row["Notes"].strip()
 
 def _deals(sponsor, row):
-    current_owner = row["New Acct Owner"]
+    current_owner = row["New Acct Owner"].strip()
     sponsor.add_deal(datetime.date.today().year, owner=current_owner)
     
     years_val, owner_val, cash_val, inkind_val = row["Previous Sponsor?"], row["Previous Acct Owner"], row["Cash Amount Sponsored"], row["In Kind Sponsor"]
@@ -70,7 +70,7 @@ def _contacts(sponsor, row):
                 row["Notes"] =  "; {0}".format(email) if row["Notes"] else email
 
 def _sponsor(row):
-    name, type_val = row["Company"], row["Lead Type"]
+    name, type_val = row["Company"].strip(), row["Lead Type"].strip()
     
     type_name = data.SponsorType(type_val).name if type_val else None
     sponsor = model.Sponsor.query.filter_by(name=name).first()
