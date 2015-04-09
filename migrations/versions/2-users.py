@@ -11,9 +11,6 @@ import string
 
 from sponsortracker import data, model
 
-import imp
-model = imp.reload(model)
-
 # revision identifiers, used by Alembic.
 revision = 'users'
 down_revision = 'init'

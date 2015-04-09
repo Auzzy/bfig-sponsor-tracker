@@ -60,7 +60,7 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
 <span><a href="{{ url_for('dealtracker.edit_current_deal', id=sponsor.id) }}">Edit...</a></span>
 
 <p style="margin-bottom:0px;">
-    <span style="font-weight:bold">Account owner</span>: {{ sponsor.current.owner or "" }}<br />
+    <span style="font-weight:bold">Account owner</span>: {{ sponsor.current.owner_name or "" }}<br />
     <span style="font-weight:bold">Level</span>: {{ sponsor.level.label or "" }}<br />
     <span style="font-weight:bold">Cash</span>: ${{ sponsor.current.cash }}<br />
     <span style="font-weight:bold">Inkind</span>: ${{ sponsor.current.inkind }}<br />
@@ -93,7 +93,7 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
 {% for deal in sponsor.deals[1:]|sort(attribute="year", reverse=True) %}
 <p>
     <span style="font-weight:bold">Year</span>: {{ deal.year }}<br />
-    <span style="font-weight:bold">Account owner</span>: {{ deal.owner or "" }}<br />
+    <span style="font-weight:bold">Account owner</span>: {{ deal.owner_name or "" }}<br />
     <span style="font-weight:bold">Cash</span>: ${{ deal.cash }}<br />
     <span style="font-weight:bold">Inkind</span>: ${{ deal.inkind }}<br />
 </p>

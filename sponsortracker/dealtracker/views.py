@@ -107,7 +107,7 @@ def _extract_contacts(data, email_basename, name_basename):
 
 def _configure_sponsor(id, form, contacts):
     if id:
-        sponsor = model.Sponsor.query.get(id)
+        sponsor = model.Sponsor.query.get_or_404(id)
         sponsor.update(name=form.name.data, type_name=form.type_name.data, notes=form.notes.data)
     else:
         sponsor = model.Sponsor(form.name.data, type_name=form.type_name.data, notes=form.notes.data)
@@ -120,8 +120,8 @@ def _configure_sponsor(id, form, contacts):
     return sponsor
 
 def _configure_deal(id, form):
-    deal = model.Deal.query.filter_by(sponsor_id=id, year=form.year.data).first()
     sponsor = model.Sponsor.query.get_or_404(id)
+    deal = sponsor.deals.filter_by(year=form.year.data).first()
     if deal:
         deal.update(owner=form.owner.data, cash=form.cash.data, inkind=form.inkind.data)
     else:

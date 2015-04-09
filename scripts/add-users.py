@@ -6,6 +6,11 @@ from sponsortracker import data, model
 
 EMAIL_DELIM = ':'
 NAME_DELIM = ','
+PLACEHOLDER_USERS_FILENAME = "placeholder.txt"
+USER_FILE_MAP = {
+    data.UserType.ADMIN.type: "admin.txt",
+    data.UserType.SALES.type: "sales.txt"
+}
 USERS_DIR = "users/"
 
 def _add_user(type, first_name, last_name, username, email, password=None):
@@ -23,15 +28,25 @@ def _add_user(type, first_name, last_name, username, email, password=None):
     print("Added {0} {1} ({2})".format(first_name, last_name, username))
     
 def _import_users():
-    for user_filename in os.listdir(USERS_DIR):
-        type = os.path.splitext(user_filename)[0]
-        with open(os.path.join(USERS_DIR, user_filename)) as user_file:
-            for user_line in user_file.readlines():
+    for user_type in USER_FILE_MAP:
+        with open(os.path.join(USERS_DIR, USER_FILE_MAP[user_type])) as user_file:
+            for user_line in user_file:
+                user_line = user_line.strip()
                 name, email = user_line.split(EMAIL_DELIM)
                 last_name, first_name = name.split(NAME_DELIM)
                 username = email.split('@')[0]
-                _add_user(type, first_name, last_name, username, email)
-
+                _add_user(user_type, first_name, last_name, username, email)
+    
+    '''
+    with open(os.path.join(USERS_DIR, PLACEHOLDER_USERS_FILENAME)) as user_file:
+        for name in user_file:
+            name = name.strip()
+            username = "{0}-pseudoacct".format(name.lower())
+            if not model.PseudoUser.query.filter_by(username=username).first():
+                model.db.session.add(model.PseudoUser(first_name=name, username=username))
+                print("Added pseudouser {0} ({1})".format(name, username))
+    '''
+    
 def main():
     _import_users()
     

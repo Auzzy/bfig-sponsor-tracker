@@ -35,7 +35,6 @@ class Sponsor(db.Model):
     contacts = db.relationship("Contact", cascade="all, delete-orphan", passive_updates=False, backref="sponsor", lazy="dynamic")
     assets = db.relationship("Asset", cascade="all, delete-orphan", passive_updates=False, backref="sponsor", lazy="dynamic")
     deals = db.relationship("Deal", cascade="all, delete-orphan", passive_updates=False, backref="sponsor", lazy="dynamic")
-    # requests = db.relationship("Requests", uselist=False, backref="sponsor")
     
     def __init__(self, name, type_name=None, level_name=None, notes=None):
         self.name = name
@@ -190,38 +189,7 @@ class Invoice(db.Model):
         self.deal_id = deal_id
         self.sent = sent
         self.received = received
-
-
-'''
-class Requests(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsor.id'))
-    invoices = db.relationship("Invoice")
-    assets = db.relationship("AssetRequest")
-
-    def __init__(self, sponsor_id):
-        self.sponsor_id = sponsor_id
-    
-class Invoice(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    requests_id = db.Column(db.Integer, db.ForeignKey('requests.id'))
-    date = db.Column(db.Date, nullable=False)
-    
-    def __init__(self, request_id, date):
-        self.request_id = request_id
-        self.date = date
-
-class AssetRequest(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    requests_id = db.Column(db.Integer, db.ForeignKey('requests.id'))
-    date = db.Column(db.Date, nullable=False)
-    
-    def __init__(self, requests_id, date):
-        self.requests_id = requests_id
-        self.date = date
-'''
-
-
+        
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -263,7 +231,21 @@ class Role(db.Model):
         if name == "name":
             return self.type
         return super(Role, self).__getattr__(self, name)
+
+'''
+class PseudoUser(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(50), nullable=False, default='')
+    last_name = db.Column(db.String(50), default='')
+    username = db.Column(db.String(50))
     
+    @property
+    def user_auth(self):
+        obj = object()
+        obj.username = username
+        return obj
+'''
+
 class UserRoles(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     user_id = db.Column(db.Integer(), db.ForeignKey("user.id", ondelete="CASCADE"))
@@ -287,6 +269,14 @@ def load_sponsor(target, context):
             target.assets_by_type[asset.type].append(asset)
         
         target.received_assets = all(type in target.assets_by_type for type in target.level.assets) and target.info.link and target.info.description
+
+@event.listens_for(Deal, 'load')
+def load_deal(target, context):
+    user_auth = UserAuth.query.filter_by(username=target.owner).first()
+    if user_auth:
+        target.owner_name = "{user.first_name} {user.last_name}".format(user=user_auth.user)
+    else:
+        target.owner_name = target.owner
 
 @event.listens_for(Contract, 'load')
 def load_contract(target, context):
