@@ -276,7 +276,12 @@ class UserRoles(db.Model):
 @event.listens_for(Sponsor, 'load')
 def load_sponsor(target, context):
     # For use by the views and controllers - not in the DB
-    target.current = target.deals[0]
+    for deal in target.deals:
+        if deal.year == datetime.datetime.today().year:
+            target.current = deal
+            break
+    else:
+        target.current = target.add_deal(datetime.datetime.today().year)
     
     target.assets_by_type = {}
     target.received_assets = True
