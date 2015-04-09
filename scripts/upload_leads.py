@@ -56,7 +56,9 @@ def _deals(sponsor, row):
     inkind_map = _map_values(inkind_val.replace('$', '').replace(',', ''), years)
     
     for year in years:
-        sponsor.add_deal(year, owner_map.get(year), cash_map.get(year, 0), inkind_map.get(year, 0))
+        cash = int(cash_map.get(year)) if cash_map.get(year, "").isdigit() else 0
+        inkind = int(inkind_map.get(year)) if inkind_map.get(year, "").isdigit() else 0
+        sponsor.add_deal(year, owner_map.get(year), cash, inkind)
 
 def _contacts(sponsor, row):
     names = _split_values(_remove_parens(row["Contact Name"]))
