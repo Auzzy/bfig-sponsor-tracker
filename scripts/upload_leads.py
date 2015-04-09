@@ -46,7 +46,9 @@ def _notes(sponsor, row):
 
 def _deals(sponsor, row):
     current_owner = row["New Acct Owner"].strip()
+    print("CURRENT DEAL - START")
     sponsor.add_deal(datetime.date.today().year, owner=current_owner)
+    print("CURRENT DEAL - END")
     
     years_val, owner_val, cash_val, inkind_val = row["Previous Sponsor?"], row["Previous Acct Owner"], row["Cash Amount Sponsored"], row["In Kind Sponsor"]
     
@@ -55,10 +57,12 @@ def _deals(sponsor, row):
     cash_map = _map_values(cash_val.replace('$', '').replace(',', ''), years)
     inkind_map = _map_values(inkind_val.replace('$', '').replace(',', ''), years)
     
+    print("PREV DEALS - START")
     for year in years:
         cash = int(cash_map.get(year)) if cash_map.get(year, "").isdigit() else 0
         inkind = int(inkind_map.get(year)) if inkind_map.get(year, "").isdigit() else 0
         sponsor.add_deal(year, owner_map.get(year), cash, inkind)
+    print("PREV DEALS - END")
 
 def _contacts(sponsor, row):
     names = _split_values(_remove_parens(row["Contact Name"]))

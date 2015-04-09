@@ -32,9 +32,9 @@ class Sponsor(db.Model):
     level_name = db.Column("level", db.Enum(name="LevelType", *_LEVEL_TYPES))
     notes = db.Column(db.Text())
     info = db.relationship("Info", uselist=False, cascade="all, delete-orphan", passive_updates=False, backref="sponsor")
-    contacts = db.relationship("Contact", cascade="all, delete-orphan", passive_updates=False, backref="sponsor")
-    assets = db.relationship("Asset", cascade="all, delete-orphan", passive_updates=False, backref="sponsor")
-    deals = db.relationship("Deal", cascade="all, delete-orphan", passive_updates=False, backref="sponsor")
+    contacts = db.relationship("Contact", cascade="all, delete-orphan", passive_updates=False, backref="sponsor", lazy="dynamic")
+    assets = db.relationship("Asset", cascade="all, delete-orphan", passive_updates=False, backref="sponsor", lazy="dynamic")
+    deals = db.relationship("Deal", cascade="all, delete-orphan", passive_updates=False, backref="sponsor", lazy="dynamic")
     # requests = db.relationship("Requests", uselist=False, backref="sponsor")
     
     def __init__(self, name, type_name=None, level_name=None, notes=None):
@@ -43,9 +43,6 @@ class Sponsor(db.Model):
         self.level_name = level_name or None
         self.notes = notes
         self.info = Info(self.id)
-        
-        self.deals.append(Deal(self.id, datetime.date.today().year))
-        self.current = self.deals[0]
         
         load_sponsor(self, None)
         
@@ -68,7 +65,7 @@ class Sponsor(db.Model):
         if not email:
             return None
         
-        contact = Contact.query.filter_by(sponsor_id=self.id, email=email).first()
+        contact = self.contacts.filter_by(email=email).first()
         if contact:
             contact.update(name=name)
         else:
@@ -80,7 +77,7 @@ class Sponsor(db.Model):
         if not year:
             return None
         
-        deal = Deal.query.filter_by(sponsor_id=self.id, year=year).first()
+        deal = self.deals.filter_by(year=year).first()
         if deal:
             deal.update(owner=owner, cash=cash, inkind=inkind)
         else:
@@ -232,8 +229,8 @@ class User(db.Model, UserMixin):
     last_name = db.Column(db.String(50), nullable=False, default='')
     enabled = db.Column(db.Boolean(), nullable=False, default=False)
     type = db.Column(db.Enum(name="UserType", *_USER_TYPES), nullable=False)
-    emails = db.relationship("UserEmail")
-    roles = db.relationship("Role", secondary='user_roles', backref=db.backref('users', lazy='dynamic'))
+    emails = db.relationship("UserEmail", lazy="dynamic")
+    roles = db.relationship("Role", secondary='user_roles', backref=db.backref('users', lazy='dynamic'), lazy="dynamic")
     user_auth = db.relationship("UserAuth", uselist=False)
     
     def is_active(self):
@@ -276,11 +273,8 @@ class UserRoles(db.Model):
 @event.listens_for(Sponsor, 'load')
 def load_sponsor(target, context):
     # For use by the views and controllers - not in the DB
-    for deal in target.deals:
-        if deal.year == datetime.datetime.today().year:
-            target.current = deal
-            break
-    else:
+    target.current = target.deals.filter_by(year=datetime.datetime.today().year).first()
+    if not target.current:
         target.current = target.add_deal(datetime.datetime.today().year)
     
     target.assets_by_type = {}
