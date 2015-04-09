@@ -28,10 +28,10 @@ def _map_values(value_str, years):
     for value in _split_values(value_str):
         deal_year = DEAL_YEAR_RE.search(value)
         if deal_year:
-            value_map[deal_year.group(1)] = _remove_parens(value).strip() or 0
+            value_map[deal_year.group(1)] = _remove_parens(value).strip() or "0"
     
     if not value_map and len(years) == 1:
-        value_map[years[0]] = _remove_parens(value_str).strip() or 0
+        value_map[years[0]] = _remove_parens(value_str).strip() or "0"
     
     return value_map
 
