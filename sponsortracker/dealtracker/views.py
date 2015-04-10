@@ -20,6 +20,14 @@ def home():
     readonly = not current_user.has_roles(RoleType.DT_WRITE)
     return render_template("dealtracker.html", sponsors=model.Sponsor.query.all(), readonly=readonly)
 
+@deal_tracker.route("/my-accounts")
+@roles_required([RoleType.DT_READ, RoleType.DT_WRITE])
+def my_accounts():
+    readonly = not current_user.has_roles(RoleType.DT_WRITE)
+    deals = model.Deal.query.filter_by(owner=current_user.user_auth.username).all()
+    sponsors = [deal.sponsor for deal in deals]
+    return render_template("dealtracker.html", sponsors=sponsors, readonly=readonly)
+
 @deal_tracker.route("/sponsor/<int:id>/")
 @roles_required([RoleType.DT_WRITE])
 def sponsor_info(id):

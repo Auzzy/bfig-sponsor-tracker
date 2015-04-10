@@ -76,9 +76,10 @@ class Sponsor(db.Model):
         if not year:
             return None
         
-        deal = self.deals.filter_by(year=year).first()
-        if deal:
-            deal.update(owner=owner, cash=cash, inkind=inkind)
+        for deal in self.deals:
+            if deal.year == year:
+                deal.update(owner=owner, cash=cash, inkind=inkind)
+                break
         else:
             deal = Deal(self.id, year, owner, cash, inkind)
             self.deals.append(deal)
@@ -255,9 +256,17 @@ class UserRoles(db.Model):
 @event.listens_for(Sponsor, 'load')
 def load_sponsor(target, context):
     # For use by the views and controllers - not in the DB
+    for deal in target.deals:
+        if deal.year == datetime.datetime.today().year:
+            target.current = deal
+            break
+    else:
+        target.current = target.add_deal(datetime.datetime.today().year)
+    '''
     target.current = target.deals.filter_by(year=datetime.datetime.today().year).first()
     if not target.current:
         target.current = target.add_deal(datetime.datetime.today().year)
+    '''
     
     target.assets_by_type = {}
     target.received_assets = True

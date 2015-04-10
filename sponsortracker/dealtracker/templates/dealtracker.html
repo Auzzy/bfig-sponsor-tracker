@@ -2,6 +2,10 @@
 
 {% block title %}Deal Tracker Home{% endblock %}
 
+{% block menu %}
+<a href="{{ url_for('dealtracker.my_accounts') }}">My Accounts</a>
+{% endblock %}
+
 {% block content %}
 <p><a href="{{ url_for('dealtracker.configure_sponsor') }}">New Sponsor</a></p>
 
@@ -21,7 +25,7 @@
         {% for sponsor in sponsors %}
         <tr style="text-align:center;">
             <td style="text-align:left;"><a href="{{ url_for('dealtracker.sponsor_info', id=sponsor.id) }}">{{ sponsor.name }}</a></td>
-            <td>{% if sponsor.current.owner %}{{ sponsor.current.owner }}{% endif %}</td>
+            <td>{% if sponsor.current.owner %}{{ sponsor.current.owner_name }}{% endif %}</td>
             <td>{% if sponsor.type.value %}{{ sponsor.type.value }}{% endif %}</td>
             <td>{{ sponsor.level.label }}</td>
             {% if not readonly %}
