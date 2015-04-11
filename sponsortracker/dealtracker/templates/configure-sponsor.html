@@ -4,19 +4,7 @@
 {# {% from 'contact-field.html' import contact_field %} #}
 
 <form action="{{ url_for('dealtracker.configure_sponsor', id=id) }}" method="POST">
-    {% for field in form %}
-    <p>
-        {% if field.type not in ("CSRFTokenField", "HiddenField") %}
-        {% if field.flags.required %}
-        {{ field.label(text=field.label.text ~ "*") }}<br />
-        {% else %}
-        {{ field.label }}<br />
-        {% endif %}
-        {% endif %}
-        
-        {{ field }}
-    </p>
-    {% endfor %}
+    {% include "render-form.html" %}
     
     <div id="contacts_container"></div>
     

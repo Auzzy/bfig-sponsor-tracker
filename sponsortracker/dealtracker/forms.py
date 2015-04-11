@@ -3,7 +3,7 @@ import re
 
 import flask_wtf
 from wtforms import HiddenField, IntegerField, SelectField, StringField, TextAreaField
-from wtforms.validators import DataRequired, Optional
+from wtforms.validators import DataRequired, Optional, URL
 
 from sponsortracker import data, model
 
@@ -17,6 +17,8 @@ _SPONSOR_TYPE_CHOICES = [("", "")] + [(sponsor_type.name, sponsor_type.value) fo
 class SponsorForm(flask_wtf.Form):
     name = StringField(validators=[DataRequired()])
     type_name = SelectField("Sponsor Type", choices=_SPONSOR_TYPE_CHOICES, validators=[Optional()])
+    link = StringField("Home page", validators=[URL(), Optional()])
+    description = TextAreaField(validators=[Optional()])
     notes = TextAreaField(validators=[Optional()])
 
 class CurrentDealForm(flask_wtf.Form):
