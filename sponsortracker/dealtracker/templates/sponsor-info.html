@@ -90,13 +90,15 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
 
 {% if sponsor.deals[1:] %}
 <h2>Previous Deals</h2>
-{% for deal in sponsor.deals[1:]|sort(attribute="year", reverse=True) %}
+{% for deal in sponsor.deals|sort(attribute="year", reverse=True) %}
+{% if deal.year != sponsor.current.year %}
 <p>
     <span style="font-weight:bold">Year</span>: {{ deal.year }}<br />
     <span style="font-weight:bold">Account owner</span>: {{ deal.owner_name or "" }}<br />
     <span style="font-weight:bold">Cash</span>: ${{ deal.cash }}<br />
     <span style="font-weight:bold">Inkind</span>: ${{ deal.inkind }}<br />
 </p>
+{% endif %}
 {% endfor %}
 {% endif %}
 
