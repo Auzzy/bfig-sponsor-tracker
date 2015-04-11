@@ -49,8 +49,8 @@ def sponsor_page(id):
         info_forms = {}
     else:
         info_forms = {
-            "link":forms.LinkForm(info=sponsor.info.link),
-            "description":forms.DescriptionForm(info=sponsor.info.description)
+            "link":forms.LinkForm(info=sponsor.link),
+            "description":forms.DescriptionForm(info=sponsor.description)
         }
     return render_template("sponsor-page.html", sponsor=sponsor, forms=info_forms, readonly=readonly, errors=errors)
 

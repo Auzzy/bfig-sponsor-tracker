@@ -117,13 +117,14 @@ def _extract_contacts(data, email_basename, name_basename):
 def _configure_sponsor(id, form, contacts):
     if id:
         sponsor = model.Sponsor.query.get_or_404(id)
-        sponsor.update(name=form.name.data, type_name=form.type_name.data, notes=form.notes.data)
+        sponsor.update(name=form.name.data, type_name=form.type_name.data, notes=form.notes.data, link=form.link.data, description=form.description.data)
     else:
-        sponsor = model.Sponsor(form.name.data, type_name=form.type_name.data, notes=form.notes.data)
+        sponsor = model.Sponsor(form.name.data, type_name=form.type_name.data, notes=form.notes.data, link=form.link.data, description=form.description.data)
         model.db.session.add(sponsor)
     
     for contact in contacts:
         sponsor.add_contact(*contact)
+    
     model.db.session.commit()
     
     return sponsor

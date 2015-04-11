@@ -32,15 +32,15 @@ def download(zipname=ZIPNAME, by_sponsor=True, info=True, asset_filter=lambda sp
             os.makedirs(target, exist_ok=True)
             
             if info:
-                _info_to_file(target, sponsor.info)
+                _info_to_file(target, sponsor)
             _copy_assets(target, asset_filter(sponsor))
         
         return shutil.make_archive(expanduser(join("~", zipname)), "zip", root_dir=tempdir)
 
-def _info_to_file(target, info):
-    if info.link or info.description:
+def _info_to_file(target, sponsor):
+    if sponsor.link or sponsor.description:
         with open(join(target, "info.txt"), 'w') as info_file:
-            data = [info.link, info.description]
+            data = [sponsor.link, sponsor.description]
             info_file.write("\n\n".join([field for field in data if field]))
 
 def _copy_assets(target, assets):

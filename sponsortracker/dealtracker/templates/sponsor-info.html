@@ -37,8 +37,8 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
     
     <span style="font-weight:bold">Sponsor type</span>: {{ sponsor.type.value or "" }}<br />
     <span style="font-weight:bold">Contact(s)</span>: {{ sponsor.contacts|join('; ', attribute='email') }}<br />
-    <span style="font-weight:bold">Home page</span>: {{ sponsor.info.link or ""}}<br />
-    <span style="font-weight:bold">Description</span>: {{ sponsor.info.description or "" }}<br />
+    <span style="font-weight:bold">Home page</span>: {{ sponsor.link or ""}}<br />
+    <span style="font-weight:bold">Description</span>: {{ sponsor.description or "" }}<br />
     <span style="font-weight:bold">Notes</span>: {{ sponsor.notes or ""}}
 </p>
 

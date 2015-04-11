@@ -31,33 +31,36 @@ class Sponsor(db.Model):
     type_name = db.Column("type", db.Enum(name="SponsorType", *_SPONSOR_TYPES))
     level_name = db.Column("level", db.Enum(name="LevelType", *_LEVEL_TYPES))
     notes = db.Column(db.Text())
-    info = db.relationship("Info", uselist=False, cascade="all, delete-orphan", passive_updates=False, backref="sponsor")
+    link = db.Column(db.String(2000))
+    description = db.Column(db.Text())
     contacts = db.relationship("Contact", cascade="all, delete-orphan", passive_updates=False, backref="sponsor", lazy="dynamic")
     assets = db.relationship("Asset", cascade="all, delete-orphan", passive_updates=False, backref="sponsor", lazy="dynamic")
     deals = db.relationship("Deal", cascade="all, delete-orphan", passive_updates=False, backref="sponsor", lazy="dynamic")
     
-    def __init__(self, name, type_name=None, level_name=None, notes=None):
+    def __init__(self, name, type_name=None, level_name=None, notes=None, link=None, description=None):
         self.name = name
         self.type_name = type_name or None
         self.level_name = level_name or None
         self.notes = notes
-        self.info = Info(self.id)
+        self.link = link
+        self.description = description
         
         load_sponsor(self, None)
         
-    def update(self, name=None, type_name=None, level_name=None, notes=None):
+    def update(self, name=None, type_name=None, level_name=None, notes=None, link=None, description=None):
         self.name = name or self.name
         self.type_name = type_name or self.type_name
         self.level_name = level_name or self.level_name
-        
         self.notes = notes or self.notes
+        self.link = link or self.link
+        self.description = description or self.description
     
     def save_link(self, form):
-        self.info.link = form.link.data or ""
+        self.link = form.link.data or ""
         db.session.commit()
         
     def save_description(self, form):
-        self.info.description = form.description.data or ""
+        self.description = form.description.data or ""
         db.session.commit()
     
     def add_contact(self, email, name=None):
@@ -84,17 +87,6 @@ class Sponsor(db.Model):
             deal = Deal(self.id, year, owner, cash, inkind)
             self.deals.append(deal)
         return deal
-
-class Info(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsor.id'))
-    link = db.Column(db.String(2000))
-    description = db.Column(db.Text())
-    
-    def __init__(self, sponsor_id, link=None, description=None):
-        self.sponsor_id = sponsor_id
-        self.link = link
-        self.description = description
 
 class Contact(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -277,7 +269,7 @@ def load_sponsor(target, context):
         for asset in target.assets:
             target.assets_by_type[asset.type].append(asset)
         
-        target.received_assets = all(type in target.assets_by_type for type in target.level.assets) and target.info.link and target.info.description
+        target.received_assets = all(type in target.assets_by_type for type in target.level.assets) and target.link and target.description
 
 @event.listens_for(Deal, 'load')
 def load_deal(target, context):
