@@ -140,10 +140,7 @@ def _configure_deal(id, form):
     sponsor.update(level_name=form.level_name.data)
     
     if sponsor.current == deal:
-        if deal.cash > 0 or deal.inkind > 0:
-            deal.init_contract_invoice()
-        
-        if deal.cash == 0 and deal.inkind == 0:
-            deal.remove_contract_invoice()
+        deal.contract.ready = deal.cash > 0 or deal.inkind > 0
+        deal.invoice.ready = deal.cash > 0 or deal.inkind > 0
     
     model.db.session.commit()

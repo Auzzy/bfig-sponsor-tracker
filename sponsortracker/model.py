@@ -141,6 +141,9 @@ class Deal(db.Model):
         self.owner = owner
         self.cash = cash
         self.inkind = inkind
+        
+        self.contract = Contract()
+        self.invoice = Invoice()
     
     def update(self, year=None, owner=None, cash=None, inkind=None):
         self.year = year or self.year
@@ -148,38 +151,30 @@ class Deal(db.Model):
         self.cash = cash if cash is not None else self.cash
         self.inkind = inkind if inkind is not None else self.inkind
     
-    def init_contract_invoice(self):
-        if not self.contract:
-            self.contract = Contract(self.id)
-        if not self.invoice:
-            self.invoice = Invoice(self.id)
-    
-    def remove_contract_invoice(self):
-        if self.contract:
-            db.session.delete(self.contract)
-        if self.invoice:
-            db.session.delete(self.invoice)
-        db.session.commit()
 
 class Contract(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'))
+    ready = db.Column(db.Boolean, default=False)
     sent = db.Column(db.Date)
     received = db.Column(db.Date)
     
-    def __init__(self, deal_id, sent=None, received=None):
+    def __init__(self, deal_id, ready=False, sent=None, received=None):
         self.deal_id = deal_id
+        self.ready = ready
         self.sent = sent
         self.received = received
 
 class Invoice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'))
+    ready = db.Column(db.Boolean)
     sent = db.Column(db.Date)
     received = db.Column(db.Date)
     
-    def __init__(self, deal_id, sent=None, received=None):
+    def __init__(self, deal_id, ready=False, sent=None, received=None):
         self.deal_id = deal_id
+        self.ready = ready
         self.sent = sent
         self.received = received
         

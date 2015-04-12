@@ -1,34 +1,28 @@
 {% set contract = sponsor.current.contract %}
 {% set invoice = sponsor.current.invoice %}
 
-<table>
+<table border="1">
     <tr>
-        {% if contract %}
         <th style="width: 150px">Contract</th>
-        {% endif %}
-        {% if invoice %}
         <th style="width: 150px">Invoice</th>
-        {% endif %}
     </tr>
     <tr>
-        {% if contract %}
         {% if contract.received %}
         <td style="background-color: #00FF00;">Received {{ contract.received }}</td>
         {% elif contract.sent %}
         <td style="background-color: {% if contract.overdue %}#FF0000;{% else %}#FFFF00;{% endif %}">Sent {{ contract.sent }}</td>
-        {% else %}
+        {% elif contract.ready %}
         <td style="background-color: #FF0000;">Ready to send</td>
-        {% endif %}
+        {% else %}
+        <td>Not ready</td>
         {% endif %}
         
-        {% if invoice %}
         {% if invoice.received %}
         <td style="background-color: #00FF00;">Received {{ invoice.received }}</td>
-        {% elif invoice.sent %}
-        <td style="background-color: {% if invoice.overdue %}#FF0000;{% else %}#FFFF00;{% endif %}">Sent {{ invoice.sent }}</td>
-        {% else %}
+        {% elif invoice.ready %}
         <td style="background-color: #FF0000;">Ready to send</td>
-        {% endif %}
+        {% else %}
+        <td>Not ready</td>
         {% endif %}
     </tr>
 </table>

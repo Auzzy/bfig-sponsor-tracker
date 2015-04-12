@@ -42,10 +42,8 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
     <span style="font-weight:bold">Notes</span>: {{ sponsor.notes or ""}}
 </p>
 
-{% if sponsor.current.contract or sponsor.current.invoice %}
 <h2>Status</h2>
 {% include 'sponsor-status.html' %}
-{% endif %}
 
 <p>
     {% if sponsor.contract %}
