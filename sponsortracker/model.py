@@ -144,9 +144,9 @@ class Deal(db.Model):
         self.cash = cash
         self.inkind = inkind
         
-        self.contract = Contract()
-        self.invoice = Invoice()
-        self.asset_request = AssetRequest()
+        self.contract = Contract(self.id)
+        self.invoice = Invoice(self.id)
+        self.asset_request = AssetRequest(self.id)
     
     def update(self, year=None, owner=None, cash=None, inkind=None):
         self.year = year or self.year
