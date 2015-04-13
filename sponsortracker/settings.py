@@ -1,8 +1,9 @@
 import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
+PROPAGATE_EXCEPTIONS = True
+
 # Flask-SQLAlchemy
-# SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', "sqlite:///" + os.path.join(basedir, os.pardir, "sponsortracker.db"))
 SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', "postgresql:///sponsortracker")
 
 # Flask-WTForms
