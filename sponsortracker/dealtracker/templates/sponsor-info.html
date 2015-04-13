@@ -27,6 +27,7 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
 {% block content %}
 {% set contract = sponsor.current.contract %}
 {% set invoice = sponsor.current.invoice %}
+{% set asset_request = sponsor.current.asset_request %}
 
 <h1>{{ sponsor.name }}</h1>
 
@@ -86,6 +87,17 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
     </form>
 </div>
 
+<div>
+    <span style="font-weight:bold">Asset Request</span>:
+    <form id="asset-request-sent-form" style="display:inline;" action="{{ url_for('dealtracker.asset_request_sent', id=sponsor.id) }}" method="POST">
+        <input type="checkbox" name="{{ request_id }}" id="asset-request-sent" {% if asset_request.sent %}checked{% endif %} {% if not sponsor.level %}disabled{% endif %} />Sent
+    </form>
+    &nbsp;&nbsp;
+    <form id="asset-request-received-form" style="display:inline;" action="{{ url_for('dealtracker.asset_request_received', id=sponsor.id) }}" method="POST">
+        <input type="checkbox" name="{{ request_id }}" id="asset-request-received" {% if asset_request.received %}checked{% elif not asset_request.sent %}disabled{% endif %} />Received
+    </form>
+</div>
+
 {% if sponsor.deals[1:] %}
 <h2>Previous Deals</h2>
 {% for deal in sponsor.deals|sort(attribute="year", reverse=True) %}
@@ -129,6 +141,7 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
 {% block js %}
 {% set contract = sponsor.current.contract %}
 {% set invoice = sponsor.current.invoice %}
+{% set asset_request = sponsor.current.asset_request %}
 
 function submit_form(id) {
     var form = document.getElementById(id + "-form");
@@ -168,6 +181,10 @@ window.addEventListener('load', function() {
     datepickers["invoice-sent"] = setup_datepicker("invoice-sent");
     datepickers["invoice-received"] = setup_datepicker("invoice-received");
     {% if invoice.sent %}datepickers["invoice-received"].setMinDate(new Date('{{ invoice.sent.strftime("%Y-%m-%d") }}'));{% endif %}
+    
+    datepickers["asset-request-sent"] = setup_datepicker("asset-request-sent");
+    datepickers["asset-request-received"] = setup_datepicker("asset-request-received");
+    {% if asset_request.sent %}datepickers["asset-request-received"].setMinDate(new Date('{{ asset_request.sent.strftime("%Y-%m-%d") }}'));{% endif %}
 });
 
 {% endblock %}

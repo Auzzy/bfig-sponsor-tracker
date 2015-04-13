@@ -82,6 +82,14 @@ def invoice_sent(id):
 def invoice_received(id):
     return _update_request(id, lambda sponsor, val: setattr(sponsor.current.invoice, "received", val))
 
+@deal_tracker.route("/sponsor/<int:id>/edit/asset-request-sent", methods=["POST"])
+def asset_request_sent(id):
+    return _update_request(id, lambda sponsor, val: setattr(sponsor.current.asset_request, "sent", val))
+
+@deal_tracker.route("/sponsor/<int:id>/edit/asset-request-received", methods=["POST"])
+def asset_request_received(id):
+    return _update_request(id, lambda sponsor, val: setattr(sponsor.current.asset_request, "received", val))
+
 def _update_request(sponsor_id, update_field):
     sponsor = model.Sponsor.query.get_or_404(sponsor_id)
     date = datetime.datetime.strptime(request.values[REQUEST_ID], DATE_FORMAT).date() if request.values.get(REQUEST_ID) else None
@@ -90,6 +98,8 @@ def _update_request(sponsor_id, update_field):
         sponsor.current.contract.received = None
     if sponsor.current.invoice.received and not sponsor.current.invoice.sent:
         sponsor.current.invoice.received = None
+    if sponsor.current.asset_request.received and not sponsor.current.asset_request.sent:
+        sponsor.current.asset_request.received = None
     model.db.session.commit()
     return redirect(url_for("dealtracker.sponsor_info", id=sponsor.id))
 
@@ -143,5 +153,6 @@ def _configure_deal(id, form):
     if sponsor.current == deal:
         deal.contract.ready = deal.cash > 0 or deal.inkind > 0
         deal.invoice.ready = deal.cash > 0 or deal.inkind > 0
-    
+        deal.asset_request.ready = bool(sponsor.level_name)
+        
     model.db.session.commit()

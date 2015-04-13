@@ -50,10 +50,11 @@ class Sponsor(db.Model):
     def update(self, name=None, type_name=None, level_name=None, notes=None, link=None, description=None):
         self.name = name or self.name
         self.type_name = type_name or self.type_name
-        self.level_name = level_name or self.level_name
         self.notes = notes or self.notes
         self.link = link or self.link
         self.description = description or self.description
+        if level_name is not None:
+            self.level_name = None if level_name == "" else level_name
     
     def save_link(self, form):
         self.link = form.link.data or ""
@@ -134,6 +135,7 @@ class Deal(db.Model):
     inkind = db.Column(db.Integer)
     contract = db.relationship("Contract", uselist=False, cascade="all, delete-orphan", passive_updates=False, backref="deal")
     invoice = db.relationship("Invoice", uselist=False, cascade="all, delete-orphan", passive_updates=False, backref="deal")
+    asset_request = db.relationship("AssetRequest", uselist=False, cascade="all, delete-orphan", passive_updates=False, backref="deal")
     
     def __init__(self, sponsor_id, year, owner=None, cash=0, inkind=0):
         self.sponsor_id = sponsor_id
@@ -144,6 +146,7 @@ class Deal(db.Model):
         
         self.contract = Contract()
         self.invoice = Invoice()
+        self.asset_request = AssetRequest()
     
     def update(self, year=None, owner=None, cash=None, inkind=None):
         self.year = year or self.year
@@ -166,6 +169,19 @@ class Contract(db.Model):
         self.received = received
 
 class Invoice(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'))
+    ready = db.Column(db.Boolean)
+    sent = db.Column(db.Date)
+    received = db.Column(db.Date)
+    
+    def __init__(self, deal_id, ready=False, sent=None, received=None):
+        self.deal_id = deal_id
+        self.ready = ready
+        self.sent = sent
+        self.received = received
+
+class AssetRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'))
     ready = db.Column(db.Boolean)
