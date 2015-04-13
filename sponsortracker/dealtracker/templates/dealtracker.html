@@ -9,7 +9,7 @@
 {% block content %}
 <p><a href="{{ url_for('dealtracker.configure_sponsor') }}">New Sponsor</a></p>
 
-<table class="sortable zebra">
+<table id="sponsor-table" class="sortable zebra">
     <thead>
         <tr>
             <th style="min-width:150px;">Name</th>
@@ -17,7 +17,7 @@
             <th style="width:150px;">Sponsor Type</th>
             <th style="width:125px;">Level</th>
             {% if not readonly %}
-            <th style="background:white;"></th>
+            <th style="background:white;" class="sorttable_nosort"></th>
             {% endif %}
         </tr>
     </thead>
@@ -67,5 +67,9 @@ function delete_sponsor(id) {
     document.body.appendChild(form);
     
     form.submit();
+}
+
+window.onload = function() {
+    sortTable("sponsor-table", 0);
 }
 {% endblock %}

@@ -21,6 +21,11 @@
             background-color:#eee;
         }
         
+        table.sortable th:not(.sorttable_sorted):not(.sorttable_sorted_reverse):not(.sorttable_nosort):after { 
+            content: " \25B4\25BE" 
+        }
+        
+        /* Modals */
         .modalDialog {
         	position: fixed;
         	font-family: Arial, Helvetica, sans-serif;
@@ -75,6 +80,13 @@
     
         <script type="text/javascript" src="{{ url_for('static', filename='sorttable.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='pikaday.js') }}"></script>
+        <script>
+            function sortTable(tableId, colnum) {
+                var table = document.getElementById(tableId);
+                var sortColumn = document.getElementsByTagName("th")[colnum];
+                sorttable.innerSortFunction.apply(sortColumn, []);
+            }
+        </script>
         <script type="text/javascript">{% block js %}{% endblock %}</script>
     {% endblock %}
 </head>
