@@ -18,15 +18,13 @@ REQUEST_ID = "request-date"
 @roles_required([RoleType.DT_READ, RoleType.DT_WRITE])
 def home():
     readonly = not current_user.has_roles(RoleType.DT_WRITE)
-    # sponsors = sorted(model.Sponsor.query.all(), key=lambda sponsor: sponsor.name)
     return render_template("dealtracker.html", sponsors=model.Sponsor.query.all(), readonly=readonly)
 
 @deal_tracker.route("/my-accounts")
 @roles_required([RoleType.DT_READ, RoleType.DT_WRITE])
 def my_accounts():
     readonly = not current_user.has_roles(RoleType.DT_WRITE)
-    deals = model.Deal.query.filter_by(owner=current_user.user_auth.username).all()
-    # sponsors = sorted([deal.sponsor for deal in deals], key=lambda sponsor: sponsor.name)
+    deals = model.Deal.query.filter_by(owner=current_user.user_auth.username, year=datetime.datetime.today().year).all()
     sponsors = [deal.sponsor for deal in deals]
     return render_template("dealtracker.html", sponsors=sponsors, readonly=readonly)
 
