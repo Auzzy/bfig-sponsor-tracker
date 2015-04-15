@@ -12,6 +12,6 @@ def home():
         if current_user.has_roles((RoleType.AT_WRITE, RoleType.AT_READ)):
             return redirect(url_for("assettracker.home"))
         else:
-            return redirect(url_for("dealtracker.home"))
+            return redirect(url_for("dealtracker.all"))
     
     return render_template("home.html")
