@@ -14,7 +14,7 @@
     
     <div>
         <input type="submit" value="Submit" />
-        <a href="{% if id %}{{ url_for('dealtracker.sponsor_info', id=id) }}{% else %}{{ url_for('dealtracker.home') }}{% endif %}">
+        <a href="{% if id %}{{ url_for('dealtracker.sponsor_info', id=id) }}{% else %}{{ url_for('dealtracker.my_accounts') }}{% endif %}">
             <input type="button" value="Cancel" />
         </a>
     </div>

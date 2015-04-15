@@ -3,7 +3,7 @@
 {% block title %}Asset Tracker Home{% endblock %}
 
 {% block appnav %}
-<a href="{{ url_for('dealtracker.home') }}">Deal Tracker</a>
+<a href="{{ url_for('dealtracker.my_accounts') }}">Deal Tracker</a>
 <a href="{{ url_for('assettracker.home') }}">Asset Tracker</a>
 {% endblock %}
 
@@ -14,7 +14,7 @@
 
 {% block content %}
 <p>
-    <a href="{{ url_for('dealtracker.home') }}">Deal Tracker</a><br />
+    <a href="{{ url_for('dealtracker.my_accounts') }}">Deal Tracker</a><br />
     <a href="{{ url_for('assettracker.home') }}">Asset Tracker</a>
 </p>
 {% endblock %}

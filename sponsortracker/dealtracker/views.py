@@ -112,7 +112,7 @@ def delete_sponsor():
     id = request.form["sponsor-id"]
     model.db.session.delete(model.Sponsor.query.get_or_404(id))
     model.db.session.commit()
-    return redirect(url_for("dealtracker.home"))
+    return redirect(url_for("dealtracker.my_accounts"))
     
 
 
