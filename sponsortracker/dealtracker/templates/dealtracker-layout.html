@@ -1,7 +1,9 @@
 {% extends "layout.html" %}
 
+{% block title %}Deal Tracker{% endblock %}
+
 {% block appnav %}
-<a href="{{ url_for('dealtracker.home') }}"><h1 style="display:inline;">Deal Tracker</h1></a>
-<!-- <a href="{{ url_for('assettracker.home') }}">Asset Tracker</a> -->
-{% block menu %}{% endblock %}
+<a href="{{ url_for('dealtracker.my_accounts') }}">My Accounts</a>
+&nbsp;&nbsp;
+<a href="{{ url_for('dealtracker.all') }}">All Deals</a>
 {% endblock %}

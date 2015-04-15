@@ -83,7 +83,7 @@
         <script>
             function sortTable(tableId, colnum) {
                 var table = document.getElementById(tableId);
-                var sortColumn = document.getElementsByTagName("th")[colnum];
+                var sortColumn = table.getElementsByTagName("th")[colnum];
                 sorttable.innerSortFunction.apply(sortColumn, []);
             }
         </script>
@@ -91,10 +91,8 @@
     {% endblock %}
 </head>
 <body>
-    <div id="navheader" style="height: 50px; max-height: 30px;">
-        <div id="appnav" style="float:left;">
-            {% block appnav %}{% endblock %}
-        </div>
+    <div id="title">
+        <h1 style="display:inline;">{{ self.title() }}</h1>
         <div id="usernav" style="float:right;">
             {% block usernav %}
             <a href="{{ url_for('user.change_password') }}">Change Password</a>
@@ -102,6 +100,11 @@
             {% endblock %}
             <br />
             <span>User: {{ current_user.user_auth.username }}</span>
+        </div>
+    </div>
+    <div id="navheader" style="height: 50px; max-height: 30px;">
+        <div id="appnav" style="float:left;">
+            {% block appnav %}{% endblock %}
         </div>
     </div>
     <hr style="clear:both;" />

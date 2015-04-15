@@ -7,7 +7,7 @@ from flask.ext.user import roles_required
 from flask.ext.login import current_user
 
 from sponsortracker import model
-from sponsortracker.data import RoleType
+from sponsortracker.data import RoleType, UserType
 from sponsortracker.dealtracker import forms
 from sponsortracker.dealtracker.app import deal_tracker
 
@@ -16,17 +16,20 @@ REQUEST_ID = "request-date"
 
 @deal_tracker.route("/")
 @roles_required([RoleType.DT_READ, RoleType.DT_WRITE])
-def home():
-    readonly = not current_user.has_roles(RoleType.DT_WRITE)
-    return render_template("dealtracker.html", sponsors=model.Sponsor.query.all(), readonly=readonly)
-
-@deal_tracker.route("/my-accounts")
-@roles_required([RoleType.DT_READ, RoleType.DT_WRITE])
 def my_accounts():
-    readonly = not current_user.has_roles(RoleType.DT_WRITE)
+    if current_user.type != UserType.SALES.type:
+        return redirect(url_for("dealtracker.all"))
+    
+    readonly = not current_user.has_roles(RoleType.DT_WRITE)    
     deals = model.Deal.query.filter_by(owner=current_user.user_auth.username, year=datetime.datetime.today().year).all()
     sponsors = [deal.sponsor for deal in deals]
-    return render_template("dealtracker.html", sponsors=sponsors, readonly=readonly)
+    return render_template("sponsor-list.html", sponsors=sponsors, readonly=readonly)
+    
+@deal_tracker.route("/all")
+@roles_required([RoleType.DT_READ, RoleType.DT_WRITE])
+def all():
+    readonly = not current_user.has_roles(RoleType.DT_WRITE)
+    return render_template("sponsor-list.html", sponsors=model.Sponsor.query.all(), readonly=readonly)
 
 @deal_tracker.route("/sponsor/<int:id>/")
 @roles_required([RoleType.DT_WRITE])

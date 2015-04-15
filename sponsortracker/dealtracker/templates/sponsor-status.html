@@ -1,42 +1,21 @@
-{% set contract = sponsor.current.contract %}
-{% set invoice = sponsor.current.invoice %}
-{% set asset_request = sponsor.current.asset_request %}
-
 <table border="1">
-    <tr>
-        <th style="width: 150px">Contract</th>
-        <th style="width: 150px">Invoice</th>
-        <th style="width: 150px">Asset Request</th>
-    </tr>
-    <tr>
-        {% if contract.received %}
-        <td style="background-color: #00FF00;">Received {{ contract.received }}</td>
-        {% elif contract.sent %}
-        <td style="background-color: {% if contract.overdue %}#FF0000;{% else %}#FFFF00;{% endif %}">Sent {{ contract.sent }}</td>
-        {% elif contract.ready %}
-        <td style="background-color: #FF0000;">Ready to send</td>
-        {% else %}
-        <td>Not ready</td>
-        {% endif %}
-        
-        {% if invoice.received %}
-        <td style="background-color: #00FF00;">Received {{ invoice.received }}</td>
-        {% elif invoice.sent %}
-        <td style="background-color: {% if invoice.overdue %}#FF0000;{% else %}#FFFF00;{% endif %}">Sent {{ invoice.sent }}</td>
-        {% elif invoice.ready %}
-        <td style="background-color: #FF0000;">Ready to send</td>
-        {% else %}
-        <td>Not ready</td>
-        {% endif %}
-        
-        {% if asset_request.received %}
-        <td style="background-color: #00FF00;">Received {{ asset_request.received }}</td>
-        {% elif asset_request.sent %}
-        <td style="background-color: {% if asset_request.overdue %}#FF0000;{% else %}#FFFF00;{% endif %}">Sent {{ asset_request.sent }}</td>
-        {% elif asset_request.ready %}
-        <td style="background-color: #FF0000;">Ready to send</td>
-        {% else %}
-        <td>Not ready</td>
-        {% endif %}
-    </tr>
+    <thead>
+        <tr>
+            <th style="width: 150px">Contract</th>
+            <th style="width: 150px">Invoice</th>
+            <th style="width: 150px">Asset Request</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            {% set request = sponsor.current.contract %}
+            {% include "sponsor-status-request.html" %}
+            
+            {% set request = sponsor.current.invoice %}
+            {% include "sponsor-status-request.html" %}
+            
+            {% set request = sponsor.current.asset_request %}
+            {% include "sponsor-status-request.html" %}
+        </tr>
+    </tbody>
 </table>

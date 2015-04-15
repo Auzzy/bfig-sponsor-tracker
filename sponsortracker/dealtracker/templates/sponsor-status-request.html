@@ -1,0 +1,9 @@
+{% if request.received %}
+<td style="background-color: #00FF00;">Received {{ request.received }}</td>
+{% elif request.sent %}
+<td style="background-color: {% if request.overdue %}#FF0000;{% else %}#FFFF00;{% endif %}">Sent {{ request.sent }}</td>
+{% elif request.ready %}
+<td style="background-color: #FF0000;">Ready to send</td>
+{% else %}
+<td>Not ready</td>
+{% endif %}

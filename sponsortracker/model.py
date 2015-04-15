@@ -22,6 +22,8 @@ _ASSET_TYPES = [asset_type.name for asset_type in data.AssetType]
 _LEVEL_TYPES = [level.name for level in data.Level]
 _SPONSOR_TYPES = [sponsor_type.name for sponsor_type in data.SponsorType]
 _USER_TYPES = [user_type.type for user_type in data.UserType]
+
+_ASSET_REQUEST_OVERDUE_DAYS = 14
 _CONTRACT_OVERDUE_DAYS = 14
 _INVOICE_OVERDUE_DAYS = 14
 
@@ -236,20 +238,6 @@ class Role(db.Model):
             return self.type
         return super(Role, self).__getattr__(self, name)
 
-'''
-class PseudoUser(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(50), nullable=False, default='')
-    last_name = db.Column(db.String(50), default='')
-    username = db.Column(db.String(50))
-    
-    @property
-    def user_auth(self):
-        obj = object()
-        obj.username = username
-        return obj
-'''
-
 class UserRoles(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     user_id = db.Column(db.Integer(), db.ForeignKey("user.id", ondelete="CASCADE"))
@@ -265,11 +253,6 @@ def load_sponsor(target, context):
             break
     else:
         target.current = target.add_deal(datetime.datetime.today().year)
-    '''
-    target.current = target.deals.filter_by(year=datetime.datetime.today().year).first()
-    if not target.current:
-        target.current = target.add_deal(datetime.datetime.today().year)
-    '''
     
     target.assets_by_type = {}
     target.received_assets = True
@@ -301,6 +284,13 @@ def load_contract(target, context):
 def load_invoice(target, context):
     if target.sent:
         target.overdue = target.sent <= datetime.date.today() - datetime.timedelta(days=_INVOICE_OVERDUE_DAYS)
+    else:
+        target.overdue = None
+
+@event.listens_for(AssetRequest, 'load')
+def load_asset_request(target, context):
+    if target.sent:
+        target.overdue = target.sent <= datetime.date.today() - datetime.timedelta(days=_ASSET_REQUEST_OVERDUE_DAYS)
     else:
         target.overdue = None
 
