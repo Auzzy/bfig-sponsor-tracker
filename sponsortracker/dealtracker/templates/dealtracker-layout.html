@@ -1,6 +1,10 @@
 {% extends "layout.html" %}
 
-{% block title %}Deal Tracker{% endblock %}
+{% block title %}
+Deal Tracker{% if sponsor %} - {{ sponsor.name }}{% endif %}
+{% endblock %}
+
+{% block bodytitle %}Deal Tracker{% endblock %}
 
 {% block appnav %}
 <a href="{{ url_for('dealtracker.my_accounts') }}">My Accounts</a>

@@ -35,7 +35,7 @@ class CurrentDealForm(flask_wtf.Form):
         
         name_pattern = "{user.last_name}, {user.first_name}"
         sorted_users = sorted(model.User.query.all(), key=lambda user: user.last_name)
-        self.owner.choices = [("", "")] + [(user.user_auth.username, name_pattern.format(user=user)) for user in sorted_users if user.type == data.UserType.SALES.type]
+        self.owner.choices = [("", "")] + [(user.user_auth.username, name_pattern.format(user=user)) for user in sorted_users if user.type == data.UserType.SALES]
 
 def validate_email(email):
     return bool(_EMAIL_RE.match(email))

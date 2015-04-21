@@ -12,9 +12,7 @@
             <th style="min-width:150px;">Contract Status</th>
             <th style="min-width:150px;">Invoice Status</th>
             <th style="min-width:150px;">Asset Request Status</th>
-            {% if not readonly %}
             <th style="background:white;" class="sorttable_nosort"></th>
-            {% endif %}
         </tr>
     </thead>
     <tbody>
@@ -29,13 +27,11 @@
             {% include "sponsor-status-request.html" %}
             {% set request=sponsor.current.asset_request %}
             {% include "sponsor-status-request.html" %}
-            {% if not readonly %}
             <td style="background:white;">
                 <a href="javascript:void(0);" onclick="delete_sponsor({{ sponsor.id }})">
                     <img src="{{ url_for('assettracker.static', filename='delete.png') }}"></img>
                 </a>
             </td>
-            {% endif %}
         </tr>
         {% endfor %}
     </tbody>

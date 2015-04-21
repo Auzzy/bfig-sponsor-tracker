@@ -1,10 +1,9 @@
 from flask import flash, get_flashed_messages, redirect, render_template, request, send_file, url_for
 from flask.ext.login import current_user
-from flask.ext.user import roles_required
 
 import datetime
 
-from sponsortracker.data import AssetType, RoleType
+from sponsortracker.data import AssetType
 from sponsortracker.model import Asset, Sponsor
 from sponsortracker.assettracker import asset_request, download, forms, uploads
 from sponsortracker.assettracker.app import asset_tracker
@@ -12,7 +11,6 @@ from sponsortracker.assettracker.app import asset_tracker
 UPDATE_DATE_FORMAT = "%a %b %d %Y"
 
 @asset_tracker.route("/")
-@roles_required([RoleType.AT_READ, RoleType.AT_WRITE])
 def home():
     assets = Asset.query.all()
     min_asset_date = min(assets, key=lambda asset: asset.date).date if assets else datetime.date.today()
@@ -20,19 +18,16 @@ def home():
     return render_template("assettracker.html", sponsors=sponsors, min_asset_date=min_asset_date)
 
 @asset_tracker.route("/download/all/")
-@roles_required([RoleType.AT_READ])
 def download_all():
     zipfilename = download.all()
     return send_file(zipfilename, as_attachment=True)
 
 @asset_tracker.route("/download/logo_cloud/")
-@roles_required([RoleType.AT_READ])
 def download_logo_cloud():
     zipfilename = download.logo_cloud()
     return send_file(zipfilename, as_attachment=True)
 
 @asset_tracker.route("/download/website_updates/")
-@roles_required([RoleType.AT_READ])
 def download_website_updates():
     date = datetime.datetime.strptime(request.args["website-updates-date"], UPDATE_DATE_FORMAT).date()
     zipfilename = download.website_updates(date)
@@ -40,22 +35,16 @@ def download_website_updates():
 
 
 @asset_tracker.route("/sponsor/<int:id>/")
-@roles_required([RoleType.AT_READ, RoleType.AT_WRITE])
 def sponsor_page(id):
-    readonly = not current_user.has_roles(RoleType.AT_WRITE)
     sponsor = Sponsor.query.get_or_404(id)
     errors = get_flashed_messages(category_filter=["error"])
-    if readonly:
-        info_forms = {}
-    else:
-        info_forms = {
-            "link":forms.LinkForm(info=sponsor.link),
-            "description":forms.DescriptionForm(info=sponsor.description)
-        }
-    return render_template("sponsor-page.html", sponsor=sponsor, forms=info_forms, readonly=readonly, errors=errors)
+    info_forms = {
+        "link":forms.LinkForm(info=sponsor.link),
+        "description":forms.DescriptionForm(info=sponsor.description)
+    }
+    return render_template("sponsor-page.html", sponsor=sponsor, forms=info_forms, errors=errors)
 
 @asset_tracker.route("/sponsor/<int:id>/link/", methods=["POST"])
-@roles_required([RoleType.AT_WRITE])
 def info_link(id):
     form = forms.LinkForm()
     if form.validate_on_submit():
@@ -65,7 +54,6 @@ def info_link(id):
     return redirect(url_for("assettracker.sponsor_page", id=id))
 
 @asset_tracker.route("/sponsor/<int:id>/description/", methods=["POST"])
-@roles_required([RoleType.AT_WRITE])
 def info_description(id):
     form = forms.DescriptionForm()
     if form.validate_on_submit():
@@ -75,14 +63,12 @@ def info_description(id):
     return redirect(url_for("assettracker.sponsor_page", id=id))
 
 @asset_tracker.route("/sponsor/<int:id>/asset-request/", methods=["POST"])
-@roles_required([RoleType.AT_WRITE])
 def send_asset_request(id):
     asset_request.send(Sponsor.query.get_or_404(id))
     
     return redirect(url_for("assettracker.sponsor_page", id=id))
 
 @asset_tracker.route("/sponsor/<int:id>/upload-asset/", methods=["GET", "POST"])
-@roles_required([RoleType.AT_WRITE])
 def upload_asset(id):
     sponsor = Sponsor.query.get_or_404(id)
     
@@ -97,14 +83,12 @@ def upload_asset(id):
     return render_template("upload-asset.html", id=id, form=form, sponsor=sponsor, assets=sponsor.assets)
 
 @asset_tracker.route("/sponsor/<int:id>/delete-asset/", methods=["POST"])
-@roles_required([RoleType.AT_WRITE])
 def delete_asset(id):
     asset_id = request.form["asset-id"]
     uploads.Asset.delete(asset_id)
     return redirect(url_for("assettracker.sponsor_page", id=id))
 
 @asset_tracker.route("/sponsor/<int:id>/preview-asset/", methods=["GET", "POST"])
-@roles_required([RoleType.AT_WRITE])
 def preview_asset(id):
     filename = request.args.get("filename") or request.values.get("filename")
     type = request.args.get("type") or request.values.get("type")

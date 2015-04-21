@@ -3,11 +3,10 @@ import itertools
 from collections import OrderedDict
 
 from flask import redirect, render_template, request, url_for
-from flask.ext.user import roles_required
 from flask.ext.login import current_user
 
 from sponsortracker import model
-from sponsortracker.data import RoleType, UserType
+from sponsortracker.data import UserType
 from sponsortracker.dealtracker import forms
 from sponsortracker.dealtracker.app import deal_tracker
 
@@ -15,31 +14,25 @@ DATE_FORMAT = "%a %b %d %Y"
 REQUEST_ID = "request-date"
 
 @deal_tracker.route("/")
-@roles_required([RoleType.DT_READ, RoleType.DT_WRITE])
 def my_accounts():
     if current_user.type != UserType.SALES.type:
         return redirect(url_for("dealtracker.all"))
-    
-    readonly = not current_user.has_roles(RoleType.DT_WRITE)    
+        
     deals = model.Deal.query.filter_by(owner=current_user.user_auth.username, year=datetime.datetime.today().year).all()
     sponsors = [deal.sponsor for deal in deals]
-    return render_template("sponsor-list.html", sponsors=sponsors, readonly=readonly)
+    return render_template("sponsor-list.html", sponsors=sponsors)
     
 @deal_tracker.route("/all")
-@roles_required([RoleType.DT_READ, RoleType.DT_WRITE])
 def all():
-    readonly = not current_user.has_roles(RoleType.DT_WRITE)
-    return render_template("sponsor-list.html", sponsors=model.Sponsor.query.all(), readonly=readonly)
+    return render_template("sponsor-list.html", sponsors=model.Sponsor.query.all())
 
 @deal_tracker.route("/sponsor/<int:id>/")
-@roles_required([RoleType.DT_WRITE])
 def sponsor_info(id):
     sponsor = model.Sponsor.query.get_or_404(id)
     return render_template("sponsor-info.html", sponsor=sponsor, request_id=REQUEST_ID)
 
 @deal_tracker.route("/sponsor/edit", methods=["GET", "POST"])
 @deal_tracker.route("/sponsor/<int:id>/edit", methods=["GET", "POST"])
-@roles_required([RoleType.DT_WRITE])
 def configure_sponsor(id=None):
     if request.method == "POST":
         contacts = _extract_contacts(request.values, forms.EMAIL_BASENAME, forms.NAME_BASENAME)
@@ -53,7 +46,6 @@ def configure_sponsor(id=None):
     return render_template("configure-sponsor.html", id=id, form=form, contacts=contacts, email_basename=forms.EMAIL_BASENAME, name_basename=forms.NAME_BASENAME)
 
 @deal_tracker.route("/sponsor/<int:id>/edit/current-deal", methods=["GET", "POST"])
-@roles_required([RoleType.DT_WRITE])
 def edit_current_deal(id):
     if request.method == "POST":
         form = forms.CurrentDealForm()
@@ -91,6 +83,14 @@ def asset_request_sent(id):
 def asset_request_received(id):
     return _update_request(id, lambda sponsor, val: setattr(sponsor.current.asset_request, "received", val))
 
+@deal_tracker.route("/sponsor/delete", methods=["POST"])
+def delete_sponsor():
+    id = request.form["sponsor-id"]
+    model.db.session.delete(model.Sponsor.query.get_or_404(id))
+    model.db.session.commit()
+    return redirect(url_for("dealtracker.my_accounts"))
+    
+
 def _update_request(sponsor_id, update_field):
     sponsor = model.Sponsor.query.get_or_404(sponsor_id)
     date = datetime.datetime.strptime(request.values[REQUEST_ID], DATE_FORMAT).date() if request.values.get(REQUEST_ID) else None
@@ -103,18 +103,6 @@ def _update_request(sponsor_id, update_field):
         sponsor.current.asset_request.received = None
     model.db.session.commit()
     return redirect(url_for("dealtracker.sponsor_info", id=sponsor.id))
-
-
-
-@deal_tracker.route("/sponsor/delete", methods=["POST"])
-@roles_required([RoleType.DT_WRITE])
-def delete_sponsor():
-    id = request.form["sponsor-id"]
-    model.db.session.delete(model.Sponsor.query.get_or_404(id))
-    model.db.session.commit()
-    return redirect(url_for("dealtracker.my_accounts"))
-    
-
 
 def _extract_contacts(data, email_basename, name_basename):
     emails, names = {}, {}

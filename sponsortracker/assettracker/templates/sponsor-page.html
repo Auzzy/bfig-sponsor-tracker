@@ -34,27 +34,25 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
         <span id="{{ id }}_value" style="display:inline;">{{ forms[id].data_field().data or "" }}</span>
     </div>
     
-    {% if not readonly %}
-        <div id="{{ id }}_edit_button" style="display:inline;">
-            <a href="javascript:void(0);" onclick="edit('{{ id }}');"><img style="display:inline;" src="{{ url_for('assettracker.static', filename='edit.png') }}" /></a>
-        </div>
-        <form id="{{ id }}_form" style="display:inline;" method="POST" action="{{ url_for('assettracker.info_' + id, id=sponsor.id) }}">
-            {% for field in forms[id] %}
-                {% if field == forms[id].data_field() %}
-                <div id="{{ id }}_field" style="display:none;">
-                    {{ field(style="display:inline; vertical-align: text-top") }}&nbsp;
-                </div>
-                {% elif field.type in ("CSRFTokenField", "HiddenField") %}
-                    {{ field }}
-                {% endif %}
-            {% endfor %}
-        </form>
-        
-        <div id="{{ id }}_field_button" style="display:none;">
-            <a href="javascript:void(0);" onclick="save('{{ id }}');"><img style="display:inline;" src="{{ url_for('assettracker.static', filename='save.png') }}" /></a>
-            <a href="javascript:void(0);" onclick="cancel('{{ id }}');"><img style="display:inline;" src="{{ url_for('assettracker.static', filename='cancel.png') }}" /></a>
-        </div>
-    {% endif %}
+    <div id="{{ id }}_edit_button" style="display:inline;">
+        <a href="javascript:void(0);" onclick="edit('{{ id }}');"><img style="display:inline;" src="{{ url_for('assettracker.static', filename='edit.png') }}" /></a>
+    </div>
+    <form id="{{ id }}_form" style="display:inline;" method="POST" action="{{ url_for('assettracker.info_' + id, id=sponsor.id) }}">
+        {% for field in forms[id] %}
+            {% if field == forms[id].data_field() %}
+            <div id="{{ id }}_field" style="display:none;">
+                {{ field(style="display:inline; vertical-align: text-top") }}&nbsp;
+            </div>
+            {% elif field.type in ("CSRFTokenField", "HiddenField") %}
+                {{ field }}
+            {% endif %}
+        {% endfor %}
+    </form>
+    
+    <div id="{{ id }}_field_button" style="display:none;">
+        <a href="javascript:void(0);" onclick="save('{{ id }}');"><img style="display:inline;" src="{{ url_for('assettracker.static', filename='save.png') }}" /></a>
+        <a href="javascript:void(0);" onclick="cancel('{{ id }}');"><img style="display:inline;" src="{{ url_for('assettracker.static', filename='cancel.png') }}" /></a>
+    </div>
     <br />
 {% endfor %}
 
@@ -64,14 +62,12 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
 
 <h2>Assets</h2>
 <p>
-    {% if not readonly %}
     <a href="{{ url_for('assettracker.upload_asset', id=sponsor.id) }}">Upload Asset</a><br />
     <form method="POST" action="{{ url_for('assettracker.send_asset_request', id=sponsor.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         
         <!-- <input type="submit" value="Send Asset Request" /> -->
     </form>
-    {% endif %}
 </p>
 
 {% for type in sponsor.level.assets|sort(attribute="label") %}
@@ -95,7 +91,6 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
 {% endblock %}
 
 {% block js %}
-{% if not readonly %}
 function save(formId) {
     document.getElementById(formId + "_form").submit();
 }
@@ -135,5 +130,4 @@ function delete_asset(id) {
     
     form.submit();
 }
-{% endif %}
 {% endblock %}

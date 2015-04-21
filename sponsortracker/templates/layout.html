@@ -92,7 +92,7 @@
 </head>
 <body>
     <div id="title">
-        <h1 style="display:inline;">{{ self.title() }}</h1>
+        <h1 style="display:inline;">{% block bodytitle %}{% endblock %}</h1>
         <div id="usernav" style="float:right;">
             {% block usernav %}
             <a href="{{ url_for('user.change_password') }}">Change Password</a>

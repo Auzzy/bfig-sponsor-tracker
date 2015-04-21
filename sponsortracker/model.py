@@ -21,7 +21,7 @@ manager.add_command('db', MigrateCommand)
 _ASSET_TYPES = [asset_type.name for asset_type in data.AssetType]
 _LEVEL_TYPES = [level.name for level in data.Level]
 _SPONSOR_TYPES = [sponsor_type.name for sponsor_type in data.SponsorType]
-_USER_TYPES = [user_type.type for user_type in data.UserType]
+_USER_TYPES = [user_type.name for user_type in data.UserType]
 
 _ASSET_REQUEST_OVERDUE_DAYS = 14
 _CONTRACT_OVERDUE_DAYS = 14
@@ -30,8 +30,8 @@ _INVOICE_OVERDUE_DAYS = 14
 class Sponsor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True)
-    type_name = db.Column("type", db.Enum(name="SponsorType", *_SPONSOR_TYPES))
-    level_name = db.Column("level", db.Enum(name="LevelType", *_LEVEL_TYPES))
+    type_name = db.Column("type", db.Enum(name="SponsorType", native_enum=False, *_SPONSOR_TYPES))
+    level_name = db.Column("level", db.Enum(name="LevelType", native_enum=False, *_LEVEL_TYPES))
     notes = db.Column(db.Text())
     link = db.Column(db.String(2000))
     description = db.Column(db.Text())
@@ -51,12 +51,16 @@ class Sponsor(db.Model):
         
     def update(self, name=None, type_name=None, level_name=None, notes=None, link=None, description=None):
         self.name = name or self.name
-        self.type_name = type_name or self.type_name
-        self.notes = notes or self.notes
-        self.link = link or self.link
-        self.description = description or self.description
-        if level_name is not None:
-            self.level_name = None if level_name == "" else level_name
+        self.type_name = self._update_field(self.type_name, type_name)
+        self.level_name = self._update_field(self.level_name, level_name)
+        self.notes = self._update_field(self.notes, notes)
+        self.link = self._update_field(self.link, link)
+        self.description = self._update_field(self.description, description)
+    
+    def _update_field(self, old_value, new_value, cleared=""):
+        if new_value is not None:
+            return None if new_value == cleared else new_value
+        return old_value
     
     def save_link(self, form):
         self.link = form.link.data or ""
@@ -104,14 +108,19 @@ class Contact(db.Model):
         self.name = email.split('@')[0] if not name and email and '@' in email else name
     
     def update(self, email=None, name=None):
-        self.email = email or self.email
-        self.name = name or self.name
+        self.email = self._update_field(self.email, email)
+        self.name = self._update_field(self.name, name)
+        
+    def _update_field(self, old_value, new_value, cleared=""):
+        if new_value is not None:
+            return None if new_value == cleared else new_value
+        return old_value
 
 class Asset(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsor.id'))
     date = db.Column(db.Date)
-    type_name = db.Column("type", db.Enum(name="AssetType", *_ASSET_TYPES), nullable=False)
+    type_name = db.Column("type", db.Enum(name="AssetType", native_enum=False, *_ASSET_TYPES), nullable=False)
     filename = db.Column(db.String(256), nullable=False)
     
     def __init__(self, sponsor_id, type_name, filename, date=datetime.datetime.today().date()):
@@ -122,10 +131,10 @@ class Asset(db.Model):
         
         load_asset(self, None)
     
-    def update(self, sponsor_id=None, date=None, type=None, filename=None):
+    def update(self, sponsor_id=None, date=None, type_name=None, filename=None):
         self.sponsor_id = sponsor_id or self.sponsor_id
         self.date = date or self.date
-        self.type = type or self.type
+        self.type_name = type_name or self.type_name
         self.filename = filename or self.filename
 
 class Deal(db.Model):
@@ -150,11 +159,16 @@ class Deal(db.Model):
         self.invoice = Invoice(self.id)
         self.asset_request = AssetRequest(self.id)
     
-    def update(self, year=None, owner=None, cash=None, inkind=None):
+    def update(self, year=None, owner=None, cash=0, inkind=0):
         self.year = year or self.year
-        self.owner = owner or self.owner
-        self.cash = cash if cash is not None else self.cash
-        self.inkind = inkind if inkind is not None else self.inkind
+        self.owner = self._update_field(self.owner, owner)
+        self.cash = self._update_field(self.cash, cash, None, 0)
+        self.inkind = self._update_field(self.inkind, inkind, None, 0)
+    
+    def _update_field(self, old_value, new_value, cleared="", unset=None):
+        if new_value is not unset:
+            return unset if new_value == cleared else new_value
+        return old_value
     
 
 class Contract(db.Model):
@@ -202,16 +216,12 @@ class User(db.Model, UserMixin):
     first_name = db.Column(db.String(50), nullable=False, default='')
     last_name = db.Column(db.String(50), nullable=False, default='')
     enabled = db.Column(db.Boolean(), nullable=False, default=False)
-    type = db.Column(db.Enum(name="UserType", *_USER_TYPES), nullable=False)
+    type_name = db.Column(db.Enum(name="UserType", native_enum=False, *_USER_TYPES), nullable=False)
     emails = db.relationship("UserEmail", lazy="dynamic")
-    roles = db.relationship("Role", secondary='user_roles', backref=db.backref('users', lazy='dynamic'), lazy="dynamic")
     user_auth = db.relationship("UserAuth", uselist=False)
     
     def is_active(self):
         return self.enabled
-    
-    def has_roles(self, *roles):
-        return super(User, self).has_roles(*data.RoleType.types(roles))
 
 class UserEmail(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -228,20 +238,6 @@ class UserAuth(db.Model, UserMixin):
     password = db.Column(db.String(255), nullable=False, default='')
     reset_password_token = db.Column(db.String(100), nullable=False, default='')
     user = db.relationship('User', uselist=False, foreign_keys=user_id)
-
-class Role(db.Model):
-    id = db.Column(db.Integer(), primary_key=True)
-    type = db.Column(db.String(50), unique=True)
-    
-    def __getattr__(self, name):
-        if name == "name":
-            return self.type
-        return super(Role, self).__getattr__(self, name)
-
-class UserRoles(db.Model):
-    id = db.Column(db.Integer(), primary_key=True)
-    user_id = db.Column(db.Integer(), db.ForeignKey("user.id", ondelete="CASCADE"))
-    role_id = db.Column(db.Integer(), db.ForeignKey("role.id", ondelete="CASCADE"))
 
 
 @event.listens_for(Sponsor, 'load')
@@ -302,19 +298,15 @@ def load_asset(target, context):
     target.thumbnail_url = thumb_uploader.url(target.filename)
     target.name = target.filename.rsplit('/', maxsplit=1)[-1].rsplit('.', maxsplit=1)[0]
 
-@event.listens_for(User.type, 'set')
-def handle_type_change(user, type, old_type, initiator):
-    if type != old_type:
-        roles = data.UserType.from_type(type).roles
-        role_types = data.RoleType.types(roles)
-        user.roles = Role.query.filter(Role.type.in_(role_types)).all()
+@event.listens_for(User, 'load')
+def load_user(target, context):
+    target.type = data.UserType[target.type_name] if target.type_name in data.UserType.__members__ else None
 
 
 def password_validator(form, field):
     password = field.data
     if len(password) < 6:
         raise ValidationError("Password must have at least 6 characters.")
-
 
 if not hasattr(app, "user_manager"):
     db_adapter = SQLAlchemyAdapter(db, User, UserAuthClass=UserAuth, UserEmailClass=UserEmail)
