@@ -20,7 +20,7 @@ from sponsortracker import data, model
 
 def _make_enum_nonnative(table, colname, enumname, *values, **alter_column_kwargs):
     op.alter_column(table, colname, existing_type=sa.Enum(name=enumname), type_=sa.Text())
-    op.drop_constraint(enumname, table)
+    # op.drop_constraint(enumname, table)
     op.alter_column(table, colname, existing_type=sa.Text(), type_=sa.Enum(name=enumname, native_enum=False, *values), **alter_column_kwargs)
 
 def upgrade():
