@@ -31,102 +31,88 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
 
 <h1>{{ sponsor.name }}</h1>
 
-<h2 style="display: inline;">Info</h2>
-<span><a href="{{ url_for('dealtracker.configure_sponsor', id=sponsor.id) }}">Edit...</a></span>
-
-<p>
-    <span style="font-weight:bold">Sponsor type</span>: {{ sponsor.type.value or "" }}<br />
-    <span style="font-weight:bold">Contact(s)</span>: {{ sponsor.contacts|join('; ', attribute='email') }}<br />
-    <span style="font-weight:bold">Home page</span>: {% if sponsor.link %}<a href="{{ sponsor.link }}" target="_blank">{{ sponsor.link }}</a>{% endif %}<br />
-    <span style="font-weight:bold">Description</span>: {{ sponsor.description or "" }}<br />
-    <span style="font-weight:bold">Notes</span>: {{ sponsor.notes or "" }}
-</p>
+<h2 style="margin-bottom:0px;">Info</h2>
+<div>
+    <span><a href="{{ url_for('dealtracker.configure_sponsor', id=sponsor.id) }}">Edit...</a></span>
+</div>
+<div style="position:relative; left:30px;">
+    <p>
+        <span style="font-weight:bold">Sponsor type</span>: {{ sponsor.type.value or "" }}<br />
+        <span style="font-weight:bold">Contact(s)</span>: {{ sponsor.contacts|join('; ', attribute='email') }}<br />
+        <span style="font-weight:bold">Home page</span>: {% if sponsor.link %}<a href="{{ sponsor.link }}" target="_blank">{{ sponsor.link }}</a>{% endif %}<br />
+        <span style="font-weight:bold">Description</span>: {{ sponsor.description or "" }}<br />
+        <span style="font-weight:bold">Notes</span>: {{ sponsor.notes or "" }}
+    </p>
+</div>
 
 <h2>Status</h2>
 {% include 'sponsor-status.html' %}
 
 <br />
 
-<h2 style="display: inline;">Current Deal</h2>
-<span><a href="{{ url_for('dealtracker.edit_current_deal', id=sponsor.id) }}">Edit...</a></span>
-
-<p style="margin-bottom:0px;">
-    <span style="font-weight:bold">Account owner</span>: {{ sponsor.current.owner_name or "" }}<br />
-    <span style="font-weight:bold">Level</span>: {{ sponsor.current.level.label or "" }}<br />
-    <span style="font-weight:bold">Cash</span>: ${{ sponsor.current.cash }}<br />
-    <span style="font-weight:bold">Inkind</span>: ${{ sponsor.current.inkind }}<br />
-</p>
-
+<h2 style="margin-bottom:0px;">Current Deal</h2>
 <div>
-    <span style="font-weight:bold">Contract</span>:
-    <form id="contract-sent-form" style="display:inline;" action="{{ url_for('dealtracker.contract_sent', id=sponsor.id) }}" method="POST">
-        <input type="checkbox" name="{{ request_id }}" id="contract-sent" {% if contract.sent %}checked{% endif %} {% if not sponsor.current.inkind and not sponsor.current.cash %}disabled{% endif %} />Sent
-    </form>
+    <a href="{{ url_for('dealtracker.edit_current_deal', id=sponsor.id) }}">Edit...</a>
     &nbsp;&nbsp;
-    <form id="contract-received-form" style="display:inline;" action="{{ url_for('dealtracker.contract_received', id=sponsor.id) }}" method="POST">
-        <input type="checkbox" name="{{ request_id }}" id="contract-received" {% if contract.received %}checked{% elif not contract.sent %}disabled{% endif %} />Received
-    </form>
+    <a href="{{ url_for('dealtracker.manage_assets', id=sponsor.id) }}">Manage Assets...</a>
 </div>
-
-<div>
-    <span style="font-weight:bold">Invoice</span>:
-    <form id="invoice-sent-form" style="display:inline;" action="{{ url_for('dealtracker.invoice_sent', id=sponsor.id) }}" method="POST">
-        <input type="checkbox" name="{{ request_id }}" id="invoice-sent" {% if invoice.sent %}checked{% endif %} {% if not sponsor.current.inkind and not sponsor.current.cash %}disabled{% endif %} />Sent
-    </form>
-    &nbsp;&nbsp;
-    <form id="invoice-received-form" style="display:inline;" action="{{ url_for('dealtracker.invoice_received', id=sponsor.id) }}" method="POST">
-        <input type="checkbox" name="{{ request_id }}" id="invoice-received" {% if invoice.received %}checked{% elif not invoice.sent %}disabled{% endif %} />Received
-    </form>
-</div>
-
-<div>
-    <span style="font-weight:bold">Asset Request</span>:
-    <form id="asset-request-sent-form" style="display:inline;" action="{{ url_for('dealtracker.asset_request_sent', id=sponsor.id) }}" method="POST">
-        <input type="checkbox" name="{{ request_id }}" id="asset-request-sent" {% if asset_request.sent %}checked{% endif %} {% if not sponsor.level %}disabled{% endif %} />Sent
-    </form>
-    &nbsp;&nbsp;
-    <form id="asset-request-received-form" style="display:inline;" action="{{ url_for('dealtracker.asset_request_received', id=sponsor.id) }}" method="POST">
-        <input type="checkbox" name="{{ request_id }}" id="asset-request-received" {% if asset_request.received %}checked{% elif not asset_request.sent %}disabled{% endif %} />Received
-    </form>
+<div style="position:relative; left:30px;">
+    <p style="margin-bottom:0px;">
+        <span style="font-weight:bold">Account owner</span>: {{ sponsor.current.owner_name or "" }}<br />
+        <span style="font-weight:bold">Level</span>: {{ sponsor.current.level.label or "" }}<br />
+        <span style="font-weight:bold">Cash</span>: ${{ sponsor.current.cash }}<br />
+        <span style="font-weight:bold">Inkind</span>: ${{ sponsor.current.inkind }}<br />
+    </p>
+    
+    <div>
+        <span style="font-weight:bold">Contract</span>:
+        <form id="contract-sent-form" style="display:inline;" action="{{ url_for('dealtracker.contract_sent', id=sponsor.id) }}" method="POST">
+            <input type="checkbox" name="{{ request_id }}" id="contract-sent" {% if contract.sent %}checked{% endif %} {% if not sponsor.current.inkind and not sponsor.current.cash %}disabled{% endif %} />Sent
+        </form>
+        &nbsp;&nbsp;
+        <form id="contract-received-form" style="display:inline;" action="{{ url_for('dealtracker.contract_received', id=sponsor.id) }}" method="POST">
+            <input type="checkbox" name="{{ request_id }}" id="contract-received" {% if contract.received %}checked{% elif not contract.sent %}disabled{% endif %} />Received
+        </form>
+    </div>
+    
+    <div>
+        <span style="font-weight:bold">Invoice</span>:
+        <form id="invoice-sent-form" style="display:inline;" action="{{ url_for('dealtracker.invoice_sent', id=sponsor.id) }}" method="POST">
+            <input type="checkbox" name="{{ request_id }}" id="invoice-sent" {% if invoice.sent %}checked{% endif %} {% if not sponsor.current.inkind and not sponsor.current.cash %}disabled{% endif %} />Sent
+        </form>
+        &nbsp;&nbsp;
+        <form id="invoice-received-form" style="display:inline;" action="{{ url_for('dealtracker.invoice_received', id=sponsor.id) }}" method="POST">
+            <input type="checkbox" name="{{ request_id }}" id="invoice-received" {% if invoice.received %}checked{% elif not invoice.sent %}disabled{% endif %} />Received
+        </form>
+    </div>
+    
+    <div>
+        <span style="font-weight:bold">Asset Request</span>:
+        <form id="asset-request-sent-form" style="display:inline;" action="{{ url_for('dealtracker.asset_request_sent', id=sponsor.id) }}" method="POST">
+            <input type="checkbox" name="{{ request_id }}" id="asset-request-sent" {% if asset_request.sent %}checked{% endif %} {% if not sponsor.level %}disabled{% endif %} />Sent
+        </form>
+        &nbsp;&nbsp;
+        <form id="asset-request-received-form" style="display:inline;" action="{{ url_for('dealtracker.asset_request_received', id=sponsor.id) }}" method="POST">
+            <input type="checkbox" name="{{ request_id }}" id="asset-request-received" {% if asset_request.received %}checked{% elif not asset_request.sent %}disabled{% endif %} />Received
+        </form>
+    </div>
 </div>
 
 {% if sponsor.deals[1:] %}
 <h2>Previous Deals</h2>
-{% for deal in sponsor.deals|sort(attribute="year", reverse=True) %}
-{% if deal.year != sponsor.current.year %}
-<p>
-    <span style="font-weight:bold">Year</span>: {{ deal.year }}<br />
-    <span style="font-weight:bold">Account owner</span>: {{ deal.owner_name or "" }}<br />
-    <span style="font-weight:bold">Cash</span>: ${{ deal.cash }}<br />
-    <span style="font-weight:bold">Inkind</span>: ${{ deal.inkind }}<br />
-</p>
-{% endif %}
-{% endfor %}
-{% endif %}
-
-{#
-{% if sponsor.level %}
-<h2>Assets</h2>
-
-{% for type in sponsor.level.assets|sort(attribute="label") %}
-<div style="float:left; width:200px;">
-    {% if type in sponsor.assets_by_type %} {% set cls="received" %} {% else %} {% set cls="missing" %} {% endif %}
-    <p class="{{ cls }}" style="text-align:center; padding-left:5px; padding-right:5px;">{{ type.label }}</p>
-    {% for asset in sponsor.assets_by_type[type] %}
-    <div class="asset" style="position:relative; left:50px;">
-        <a href="{{ asset.url }}" target="_blank"><img src="{{ asset.thumbnail_url }}" alt="{{ asset.name }}"></img></a>
-        <a class="removable" href="javascript:void(0);" onclick="delete_asset({{ asset.id }})">
-            <img style="vertical-align:top; position:relative; left:-20px;" src="{{ url_for('assettracker.static', filename='delete.png') }}"></img>
-        </a>
-    </div>
-    <br />
+<div style="position:relative; left:30px;">
+    {% for deal in sponsor.deals|sort(attribute="year", reverse=True) %}
+    {% if deal.year != sponsor.current.year %}
+    <p>
+        <span style="font-weight:bold">Year</span>: {{ deal.year }}<br />
+        <span style="font-weight:bold">Account owner</span>: {{ deal.owner_name or "" }}<br />
+        <span style="font-weight:bold">Cash</span>: ${{ deal.cash }}<br />
+        <span style="font-weight:bold">Inkind</span>: ${{ deal.inkind }}<br />
+    </p>
+    {% endif %}
     {% endfor %}
 </div>
-
-<div style="float:left; width:20px;">&nbsp;</div>
-{% endfor %}
 {% endif %}
-#}
 
 {% endblock %}
 

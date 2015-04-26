@@ -80,13 +80,6 @@
     
         <script type="text/javascript" src="{{ url_for('static', filename='sorttable.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='pikaday.js') }}"></script>
-        <script>
-            function sortTable(tableId, colnum) {
-                var table = document.getElementById(tableId);
-                var sortColumn = table.getElementsByTagName("th")[colnum];
-                sorttable.innerSortFunction.apply(sortColumn, []);
-            }
-        </script>
         <script type="text/javascript">{% block js %}{% endblock %}</script>
     {% endblock %}
 </head>

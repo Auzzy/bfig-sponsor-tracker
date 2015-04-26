@@ -1,0 +1,76 @@
+{% extends "dealtracker-layout.html" %}
+
+{% block title %}{{ sponsor.name }} Assets{% endblock %}
+
+{% block css %}
+.missing {
+    background-color:red;
+}
+
+.received {
+    background-color:lime;
+}
+
+.error {
+    color:red;
+}
+
+.removable {
+    display:none;
+}
+
+div.asset a:hover + a.removable, div.asset a.removable:hover {
+    display:inline;
+}
+{% endblock %}
+
+{% block content %}
+<h1>{{ sponsor.name }} Assets</h1>
+
+<a href="{{ url_for('dealtracker.upload_asset', id=sponsor.id) }}">Upload Asset</a><br />
+
+{% for type in sponsor.current.level.assets|sort(attribute="label") %}
+<div style="float:left; width:200px;">
+    {% if type in sponsor.current.assets_by_type %} {% set cls="received" %} {% else %} {% set cls="missing" %} {% endif %}
+    <p class="{{ cls }}" style="text-align:center; padding-left:5px; padding-right:5px;">{{ type.label }}</p>
+    {% for asset in sponsor.current.assets_by_type[type] %}
+    <div class="asset" style="position:relative; left:50px;">
+        <a href="{{ asset.url }}" target="_blank"><img src="{{ asset.thumbnail_url }}" alt="{{ asset.name }}"></img></a>
+        <a class="removable" href="javascript:void(0);" onclick="delete_asset({{ asset.id }})">
+            <img style="vertical-align:top; position:relative; left:-20px;" src="{{ url_for('dealtracker.static', filename='delete.png') }}"></img>
+        </a>
+    </div>
+    <br />
+    {% endfor %}
+</div>
+
+<div style="float:left; width:20px;">&nbsp;</div>
+{% endfor %}
+
+{% endblock %}
+
+{% block js %}
+
+function delete_asset(id) {
+    var form = document.createElement("form");
+    form.setAttribute("method", "POST");
+    form.setAttribute("action", "{{ url_for('dealtracker.delete_asset', id=sponsor.id) }}");
+    
+    var csrfField = document.createElement("input");
+    csrfField.setAttribute("type", "hidden");
+    csrfField.setAttribute("name", "csrf_token");
+    csrfField.setAttribute("value", "{{ csrf_token() }}");
+    form.appendChild(csrfField);
+    
+    var hiddenField = document.createElement("input");
+    hiddenField.setAttribute("type", "hidden");
+    hiddenField.setAttribute("name", "asset-id");
+    hiddenField.setAttribute("value", id);
+    form.appendChild(hiddenField);
+    
+    document.body.appendChild(form);
+    
+    form.submit();
+}
+
+{% endblock %}

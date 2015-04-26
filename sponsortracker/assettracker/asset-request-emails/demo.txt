@@ -1,4 +1,0 @@
-Hello.
-This is a placeholder email during development, sent from the BFIG Sponsor Tracker.
-
-Thanks.

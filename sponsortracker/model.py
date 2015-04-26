@@ -10,7 +10,7 @@ from wtforms.validators import ValidationError
 
 from sponsortracker import data
 from sponsortracker.app import app
-from sponsortracker.assettracker.app import asset_uploader, thumb_uploader
+from sponsortracker.dealtracker.app import asset_uploader, thumb_uploader
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db, directory=app.config["MIGRATIONS_DIRECTORY"])
@@ -37,20 +37,18 @@ class Sponsor(db.Model):
     contacts = db.relationship("Contact", cascade="all, delete-orphan", passive_updates=False, backref="sponsor", lazy="dynamic")
     deals = db.relationship("Deal", cascade="all, delete-orphan", passive_updates=False, backref="sponsor", lazy="dynamic")
     
-    def __init__(self, name, type_name=None, level_name=None, notes=None, link=None, description=None):
+    def __init__(self, name, type_name=None, notes=None, link=None, description=None):
         self.name = name
         self.type_name = type_name or None
-        # self.level_name = level_name or None
         self.notes = notes
         self.link = link
         self.description = description
         
         load_sponsor(self, None)
         
-    def update_values(self, name=None, type_name=None, level_name=None, notes=None, link=None, description=None):
+    def update_values(self, name=None, type_name=None, notes=None, link=None, description=None):
         self.name = name or self.name
         self.type_name = self._update_field(self.type_name, type_name)
-        # self.level_name = self._update_field(self.level_name, level_name)
         self.notes = self._update_field(self.notes, notes)
         self.link = self._update_field(self.link, link)
         self.description = self._update_field(self.description, description)
@@ -59,14 +57,6 @@ class Sponsor(db.Model):
         if new_value is not None:
             return None if new_value == cleared else new_value
         return old_value
-    
-    def save_link(self, form):
-        self.link = form.link.data or ""
-        db.session.commit()
-        
-    def save_description(self, form):
-        self.description = form.description.data or ""
-        db.session.commit()
     
     def set_contacts(self, contact_email_name):
         contacts = []

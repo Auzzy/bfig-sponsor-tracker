@@ -16,7 +16,7 @@
         </tr>
     </thead>
     <tbody>
-        {% for sponsor in sponsors %}
+        {% for sponsor in sponsors|sort(attribute="name") %}
         <tr style="text-align:center;">
             <td style="text-align:left;"><a href="{{ url_for('dealtracker.sponsor_info', id=sponsor.id) }}">{{ sponsor.name }}</a></td>
             <td>{% if sponsor.current.owner %}{{ sponsor.current.owner_name }}{% endif %}</td>
@@ -29,7 +29,7 @@
             {% include "sponsor-status-request.html" %}
             <td style="background:white;">
                 <a href="javascript:void(0);" onclick="delete_sponsor({{ sponsor.id }})">
-                    <img src="{{ url_for('assettracker.static', filename='delete.png') }}"></img>
+                    <img src="{{ url_for('dealtracker.static', filename='delete.png') }}"></img>
                 </a>
             </td>
         </tr>
@@ -81,7 +81,4 @@ function delete_sponsor_confirmed(id) {
     form.submit();
 }
 
-window.onload = function() {
-    sortTable("sponsor-table", 0);
-}
 {% endblock %}
