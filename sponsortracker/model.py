@@ -31,28 +31,26 @@ class Sponsor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True)
     type_name = db.Column("type", db.Enum(name="SponsorType", native_enum=False, *_SPONSOR_TYPES))
-    level_name = db.Column("level", db.Enum(name="LevelType", native_enum=False, *_LEVEL_TYPES))
     notes = db.Column(db.Text())
     link = db.Column(db.String(2000))
     description = db.Column(db.Text())
     contacts = db.relationship("Contact", cascade="all, delete-orphan", passive_updates=False, backref="sponsor", lazy="dynamic")
-    assets = db.relationship("Asset", cascade="all, delete-orphan", passive_updates=False, backref="sponsor", lazy="dynamic")
     deals = db.relationship("Deal", cascade="all, delete-orphan", passive_updates=False, backref="sponsor", lazy="dynamic")
     
     def __init__(self, name, type_name=None, level_name=None, notes=None, link=None, description=None):
         self.name = name
         self.type_name = type_name or None
-        self.level_name = level_name or None
+        # self.level_name = level_name or None
         self.notes = notes
         self.link = link
         self.description = description
         
         load_sponsor(self, None)
         
-    def update(self, name=None, type_name=None, level_name=None, notes=None, link=None, description=None):
+    def update_values(self, name=None, type_name=None, level_name=None, notes=None, link=None, description=None):
         self.name = name or self.name
         self.type_name = self._update_field(self.type_name, type_name)
-        self.level_name = self._update_field(self.level_name, level_name)
+        # self.level_name = self._update_field(self.level_name, level_name)
         self.notes = self._update_field(self.notes, notes)
         self.link = self._update_field(self.link, link)
         self.description = self._update_field(self.description, description)
@@ -70,17 +68,16 @@ class Sponsor(db.Model):
         self.description = form.description.data or ""
         db.session.commit()
     
-    def add_contact(self, email, name=None):
-        if not email:
-            return None
-        
-        contact = self.contacts.filter_by(email=email).first()
-        if contact:
-            contact.update(name=name)
-        else:
-            contact = Contact(self.id, email, name)
-            self.contacts.append(contact)
-        return contact
+    def set_contacts(self, contact_email_name):
+        contacts = []
+        for email,name in contact_email_name:
+            contact = Contact.query.filter_by(email=email).first()
+            if contact:
+                contact.update_values(name=name)
+            else:
+                contact = Contact(self.id, email, name)
+            contacts.append(contact)
+        self.contacts = contacts
     
     def add_deal(self, year, owner=None, cash=0, inkind=0):
         if not year:
@@ -88,7 +85,7 @@ class Sponsor(db.Model):
         
         for deal in self.deals:
             if deal.year == year:
-                deal.update(owner=owner, cash=cash, inkind=inkind)
+                deal.update_values(owner=owner, cash=cash, inkind=inkind)
                 break
         else:
             deal = Deal(self.id, year, owner, cash, inkind)
@@ -107,7 +104,7 @@ class Contact(db.Model):
         self.email = email
         self.name = email.split('@')[0] if not name and email and '@' in email else name
     
-    def update(self, email=None, name=None):
+    def update_values(self, email=None, name=None):
         self.email = self._update_field(self.email, email)
         self.name = self._update_field(self.name, name)
         
@@ -116,27 +113,6 @@ class Contact(db.Model):
             return None if new_value == cleared else new_value
         return old_value
 
-class Asset(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsor.id'))
-    date = db.Column(db.Date)
-    type_name = db.Column("type", db.Enum(name="AssetType", native_enum=False, *_ASSET_TYPES), nullable=False)
-    filename = db.Column(db.String(256), nullable=False)
-    
-    def __init__(self, sponsor_id, type_name, filename, date=datetime.datetime.today().date()):
-        self.sponsor_id = sponsor_id
-        self.date = date
-        self.type_name = type_name
-        self.filename = filename
-        
-        load_asset(self, None)
-    
-    def update(self, sponsor_id=None, date=None, type_name=None, filename=None):
-        self.sponsor_id = sponsor_id or self.sponsor_id
-        self.date = date or self.date
-        self.type_name = type_name or self.type_name
-        self.filename = filename or self.filename
-
 class Deal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsor.id'))
@@ -144,26 +120,32 @@ class Deal(db.Model):
     owner = db.Column(db.String(60))
     cash = db.Column(db.Integer)
     inkind = db.Column(db.Integer)
+    level_name = db.Column("level", db.Enum(name="LevelType", native_enum=False, *_LEVEL_TYPES))
     contract = db.relationship("Contract", uselist=False, cascade="all, delete-orphan", passive_updates=False, backref="deal")
     invoice = db.relationship("Invoice", uselist=False, cascade="all, delete-orphan", passive_updates=False, backref="deal")
     asset_request = db.relationship("AssetRequest", uselist=False, cascade="all, delete-orphan", passive_updates=False, backref="deal")
+    assets = db.relationship("Asset", cascade="all, delete-orphan", passive_updates=False, backref="deal", lazy="dynamic")
     
-    def __init__(self, sponsor_id, year, owner=None, cash=0, inkind=0):
+    def __init__(self, sponsor_id, year, owner=None, cash=0, inkind=0, level_name=None):
         self.sponsor_id = sponsor_id
         self.year = year
         self.owner = owner
         self.cash = cash
         self.inkind = inkind
+        self.level_name = level_name
         
         self.contract = Contract(self.id)
         self.invoice = Invoice(self.id)
         self.asset_request = AssetRequest(self.id)
+        
+        load_deal(self, None)
     
-    def update(self, year=None, owner=None, cash=0, inkind=0):
+    def update_values(self, year=None, owner=None, cash=0, inkind=0, level_name=None):
         self.year = year or self.year
         self.owner = self._update_field(self.owner, owner)
         self.cash = self._update_field(self.cash, cash, None, 0)
         self.inkind = self._update_field(self.inkind, inkind, None, 0)
+        self.level_name = self._update_field(self.level_name, level_name)
     
     def _update_field(self, old_value, new_value, cleared="", unset=None):
         if new_value is not unset:
@@ -209,7 +191,27 @@ class AssetRequest(db.Model):
         self.ready = ready
         self.sent = sent
         self.received = received
+
+class Asset(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'))
+    date = db.Column(db.Date)
+    type_name = db.Column("type", db.Enum(name="AssetType", native_enum=False, *_ASSET_TYPES), nullable=False)
+    filename = db.Column(db.String(256), nullable=False)
+    
+    def __init__(self, deal_id, type_name, filename, date=datetime.datetime.today().date()):
+        self.deal_id = deal_id
+        self.date = date
+        self.type_name = type_name
+        self.filename = filename
         
+        load_asset(self, None)
+    
+    def update_values(self, deal_id=None, date=None, type_name=None, filename=None):
+        self.deal_id = deal_id or self.deal_id
+        self.date = date or self.date
+        self.type_name = type_name or self.type_name
+        self.filename = filename or self.filename        
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -250,9 +252,10 @@ def load_sponsor(target, context):
     else:
         target.current = target.add_deal(datetime.datetime.today().year)
     
-    target.assets_by_type = {}
-    target.received_assets = True
+    # target.assets_by_type = {}
+    # target.received_assets = True
     target.type = data.SponsorType[target.type_name] if target.type_name else None
+    '''
     target.level = data.Level[target.level_name] if target.level_name else None
     if target.level:
         target.assets_by_type = collections.defaultdict(list)
@@ -260,7 +263,8 @@ def load_sponsor(target, context):
             target.assets_by_type[asset.type].append(asset)
         
         target.received_assets = all(type in target.assets_by_type for type in target.level.assets) and target.link and target.description
-
+    '''
+    
 @event.listens_for(Deal, 'load')
 def load_deal(target, context):
     user_auth = UserAuth.query.filter_by(username=target.owner).first()
@@ -268,6 +272,16 @@ def load_deal(target, context):
         target.owner_name = "{user.first_name} {user.last_name}".format(user=user_auth.user)
     else:
         target.owner_name = target.owner
+    
+    target.assets_by_type = {}
+    target.received_assets = True
+    target.level = data.Level[target.level_name] if target.level_name else None
+    if target.level:
+        target.assets_by_type = collections.defaultdict(list)
+        for asset in target.assets:
+            target.assets_by_type[asset.type].append(asset)
+        
+        target.received_assets = all(type in target.assets_by_type for type in target.level.assets) and target.link and target.description
 
 @event.listens_for(Contract, 'load')
 def load_contract(target, context):

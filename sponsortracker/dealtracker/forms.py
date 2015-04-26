@@ -30,8 +30,10 @@ class CurrentDealForm(flask_wtf.Form):
     
     def __init__(self, *args, **kwargs):
         super(CurrentDealForm, self).__init__(*args, **kwargs)
+        '''
         if "obj" in kwargs:
             self.level_name.data = kwargs["obj"].sponsor.level_name
+        '''
         
         name_pattern = "{user.last_name}, {user.first_name}"
         sorted_users = sorted(model.User.query.all(), key=lambda user: user.last_name)

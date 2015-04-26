@@ -52,7 +52,7 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
 
 <p style="margin-bottom:0px;">
     <span style="font-weight:bold">Account owner</span>: {{ sponsor.current.owner_name or "" }}<br />
-    <span style="font-weight:bold">Level</span>: {{ sponsor.level.label or "" }}<br />
+    <span style="font-weight:bold">Level</span>: {{ sponsor.current.level.label or "" }}<br />
     <span style="font-weight:bold">Cash</span>: ${{ sponsor.current.cash }}<br />
     <span style="font-weight:bold">Inkind</span>: ${{ sponsor.current.inkind }}<br />
 </p>

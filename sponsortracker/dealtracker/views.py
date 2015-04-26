@@ -117,31 +117,30 @@ def _extract_contacts(data, email_basename, name_basename):
 def _configure_sponsor(id, form, contacts):
     if id:
         sponsor = model.Sponsor.query.get_or_404(id)
-        sponsor.update(name=form.name.data, type_name=form.type_name.data, notes=form.notes.data, link=form.link.data, description=form.description.data)
+        sponsor.update_values(name=form.name.data, type_name=form.type_name.data, notes=form.notes.data, link=form.link.data, description=form.description.data)
     else:
         sponsor = model.Sponsor(form.name.data, type_name=form.type_name.data, notes=form.notes.data, link=form.link.data, description=form.description.data)
         model.db.session.add(sponsor)
     
-    for contact in contacts:
-        sponsor.add_contact(*contact)
+    sponsor.set_contacts(contacts)
     
     model.db.session.commit()
     
     return sponsor
 
 def _configure_deal(id, form):
-    sponsor = model.Sponsor.query.get_or_404(id)
-    deal = sponsor.deals.filter_by(year=form.year.data).first()
+    # sponsor = model.Sponsor.query.get_or_404(id)
+    deal = model.Deal.query.filter_by(sponsor_id=id, year=form.year.data).first()
     if deal:
-        deal.update(owner=form.owner.data, cash=form.cash.data, inkind=form.inkind.data)
+        deal.update_values(owner=form.owner.data, cash=form.cash.data, inkind=form.inkind.data, level_name=form.level_name.data)
     else:
-        sponsor.add_deal(datetime.date.today().year, form.owner.data, form.cash.data, form.inkind.data)
+        deal = model.Deal(id, datetime.date.today().year, form.owner.data, form.cash.data, form.inkind.data, form.level_name.data)
     
-    sponsor.update(level_name=form.level_name.data)
+    # sponsor.update(level_name=form.level_name.data)
     
-    if sponsor.current == deal:
+    if deal == deal.sponsor.current:
         deal.contract.ready = deal.cash > 0 or deal.inkind > 0
         deal.invoice.ready = deal.cash > 0 or deal.inkind > 0
-        deal.asset_request.ready = bool(sponsor.level_name)
+        deal.asset_request.ready = bool(deal.level_name)
         
     model.db.session.commit()
