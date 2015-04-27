@@ -18,7 +18,7 @@
 {% endwith %}
 
 <p>
-    We have automatically corrected the discrepancies to create the image below. If this version is acceptable, please click "Use Preview". Click "Discard Preview" to discard the preview and return to the Upload Asset page.
+    We have automatically corrected the discrepancies to create the image below. Click "Accept" to use this version, or "Discard" to discard it and return to the Upload Asset page.
 </p>
 
 <img src="{{ preview }}" />
@@ -31,8 +31,8 @@
     <input type="hidden" name="filename" value="{{ filename }}" />
     <input type="hidden" name="type" value="{{ type.name }}" />
     
-    <input type="submit" name="save" value="Use Preview" />
-    <input type="submit" name="cancel" value="Discard Preview" />
+    <input type="submit" name="save" value="Accept" />
+    <input type="submit" name="cancel" value="Discard" />
 </form>
 
 <br /><br />

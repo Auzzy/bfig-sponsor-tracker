@@ -31,7 +31,7 @@ class Image(wand.image.Image):
         if name == "format":
             self.filename = "{file}.{ext}".format(file=splitext(self.filename)[0], ext=self.format.lower())
     
-    def save(self, sponsor_id):
+    def save(self, deal):
         if not hasattr(self, "UPLOADER") or not self.UPLOADER:
             raise AttributeError("To save this image, an uploader must be defined.")
         
@@ -39,19 +39,19 @@ class Image(wand.image.Image):
         super(Image, self).save(file=byte_stream)
         byte_stream.seek(0)
         file_storage = FileStorage(stream=byte_stream, filename=self.filename)
-        return self.UPLOADER.save(file_storage, folder=str(sponsor_id))
+        return self.UPLOADER.save(file_storage, folder=str(deal.sponsor.id))
     
     @classmethod
-    def url(cls, sponsor_id, filename):
-        return cls.UPLOADER.url(join(str(sponsor_id), filename))
+    def url(cls, deal, filename):
+        return cls.UPLOADER.url(join(str(deal.sponsor.id), filename))
     
     @classmethod
-    def _path(cls, sponsor_id, filename):
-        return cls.UPLOADER.path(join(str(sponsor_id), filename))
+    def _path(cls, deal, filename):
+        return cls.UPLOADER.path(join(str(deal.sponsor.id), filename))
     
     @classmethod
-    def discard(cls, sponsor_id, filename):
-        os.remove(cls._path(sponsor_id, filename))
+    def discard(cls, deal, filename):
+        os.remove(cls._path(deal, filename))
 
 class Preview(Image):
     UPLOADER = preview_uploader
@@ -60,12 +60,12 @@ class Preview(Image):
         super(Preview, self).__init__(filename, *args, **kwargs)
     
     @staticmethod
-    def stash(sponsor_id, type, filename):
-        with open(Preview._path(sponsor_id, filename), 'rb') as preview_file:
+    def stash(deal, type, filename):
+        with open(Preview._path(deal, filename), 'rb') as preview_file:
             file_storage = FileStorage(stream=preview_file, filename=filename)
-            asset_filename = Asset.stash(sponsor_id, type, file_storage)
+            asset_filename = Asset.stash(deal, type, file_storage)
         
-        os.remove(Preview._path(sponsor_id, filename))
+        os.remove(Preview._path(deal, filename))
         return asset_filename
 
 class Thumbnail(Image):
@@ -78,14 +78,14 @@ class Thumbnail(Image):
         super(Thumbnail, self).__init__(filename, *args, **kwargs)
     
     @staticmethod
-    def create(file_storage, sponsor_id, size=None):
-        return Thumbnail.create_from_file(file_storage.filename, file_storage.stream, sponsor_id, size)
+    def create(file_storage, deal, size=None):
+        return Thumbnail.create_from_file(file_storage.filename, file_storage.stream, deal, size)
         
     @staticmethod
-    def create_from_file(filename, file, sponsor_id, size=None):
+    def create_from_file(filename, file, deal, size=None):
         thumbnail = Thumbnail(filename, file=file)
         thumbnail._resize(size)
-        return thumbnail.save(sponsor_id)
+        return thumbnail.save(deal)
     
     def _resize(self, size):
         transform = ""
@@ -107,35 +107,33 @@ class Asset(Image):
         super(Asset, self).__init__(filename, *args, **kwargs)
     
     @staticmethod
-    def stash(sponsor_id, type, file_storage):
-        asset_filename = Asset.load(file_storage).save(sponsor_id)
-        file_storage.filename = relpath(asset_filename, str(sponsor_id))
-        Thumbnail.create(file_storage, sponsor_id, size={"width": None})
+    def stash(deal, type, file_storage):
+        asset_filename = Asset.load(file_storage).save(deal)
+        file_storage.filename = relpath(asset_filename, str(deal.sponsor.id))
+        Thumbnail.create(file_storage, deal, size={"width": None})
         
-        Asset._store(sponsor_id, type, asset_filename)
+        Asset._store(deal, type, asset_filename)
         
         return asset_filename
     
     @staticmethod
-    def _store(sponsor_id, type, filename):
-        deal = model.Sponsor.query.get_or_404(sponsor_id).current
+    def _store(deal, type, filename):
         deal.assets.append(model.Asset(deal.id, type, filename))
         model.db.session.commit()
     
     @staticmethod
     def delete(id):
         asset_model = model.Asset.query.get(id)
-        sponsor_id = asset_model.deal.sponsor.id
+        deal = asset_model.deal
         
-        relfilename = relpath(asset_model.filename, str(sponsor_id))
-        Asset.discard(sponsor_id, relfilename)
-        Thumbnail.discard(sponsor_id, relfilename)
+        relfilename = relpath(asset_model.filename, str(deal.sponsor.id))
+        Asset.discard(deal, relfilename)
+        Thumbnail.discard(deal, relfilename)
         
         model.db.session.delete(asset_model)
         model.db.session.commit()
 
-
-def verify(sponsor_id, form):
+def verify(deal, form):
     preview = Preview.load(form.asset.data)
     spec = data.AssetType[form.type.data].spec
     
@@ -157,17 +155,8 @@ def verify(sponsor_id, form):
         pass
     
     if preview.dirty:
-        filename = preview.save(sponsor_id)
+        filename = preview.save(deal)
         return filename.split('/')[-1]
     else:
-        Asset.stash(sponsor_id, form.type.data, form.asset.data)
+        Asset.stash(deal, form.type.data, form.asset.data)
         return None
-
-'''
-def delete_asset(id):
-    asset_model = model.Asset.query.get(id)
-    Asset.delete(asset_model.sponsor.id, asset_model.filename)
-    
-    model.db.session.delete(asset_model)
-    model.db.session.commit()
-'''

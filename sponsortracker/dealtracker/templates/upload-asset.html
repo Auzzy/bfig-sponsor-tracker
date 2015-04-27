@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<h1>{{ sponsor.name }} - Upload Asset</h1>
+<h1>{{ deal.sponsor.name }} - Upload Asset</h1>
 
 <form method="POST" enctype="multipart/form-data" action="{{ url_for('dealtracker.upload_asset', id=id) }}">
     {% for field in form %}
@@ -25,6 +25,9 @@
     {% endfor %}
     
     <input type="submit" value="Submit" />
+    <a href="{{ url_for('dealtracker.sponsor_info', id=id) }}">
+        <input type="button" value="Cancel" />
+    </a>
 </form>
 
 {% endblock %}
