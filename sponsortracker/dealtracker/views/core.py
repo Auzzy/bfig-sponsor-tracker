@@ -27,6 +27,7 @@ def my_accounts():
     
 @deal_tracker.route("/all/")
 @login_required
+>>>>>>> 0b6eaf4... Thumbnails are PNGs, regardless of the full image format. Can upload images without deal having a level set. Properly handles image formats not supported by the browser. Images are also stored in the database without their forlder.
 def all():
     return render_template("sponsor-list.html", sponsors=model.Sponsor.query.all())
 
@@ -35,7 +36,6 @@ def all():
 def sponsor_info(id):
     sponsor = model.Sponsor.query.get_or_404(id)
     return render_template("sponsor-info.html", sponsor=sponsor, request_id=REQUEST_ID)
-
 
 @deal_tracker.route("/sponsor/edit/", methods=["GET", "POST"])
 @deal_tracker.route("/sponsor/<int:id>/edit/", methods=["GET", "POST"])

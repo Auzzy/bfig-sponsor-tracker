@@ -11,16 +11,12 @@
     background-color:lime;
 }
 
+.header {
+    background-color:#DDDDDD;
+}
+
 .error {
     color:red;
-}
-
-.removable {
-    display:none;
-}
-
-div.asset a:hover + a.removable, div.asset a.removable:hover {
-    display:inline;
 }
 {% endblock %}
 
@@ -36,8 +32,29 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
     {% for asset in deal.assets_by_type[type] %}
     <div class="asset" style="position:relative; left:50px;">
         <a href="{{ asset.url }}" target="_blank"><img src="{{ asset.thumbnail_url }}" alt="{{ asset.name }}"></img></a>
-        <a class="removable" href="javascript:void(0);" onclick="delete_asset({{ asset.id }})">
-            <img style="vertical-align:top; position:relative; left:-20px;" src="{{ url_for('dealtracker.static', filename='delete.png') }}"></img>
+        <a href="javascript:void(0);" onclick="delete_asset({{ asset.id }})">
+            <img style="vertical-align:top;" src="{{ url_for('dealtracker.static', filename='delete.png') }}"></img>
+        </a>
+    </div>
+    <br />
+    {% endfor %}
+</div>
+
+<div style="float:left; width:20px;">&nbsp;</div>
+{% endfor %}
+
+<div style="clear:both; width:20px;">&nbsp;</div>
+
+<h2>Other Assets</h2>
+
+{% for type in other_assets|sort(attribute="label") %}
+<div style="float:left; width:200px;">
+    <p class="header" style="text-align:center; padding-left:5px; padding-right:5px;">{{ type.label }}</p>
+    {% for asset in deal.assets_by_type[type] %}
+    <div class="asset" style="position:relative; left:50px;">
+        <a href="{{ asset.url }}" target="_blank"><img src="{{ asset.thumbnail_url }}" alt="{{ asset.name }}"></img></a>
+        <a href="javascript:void(0);" onclick="delete_asset({{ asset.id }})">
+            <img style="vertical-align:top;" src="{{ url_for('dealtracker.static', filename='delete.png') }}"></img>
         </a>
     </div>
     <br />

@@ -21,7 +21,12 @@
     We have automatically corrected the discrepancies to create the image below. Click "Accept" to use this version, or "Discard" to discard it and return to the Upload Asset page.
 </p>
 
-<img src="{{ preview }}" />
+{% if display %}
+<a href="{{ preview }}" target="_blank"><img src="{{ preview }}" /></a>
+{% else %}
+<p>The image format isn't supported by the browser. Please download it to confirm its correctness using the following link.</p>
+<a href="{{ preview }}" target="_blank">{{ preview }}</a>
+{% endif %}
 
 <br /><br />
 

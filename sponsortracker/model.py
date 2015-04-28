@@ -4,13 +4,12 @@ import re
 
 from flask.ext.migrate import Migrate, MigrateCommand
 from flask.ext.script import Manager
-from flask.ext.sqlalchemy import event, SQLAlchemy
+from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.user import SQLAlchemyAdapter, UserManager, UserMixin
 from wtforms.validators import ValidationError
 
 from sponsortracker import data
 from sponsortracker.app import app
-from sponsortracker.dealtracker.app import asset_uploader, thumb_uploader
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db, directory=app.config["MIGRATIONS_DIRECTORY"])
@@ -22,10 +21,6 @@ _ASSET_TYPES = [asset_type.name for asset_type in data.AssetType]
 _LEVEL_TYPES = [level.name for level in data.Level]
 _SPONSOR_TYPES = [sponsor_type.name for sponsor_type in data.SponsorType]
 _USER_TYPES = [user_type.name for user_type in data.UserType]
-
-_ASSET_REQUEST_OVERDUE_DAYS = 14
-_CONTRACT_OVERDUE_DAYS = 14
-_INVOICE_OVERDUE_DAYS = 14
 
 class Sponsor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -45,8 +40,6 @@ class Sponsor(db.Model):
         self.notes = notes
         self.link = link
         self.description = description
-        
-        load_sponsor(self, None)
         
     def update_values(self, name=None, type_name=None, notes=None, link=None, description=None):
         self.name = name or self.name
@@ -94,7 +87,6 @@ class Contact(db.Model):
         super(Contact, self).__init__()
         
         self.sponsor_id = sponsor_id
-        
         self.email = email
         self.name = email.split('@')[0] if not name and email and '@' in email else name
     
@@ -133,8 +125,6 @@ class Deal(db.Model):
         self.contract = Contract(self.id)
         self.invoice = Invoice(self.id)
         self.asset_request = AssetRequest(self.id)
-        
-        load_deal(self, None)
     
     def update_values(self, year=None, owner=None, cash=0, inkind=0, level_name=None):
         self.year = year or self.year
@@ -147,7 +137,6 @@ class Deal(db.Model):
         if new_value is not unset:
             return unset if new_value == cleared else new_value
         return old_value
-    
 
 class Contract(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -208,8 +197,6 @@ class Asset(db.Model):
         self.date = date
         self.type_name = type_name
         self.filename = filename
-        
-        load_asset(self, None)
     
     def update_values(self, deal_id=None, date=None, type_name=None, filename=None):
         self.deal_id = deal_id or self.deal_id
@@ -244,82 +231,7 @@ class UserAuth(db.Model, UserMixin):
     password = db.Column(db.String(255), nullable=False, default='')
     reset_password_token = db.Column(db.String(100), nullable=False, default='')
     user = db.relationship('User', uselist=False, foreign_keys=user_id)
-
-
-@event.listens_for(Sponsor, 'load')
-def load_sponsor(target, context):
-    # For use by the views and controllers - not in the DB
-    for deal in target.deals:
-        if deal.year == datetime.datetime.today().year:
-            target.current = deal
-            break
-    else:
-        target.current = target.add_deal(datetime.datetime.today().year)
     
-    # target.assets_by_type = {}
-    # target.received_assets = True
-    target.type = data.SponsorType[target.type_name] if target.type_name else None
-    '''
-    target.level = data.Level[target.level_name] if target.level_name else None
-    if target.level:
-        target.assets_by_type = collections.defaultdict(list)
-        for asset in target.assets:
-            target.assets_by_type[asset.type].append(asset)
-        
-        target.received_assets = all(type in target.assets_by_type for type in target.level.assets) and target.link and target.description
-    '''
-    
-@event.listens_for(Deal, 'load')
-def load_deal(target, context):
-    user_auth = UserAuth.query.filter_by(username=target.owner).first()
-    if user_auth:
-        target.owner_name = "{user.first_name} {user.last_name}".format(user=user_auth.user)
-    else:
-        target.owner_name = target.owner
-    
-    target.assets_by_type = {}
-    target.received_assets = True
-    target.level = data.Level[target.level_name] if target.level_name else None
-    if target.level:
-        target.assets_by_type = collections.defaultdict(list)
-        for asset in target.assets:
-            target.assets_by_type[asset.type].append(asset)
-        
-        target.received_assets = all(type in target.assets_by_type for type in target.level.assets) and target.link and target.description
-
-@event.listens_for(Contract, 'load')
-def load_contract(target, context):
-    if target.sent:
-        target.overdue = target.sent <= datetime.date.today() - datetime.timedelta(days=_CONTRACT_OVERDUE_DAYS)
-    else:
-        target.overdue = None
-
-@event.listens_for(Invoice, 'load')
-def load_invoice(target, context):
-    if target.sent:
-        target.overdue = target.sent <= datetime.date.today() - datetime.timedelta(days=_INVOICE_OVERDUE_DAYS)
-    else:
-        target.overdue = None
-
-@event.listens_for(AssetRequest, 'load')
-def load_asset_request(target, context):
-    if target.sent:
-        target.overdue = target.sent <= datetime.date.today() - datetime.timedelta(days=_ASSET_REQUEST_OVERDUE_DAYS)
-    else:
-        target.overdue = None
-
-@event.listens_for(Asset, 'load')
-def load_asset(target, context):
-    # For use by the views and controllers - not in the DB
-    target.type = data.AssetType[target.type_name]
-    target.url = asset_uploader.url(target.filename)
-    target.thumbnail_url = thumb_uploader.url(target.filename)
-    target.name = target.filename.rsplit('/', maxsplit=1)[-1].rsplit('.', maxsplit=1)[0]
-
-@event.listens_for(User, 'load')
-def load_user(target, context):
-    target.type = data.UserType[target.type_name] if target.type_name in data.UserType.__members__ else None
-
 
 def password_validator(form, field):
     password = field.data
