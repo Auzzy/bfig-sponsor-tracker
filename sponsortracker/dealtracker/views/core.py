@@ -23,7 +23,7 @@ def my_accounts():
     sponsors = [deal.sponsor for deal in deals]
     return render_template("sponsor-list.html", sponsors=sponsors)
     
-@deal_tracker.route("/all")
+@deal_tracker.route("/all/")
 def all():
     return render_template("sponsor-list.html", sponsors=model.Sponsor.query.all())
 
@@ -32,8 +32,8 @@ def sponsor_info(id):
     sponsor = model.Sponsor.query.get_or_404(id)
     return render_template("sponsor-info.html", sponsor=sponsor, request_id=REQUEST_ID)
 
-@deal_tracker.route("/sponsor/edit", methods=["GET", "POST"])
-@deal_tracker.route("/sponsor/<int:id>/edit", methods=["GET", "POST"])
+@deal_tracker.route("/sponsor/edit/", methods=["GET", "POST"])
+@deal_tracker.route("/sponsor/<int:id>/edit/", methods=["GET", "POST"])
 def configure_sponsor(id=None):
     if request.method == "POST":
         contacts = _extract_contacts(request.values, forms.EMAIL_BASENAME, forms.NAME_BASENAME)
@@ -46,7 +46,7 @@ def configure_sponsor(id=None):
     contacts = model.Sponsor.query.get_or_404(id).contacts if id else []
     return render_template("configure-sponsor.html", id=id, form=form, contacts=contacts, email_basename=forms.EMAIL_BASENAME, name_basename=forms.NAME_BASENAME)
 
-@deal_tracker.route("/sponsor/<int:id>/edit/current-deal", methods=["GET", "POST"])
+@deal_tracker.route("/sponsor/<int:id>/edit/current-deal/", methods=["GET", "POST"])
 def edit_current_deal(id):
     if request.method == "POST":
         form = forms.CurrentDealForm()
@@ -59,7 +59,7 @@ def edit_current_deal(id):
     
     return render_template("configure-deal.html", id=id, form=form, view="dealtracker.edit_current_deal")
 
-@deal_tracker.route("/sponsor/delete", methods=["POST"])
+@deal_tracker.route("/sponsor/delete/", methods=["POST"])
 def delete_sponsor():
     id = request.form["sponsor-id"]
     model.db.session.delete(model.Sponsor.query.get_or_404(id))
