@@ -67,7 +67,7 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
     <div>
         <span style="font-weight:bold">Contract</span>:
         <form id="contract-sent-form" style="display:inline;" action="{{ url_for('dealtracker.contract_sent', id=sponsor.id) }}" method="POST">
-            <input type="checkbox" name="{{ request_id }}" id="contract-sent" {% if contract.sent %}checked{% endif %} {% if not sponsor.current.inkind and not sponsor.current.cash %}disabled{% endif %} />Sent
+            <input type="checkbox" name="{{ request_id }}" id="contract-sent" {% if contract.sent %}checked{% endif %} {% if not sponsor.current.contract.ready %}disabled{% endif %} />Sent
         </form>
         &nbsp;&nbsp;
         <form id="contract-received-form" style="display:inline;" action="{{ url_for('dealtracker.contract_received', id=sponsor.id) }}" method="POST">
@@ -78,7 +78,7 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
     <div>
         <span style="font-weight:bold">Invoice</span>:
         <form id="invoice-sent-form" style="display:inline;" action="{{ url_for('dealtracker.invoice_sent', id=sponsor.id) }}" method="POST">
-            <input type="checkbox" name="{{ request_id }}" id="invoice-sent" {% if invoice.sent %}checked{% endif %} {% if not sponsor.current.inkind and not sponsor.current.cash %}disabled{% endif %} />Sent
+            <input type="checkbox" name="{{ request_id }}" id="invoice-sent" {% if invoice.sent %}checked{% endif %} {% if not sponsor.current.invoice.ready %}disabled{% endif %} />Sent
         </form>
         &nbsp;&nbsp;
         <form id="invoice-received-form" style="display:inline;" action="{{ url_for('dealtracker.invoice_received', id=sponsor.id) }}" method="POST">
@@ -89,7 +89,7 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
     <div>
         <span style="font-weight:bold">Asset Request</span>:
         <form id="asset-request-sent-form" style="display:inline;" action="{{ url_for('dealtracker.asset_request_sent', id=sponsor.id) }}" method="POST">
-            <input type="checkbox" name="{{ request_id }}" id="asset-request-sent" {% if asset_request.sent %}checked{% endif %} {% if not sponsor.level %}disabled{% endif %} />Sent
+            <input type="checkbox" name="{{ request_id }}" id="asset-request-sent" {% if asset_request.sent %}checked{% endif %} {% if not sponsor.current.asset_request.ready %}disabled{% endif %} />Sent
         </form>
         &nbsp;&nbsp;
         <form id="asset-request-received-form" style="display:inline;" action="{{ url_for('dealtracker.asset_request_received', id=sponsor.id) }}" method="POST">

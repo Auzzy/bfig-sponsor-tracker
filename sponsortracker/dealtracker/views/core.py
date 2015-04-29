@@ -4,6 +4,7 @@ from collections import OrderedDict
 
 from flask import redirect, render_template, request, url_for
 from flask.ext.login import current_user
+from flask.ext.user import login_required
 
 from sponsortracker import model
 from sponsortracker.data import UserType
@@ -15,6 +16,7 @@ DATE_FORMAT = "%a %b %d %Y"
 REQUEST_ID = "request-date"
 
 @deal_tracker.route("/")
+@login_required
 def my_accounts():
     if current_user.type != UserType.SALES.type:
         return redirect(url_for("dealtracker.all"))
@@ -24,16 +26,19 @@ def my_accounts():
     return render_template("sponsor-list.html", sponsors=sponsors)
     
 @deal_tracker.route("/all/")
+@login_required
 def all():
     return render_template("sponsor-list.html", sponsors=model.Sponsor.query.all())
 
 @deal_tracker.route("/sponsor/<int:id>/")
+@login_required
 def sponsor_info(id):
     sponsor = model.Sponsor.query.get_or_404(id)
     return render_template("sponsor-info.html", sponsor=sponsor, request_id=REQUEST_ID)
 
 @deal_tracker.route("/sponsor/edit/", methods=["GET", "POST"])
 @deal_tracker.route("/sponsor/<int:id>/edit/", methods=["GET", "POST"])
+@login_required
 def configure_sponsor(id=None):
     if request.method == "POST":
         contacts = _extract_contacts(request.values, forms.EMAIL_BASENAME, forms.NAME_BASENAME)
@@ -47,6 +52,7 @@ def configure_sponsor(id=None):
     return render_template("configure-sponsor.html", id=id, form=form, contacts=contacts, email_basename=forms.EMAIL_BASENAME, name_basename=forms.NAME_BASENAME)
 
 @deal_tracker.route("/sponsor/<int:id>/edit/current-deal/", methods=["GET", "POST"])
+@login_required
 def edit_current_deal(id):
     if request.method == "POST":
         form = forms.CurrentDealForm()
@@ -60,6 +66,7 @@ def edit_current_deal(id):
     return render_template("configure-deal.html", id=id, form=form, view="dealtracker.edit_current_deal")
 
 @deal_tracker.route("/sponsor/delete/", methods=["POST"])
+@login_required
 def delete_sponsor():
     id = request.form["sponsor-id"]
     model.db.session.delete(model.Sponsor.query.get_or_404(id))
@@ -92,18 +99,23 @@ def _configure_sponsor(id, form, contacts):
     return sponsor
 
 def _configure_deal(id, form):
-    # sponsor = model.Sponsor.query.get_or_404(id)
     deal = model.Deal.query.filter_by(sponsor_id=id, year=form.year.data).first()
     if deal:
         deal.update_values(owner=form.owner.data, cash=form.cash.data, inkind=form.inkind.data, level_name=form.level_name.data)
     else:
         deal = model.Deal(id, datetime.date.today().year, form.owner.data, form.cash.data, form.inkind.data, form.level_name.data)
     
-    # sponsor.update(level_name=form.level_name.data)
-    
+    print("DEAL YEAR: " + str(deal.year))
+    print("CURRENT DEAL YEAR: " + str(deal.current.year))
+    print(deal == deal.sponsor.current)
     if deal == deal.sponsor.current:
         deal.contract.ready = deal.cash > 0 or deal.inkind > 0
         deal.invoice.ready = deal.cash > 0 or deal.inkind > 0
-        deal.asset_request.ready = bool(deal.level_name)
+        
+        print("READY: " + str(deal.contract.ready))
+        print("SENT: " + str(deal.contract.sent))
+        print("RECEIVED: " + str(deal.contract.received))
+        
+        deal.asset_request.ready = bool(deal.level_name) and deal.contract.received
         
     model.db.session.commit()
