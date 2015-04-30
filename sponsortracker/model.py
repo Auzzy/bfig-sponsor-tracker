@@ -131,6 +131,14 @@ class Contract(db.Model):
     ready = db.Column(db.Boolean, default=False)
     sent = db.Column(db.Date)
     received = db.Column(db.Date)
+    
+    def __init__(self, deal_id, ready=False, sent=None, received=None):
+        super(Contract, self).__init__()
+        
+        self.deal_id = deal_id
+        self.ready = ready
+        self.sent = sent
+        self.received = received
 
 class Invoice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -138,6 +146,14 @@ class Invoice(db.Model):
     ready = db.Column(db.Boolean, default=False)
     sent = db.Column(db.Date)
     received = db.Column(db.Date)
+    
+    def __init__(self, deal_id, ready=False, sent=None, received=None):
+        super(Invoice, self).__init__()
+        
+        self.deal_id = deal_id
+        self.ready = ready
+        self.sent = sent
+        self.received = received
 
 class AssetRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -145,6 +161,14 @@ class AssetRequest(db.Model):
     ready = db.Column(db.Boolean, default=False)
     sent = db.Column(db.Date)
     received = db.Column(db.Date)
+    
+    def __init__(self, deal_id, ready=False, sent=None, received=None):
+        super(AssetRequest, self).__init__()
+        
+        self.deal_id = deal_id
+        self.ready = ready
+        self.sent = sent
+        self.received = received
 
 class Asset(db.Model):
     id = db.Column(db.Integer, primary_key=True)
