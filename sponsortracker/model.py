@@ -33,6 +33,8 @@ class Sponsor(db.Model):
     deals = db.relationship("Deal", cascade="all, delete-orphan", passive_updates=False, backref="sponsor", lazy="dynamic")
     
     def __init__(self, name, type_name=None, notes=None, link=None, description=None):
+        super(Sponsor, self).__init__()
+        
         self.name = name
         self.type_name = type_name or None
         self.notes = notes
@@ -61,19 +63,6 @@ class Sponsor(db.Model):
                 contact = Contact(self.id, email, name)
             contacts.append(contact)
         self.contacts = contacts
-    
-    def add_deal(self, year, owner=None, cash=0, inkind=0):
-        if not year:
-            return None
-        
-        for deal in self.deals:
-            if deal.year == year:
-                deal.update_values(owner=owner, cash=cash, inkind=inkind)
-                break
-        else:
-            deal = Deal(self.id, year, owner, cash, inkind)
-            self.deals.append(deal)
-        return deal
 
 class Contact(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -82,6 +71,8 @@ class Contact(db.Model):
     name = db.Column(db.String(40))
     
     def __init__(self, sponsor_id, email, name=None):
+        super(Contact, self).__init__()
+        
         self.sponsor_id = sponsor_id
         self.email = email
         self.name = email.split('@')[0] if not name and email and '@' in email else name
@@ -109,6 +100,8 @@ class Deal(db.Model):
     assets = db.relationship("Asset", cascade="all, delete-orphan", passive_updates=False, backref="deal", lazy="dynamic")
     
     def __init__(self, sponsor_id, year, owner=None, cash=0, inkind=0, level_name=None):
+        super(Deal, self).__init__()
+        
         self.sponsor_id = sponsor_id
         self.year = year
         self.owner = owner
@@ -138,38 +131,20 @@ class Contract(db.Model):
     ready = db.Column(db.Boolean, default=False)
     sent = db.Column(db.Date)
     received = db.Column(db.Date)
-    
-    def __init__(self, deal_id, ready=False, sent=None, received=None):
-        self.deal_id = deal_id
-        self.ready = ready
-        self.sent = sent
-        self.received = received
 
 class Invoice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'))
-    ready = db.Column(db.Boolean)
+    ready = db.Column(db.Boolean, default=False)
     sent = db.Column(db.Date)
     received = db.Column(db.Date)
-    
-    def __init__(self, deal_id, ready=False, sent=None, received=None):
-        self.deal_id = deal_id
-        self.ready = ready
-        self.sent = sent
-        self.received = received
 
 class AssetRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'))
-    ready = db.Column(db.Boolean)
+    ready = db.Column(db.Boolean, default=False)
     sent = db.Column(db.Date)
     received = db.Column(db.Date)
-    
-    def __init__(self, deal_id, ready=False, sent=None, received=None):
-        self.deal_id = deal_id
-        self.ready = ready
-        self.sent = sent
-        self.received = received
 
 class Asset(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -179,6 +154,8 @@ class Asset(db.Model):
     filename = db.Column(db.String(256), nullable=False)
     
     def __init__(self, deal_id, type_name, filename, date=datetime.datetime.today().date()):
+        super(Asset, self).__init__()
+        
         self.deal_id = deal_id
         self.date = date
         self.type_name = type_name
