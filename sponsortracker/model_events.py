@@ -33,7 +33,8 @@ def load_sponsor(target):
             break
     else:
         deal = model.Deal(target.id, datetime.datetime.today().year)
-        target.current = target.deals.append(deal)
+        target.deals.append(deal)
+        target.current = deal
     
     target.type = data.SponsorType[target.type_name] if target.type_name else None
 
