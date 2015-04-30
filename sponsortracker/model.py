@@ -70,6 +70,19 @@ class Sponsor(db.Model):
                 contact = Contact(self.id, email, name)
             contacts.append(contact)
         self.contacts = contacts
+    
+    def add_deal(self, year, owner=None, cash=0, inkind=0):
+        if not year:
+            return None
+        
+        for deal in self.deals:
+            if deal.year == year:
+                deal.update_values(owner=owner, cash=cash, inkind=inkind)
+                break
+        else:
+            deal = Deal(self.id, year, owner, cash, inkind)
+            self.deals.append(deal)
+        return deal
 
 class Contact(db.Model):
     id = db.Column(db.Integer, primary_key=True)
