@@ -1,7 +1,7 @@
 import io
 import os
 import shutil
-from os.path import basename, join, relpath, splitext
+from os.path import join, relpath, splitext
 
 import wand.image
 from flask import flash
@@ -11,7 +11,7 @@ from sponsortracker import data, model
 from sponsortracker.dealtracker.app import asset_uploader, preview_uploader, thumb_uploader
 
 class Image(wand.image.Image):
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, filename, *args, **kwargs):
         if "file" in kwargs:
             kwargs["file"].seek(0)
         
@@ -20,7 +20,7 @@ class Image(wand.image.Image):
         if "file" in kwargs:
             kwargs["file"].seek(0)
         
-        self.filename = name
+        self.filename = filename
     
     @classmethod
     def load(cls, file_storage):
@@ -42,20 +42,16 @@ class Image(wand.image.Image):
         return self.UPLOADER.save(file_storage, folder=str(deal.sponsor.id))
     
     @classmethod
-    def discard(cls, deal, filename):
-        os.remove(cls.path(deal, filename))
-    
-    @classmethod
-    def path(cls, deal, filename):
-        return cls.UPLOADER.path(cls.relpath(deal, filename))
-    
-    @classmethod
     def url(cls, deal, filename):
-        return cls.UPLOADER.url(cls.relpath(deal, filename))
+        return cls.UPLOADER.url(join(str(deal.sponsor.id), filename))
     
     @classmethod
-    def relpath(cls, deal, filename):
-        return join(str(deal.sponsor.id), filename)
+    def _path(cls, deal, filename):
+        return cls.UPLOADER.path(join(str(deal.sponsor.id), filename))
+    
+    @classmethod
+    def discard(cls, deal, filename):
+        os.remove(cls._path(deal, filename))
 
 class Preview(Image):
     UPLOADER = preview_uploader
@@ -65,24 +61,21 @@ class Preview(Image):
     
     @staticmethod
     def stash(deal, type, filename):
-        with open(Preview.path(deal, filename), 'rb') as preview_file:
+        with open(Preview._path(deal, filename), 'rb') as preview_file:
             file_storage = FileStorage(stream=preview_file, filename=filename)
             asset_filename = Asset.stash(deal, type, file_storage)
         
-        os.remove(Preview.path(deal, filename))
+        os.remove(Preview._path(deal, filename))
         return asset_filename
 
 class Thumbnail(Image):
     DEFAULT_WIDTH = 100
     DEFAULT_HEIGHT = 100
-    FORMAT = data._DigitalFormat.PNG
     
     UPLOADER = thumb_uploader
     
     def __init__(self, filename, *args, **kwargs):
         super(Thumbnail, self).__init__(filename, *args, **kwargs)
-        
-        self.format = Thumbnail.FORMAT.format
     
     @staticmethod
     def create(file_storage, deal, size=None):
@@ -92,7 +85,6 @@ class Thumbnail(Image):
     def create_from_file(filename, file, deal, size=None):
         thumbnail = Thumbnail(filename, file=file)
         thumbnail._resize(size)
-        # thumbnail.format = data._DigitalFormat.PNG.format
         return thumbnail.save(deal)
     
     def _resize(self, size):
@@ -107,15 +99,6 @@ class Thumbnail(Image):
         else:
             transform = "{0}x{1}!".format(Thumbnail.DEFAULT_WIDTH, Thumbnail.DEFAULT_HEIGHT)
         self.transform(resize=transform)
-    
-    def save(self, deal):
-        self.format = Thumbnail.FORMAT.format
-        return super(Thumbnail, self).save(deal)
-    
-    @classmethod
-    def relpath(cls, deal, filename):
-        filename = "{0}.{1}".format(splitext(filename)[0], Thumbnail.FORMAT.ext)
-        return super(Thumbnail, cls).relpath(deal, filename)
 
 class Asset(Image):
     UPLOADER = asset_uploader
@@ -126,12 +109,12 @@ class Asset(Image):
     @staticmethod
     def stash(deal, type, file_storage):
         asset_filename = Asset.load(file_storage).save(deal)
+        file_storage.filename = relpath(asset_filename, str(deal.sponsor.id))
         Thumbnail.create(file_storage, deal, size={"width": None})
         
-        filename = basename(asset_filename)
-        Asset._store(deal, type, filename)
+        Asset._store(deal, type, asset_filename)
         
-        return filename
+        return asset_filename
     
     @staticmethod
     def _store(deal, type, filename):
@@ -143,8 +126,9 @@ class Asset(Image):
         asset_model = model.Asset.query.get(id)
         deal = asset_model.deal
         
-        Asset.discard(deal, asset_model.filename)
-        Thumbnail.discard(deal, asset_model.filename)
+        relfilename = relpath(asset_model.filename, str(deal.sponsor.id))
+        Asset.discard(deal, relfilename)
+        Thumbnail.discard(deal, relfilename)
         
         model.db.session.delete(asset_model)
         model.db.session.commit()

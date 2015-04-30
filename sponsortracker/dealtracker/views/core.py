@@ -36,6 +36,7 @@ def sponsor_info(id):
     sponsor = model.Sponsor.query.get_or_404(id)
     return render_template("sponsor-info.html", sponsor=sponsor, request_id=REQUEST_ID)
 
+
 @deal_tracker.route("/sponsor/edit/", methods=["GET", "POST"])
 @deal_tracker.route("/sponsor/<int:id>/edit/", methods=["GET", "POST"])
 @login_required
