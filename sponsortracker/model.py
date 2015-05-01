@@ -33,8 +33,6 @@ class Sponsor(db.Model):
     deals = db.relationship("Deal", cascade="all, delete-orphan", passive_updates=False, backref="sponsor", lazy="dynamic")
     
     def __init__(self, name, type_name=None, notes=None, link=None, description=None):
-        super(Sponsor, self).__init__()
-        
         self.name = name
         self.type_name = type_name or None
         self.notes = notes
@@ -84,8 +82,6 @@ class Contact(db.Model):
     name = db.Column(db.String(40))
     
     def __init__(self, sponsor_id, email, name=None):
-        super(Contact, self).__init__()
-        
         self.sponsor_id = sponsor_id
         self.email = email
         self.name = email.split('@')[0] if not name and email and '@' in email else name
@@ -113,8 +109,6 @@ class Deal(db.Model):
     assets = db.relationship("Asset", cascade="all, delete-orphan", passive_updates=False, backref="deal", lazy="dynamic")
     
     def __init__(self, sponsor_id, year, owner=None, cash=0, inkind=0, level_name=None):
-        super(Deal, self).__init__()
-        
         self.sponsor_id = sponsor_id
         self.year = year
         self.owner = owner
@@ -156,7 +150,7 @@ class Contract(db.Model):
 class Invoice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'))
-    ready = db.Column(db.Boolean, default=False)
+    ready = db.Column(db.Boolean)
     sent = db.Column(db.Date)
     received = db.Column(db.Date)
     
@@ -171,7 +165,7 @@ class Invoice(db.Model):
 class AssetRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'))
-    ready = db.Column(db.Boolean, default=False)
+    ready = db.Column(db.Boolean)
     sent = db.Column(db.Date)
     received = db.Column(db.Date)
     
@@ -191,8 +185,6 @@ class Asset(db.Model):
     filename = db.Column(db.String(256), nullable=False)
     
     def __init__(self, deal_id, type_name, filename, date=datetime.datetime.today().date()):
-        super(Asset, self).__init__()
-        
         self.deal_id = deal_id
         self.date = date
         self.type_name = type_name

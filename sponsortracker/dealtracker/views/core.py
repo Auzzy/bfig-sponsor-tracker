@@ -106,9 +106,17 @@ def _configure_deal(id, form):
     else:
         deal = model.Deal(id, datetime.date.today().year, form.owner.data, form.cash.data, form.inkind.data, form.level_name.data)
     
+    print("DEAL YEAR: " + str(deal.year))
+    print("CURRENT DEAL YEAR: " + str(deal.current.year))
+    print(deal == deal.sponsor.current)
     if deal == deal.sponsor.current:
         deal.contract.ready = deal.cash > 0 or deal.inkind > 0
         deal.invoice.ready = deal.cash > 0 or deal.inkind > 0
+        
+        print("READY: " + str(deal.contract.ready))
+        print("SENT: " + str(deal.contract.sent))
+        print("RECEIVED: " + str(deal.contract.received))
+        
         deal.asset_request.ready = bool(deal.level_name) and deal.contract.received
         
     model.db.session.commit()
