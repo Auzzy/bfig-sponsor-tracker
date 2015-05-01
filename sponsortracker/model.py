@@ -44,6 +44,8 @@ class Sponsor(db.Model):
         self.link = link
         self.description = description
         
+        load_sponsor(self, None)
+        
     def update_values(self, name=None, type_name=None, notes=None, link=None, description=None):
         self.name = name or self.name
         self.type_name = self._update_field(self.type_name, type_name)
@@ -124,6 +126,8 @@ class Deal(db.Model):
         self.contract = Contract(self.id)
         self.invoice = Invoice(self.id)
         self.asset_request = AssetRequest(self.id)
+        
+        load_deal(self, None)
     
     def update_values(self, year=None, owner=None, cash=0, inkind=0, level_name=None):
         self.year = year or self.year
@@ -151,6 +155,8 @@ class Contract(db.Model):
         self.ready = ready
         self.sent = sent
         self.received = received
+        
+        load_contract(self, None)
 
 class Invoice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -166,6 +172,8 @@ class Invoice(db.Model):
         self.ready = ready
         self.sent = sent
         self.received = received
+        
+        load_invoice(self, None)
 
 class AssetRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -181,6 +189,8 @@ class AssetRequest(db.Model):
         self.ready = ready
         self.sent = sent
         self.received = received
+        
+        load_asset_request(self, None)
 
 class Asset(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -194,6 +204,8 @@ class Asset(db.Model):
         self.date = date
         self.type_name = type_name
         self.filename = filename
+        
+        load_asset(self, None)
     
     def update_values(self, deal_id=None, date=None, type_name=None, filename=None):
         self.deal_id = deal_id or self.deal_id
