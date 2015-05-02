@@ -21,7 +21,7 @@ def _add_user(type, first_name, last_name, username, email, password=None):
     
     email = model.UserEmail(email=email, is_primary=True)
     auth = model.UserAuth(username=username, password=model.user_manager.hash_password(password))
-    user = model.User(first_name=first_name, last_name=last_name, enabled=True, type=type.upper(), user_auth=auth)
+    user = model.User(first_name=first_name, last_name=last_name, enabled=True, type_name=type.upper(), user_auth=auth)
     user.emails.append(email)
     model.db.session.add(user)
     
