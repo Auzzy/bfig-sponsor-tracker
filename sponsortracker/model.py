@@ -38,6 +38,8 @@ class Sponsor(db.Model):
     deals = db.relationship("Deal", cascade="all, delete-orphan", passive_updates=False, backref="sponsor", lazy="dynamic")
     
     def __init__(self, name, type_name=None, notes=None, link=None, description=None):
+        super(Sponsor, self).__init__()
+        
         self.name = name
         self.type_name = type_name or None
         self.notes = notes
@@ -89,6 +91,8 @@ class Contact(db.Model):
     name = db.Column(db.String(40))
     
     def __init__(self, sponsor_id, email, name=None):
+        super(Contact, self).__init__()
+        
         self.sponsor_id = sponsor_id
         self.email = email
         self.name = email.split('@')[0] if not name and email and '@' in email else name
@@ -116,6 +120,8 @@ class Deal(db.Model):
     assets = db.relationship("Asset", cascade="all, delete-orphan", passive_updates=False, backref="deal", lazy="dynamic")
     
     def __init__(self, sponsor_id, year, owner=None, cash=0, inkind=0, level_name=None):
+        super(Deal, self).__init__()
+        
         self.sponsor_id = sponsor_id
         self.year = year
         self.owner = owner
@@ -129,11 +135,11 @@ class Deal(db.Model):
         
         load_deal(self, None)
     
-    def update_values(self, year=None, owner=None, cash=0, inkind=0, level_name=None):
+    def update_values(self, year=None, owner=None, cash=None, inkind=None, level_name=None):
         self.year = year or self.year
         self.owner = self._update_field(self.owner, owner)
-        self.cash = self._update_field(self.cash, cash, None, 0)
-        self.inkind = self._update_field(self.inkind, inkind, None, 0)
+        self.cash = self._update_field(self.cash, cash)
+        self.inkind = self._update_field(self.inkind, inkind)
         self.level_name = self._update_field(self.level_name, level_name)
     
     def _update_field(self, old_value, new_value, cleared="", unset=None):
@@ -200,10 +206,12 @@ class Asset(db.Model):
     filename = db.Column(db.String(256), nullable=False)
     
     def __init__(self, deal_id, type_name, filename, date=datetime.datetime.today().date()):
-        self.deal_id = deal_id
+        super(Asset, self).__init__()
+        
         self.date = date
         self.type_name = type_name
         self.filename = filename
+        self.deal_id = deal_id
         
         load_asset(self, None)
     
@@ -211,8 +219,20 @@ class Asset(db.Model):
         self.deal_id = deal_id or self.deal_id
         self.date = date or self.date
         self.type_name = type_name or self.type_name
-        self.filename = filename or self.filename        
-
+        self.filename = filename or self.filename
+    
+    @property
+    def url(self):
+        from sponsortracker.dealtracker import uploads
+        
+        return uploads.Asset.url(self.deal, self.filename)
+    
+    @property
+    def thumbnail_url(self):
+        from sponsortracker.dealtracker import uploads
+        
+        return uploads.Thumbnail.url(self.deal, self.filename)
+    
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(50), nullable=False, default='')
@@ -296,15 +316,10 @@ def load_asset_request(target, context):
 
 @event.listens_for(Asset, 'load')
 def load_asset(target, context):
-    from sponsortracker.dealtracker import uploads
-    
     # For use by the views and controllers - not in the DB
-    target.type = data.AssetType[target.type_name]
-    # target.url = asset_uploader.url(target.filename)
-    # target.thumbnail_url = thumb_uploader.url(target.filename)
-    target.url = uploads.Asset.url(target.deal, target.filename)
-    target.thumbnail_url = uploads.Thumbnail.url(target.deal, target.filename)
     target.name = target.filename.rsplit('/', maxsplit=1)[-1].rsplit('.', maxsplit=1)[0]
+    target.type = data.AssetType[target.type_name]
+
 
 @event.listens_for(User, 'load')
 def load_user(target, context):

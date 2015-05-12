@@ -103,7 +103,7 @@ class AssetLabel:
 class AssetType(Enum):
     DIGITAL_BANNER = (AssetLabel("Banner Ad", "Digital Guide"), ImageSpec(72, 640, 240, _DimUnits.PX, [_ColorMode.SRGB, _ColorMode.RGB], [_DigitalFormat.PNG]))
     DIGITAL_MENU = (AssetLabel("Menu Ad", "Digital Guide"), ImageSpec(72, 600, 110, _DimUnits.PX, [_ColorMode.SRGB, _ColorMode.RGB], [_DigitalFormat.PNG]))
-    LOGO = (AssetLabel("Logo"), ImageSpec(300, 150, 150, _DimUnits.PX, [_ColorMode.SRGB, _ColorMode.RGB], [_DigitalFormat.PNG, _LogoFormat.EPS, _PrintFormat.PSD], True))
+    LOGO = (AssetLabel("Logo"), ImageSpec(300, 150, 150, _DimUnits.PX, [_ColorMode.SRGB, _ColorMode.RGB, _ColorMode.CMYK], [_DigitalFormat.PNG, _LogoFormat.EPS, _PrintFormat.PSD], True))
     NEWSLETTER_HEADER = (AssetLabel("Header Ad", "Newsletter"), ImageSpec(72, 728, 90, _DimUnits.PX, [_ColorMode.SRGB, _ColorMode.RGB], list(_DigitalFormat)))
     NEWSLETTER_SIDEBAR = (AssetLabel("Sidebar Ad", "Newsletter"), ImageSpec(72, 250, 300, _DimUnits.PX,  [_ColorMode.SRGB, _ColorMode.RGB],list(_DigitalFormat)))
     NEWSLETTER_FOOTER = (AssetLabel("Footer Ad", "Newsletter"), ImageSpec(72, 728, 90, _DimUnits.PX, [_ColorMode.SRGB, _ColorMode.RGB], list(_DigitalFormat)))
