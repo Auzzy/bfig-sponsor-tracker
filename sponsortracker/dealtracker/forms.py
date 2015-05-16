@@ -28,10 +28,13 @@ def validate_asset(form, field):
         raise ValidationError("Expected a transparent background.")
     elif spec.transparent is False and image.alpha_channel:
         raise ValidationError("Expected an opaque background.")
-        
+
+def validate_sponsor(form, field):
+    if model.Sponsor.query.filter_by(name=field.data):
+        raise ValidationError("A sponsor with that name already exists.")
 
 class SponsorForm(flask_wtf.Form):
-    name = StringField(validators=[DataRequired()])
+    name = StringField(validators=[DataRequired(), validate_sponsor])
     type_name = SelectField("Sponsor Type", choices=_SPONSOR_TYPE_CHOICES, validators=[Optional()])
     link = StringField("Home page", validators=[URL(), Optional()])
     description = TextAreaField(validators=[Optional()])
