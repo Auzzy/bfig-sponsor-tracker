@@ -33,12 +33,15 @@ def validate_sponsor(form, field):
     if model.Sponsor.query.filter_by(name=field.data):
         raise ValidationError("A sponsor with that name already exists.")
 
+def filter_strip(value):
+    return value.strip() if value else value
+
 class SponsorForm(flask_wtf.Form):
-    name = StringField(validators=[DataRequired(), validate_sponsor])
+    name = StringField(validators=[DataRequired(), validate_sponsor], filters=[filter_strip])
     type_name = SelectField("Sponsor Type", choices=_SPONSOR_TYPE_CHOICES, validators=[Optional()])
-    link = StringField("Home page", validators=[URL(), Optional()])
-    description = TextAreaField(validators=[Optional()])
-    notes = TextAreaField(validators=[Optional()])
+    link = StringField("Home page", validators=[URL(), Optional()], filters=[filter_strip])
+    description = TextAreaField(validators=[Optional()], filters=[filter_strip])
+    notes = TextAreaField(validators=[Optional()], filters=[filter_strip])
 
 class CurrentDealForm(flask_wtf.Form):
     owner = SelectField()

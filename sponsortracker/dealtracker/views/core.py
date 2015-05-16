@@ -43,6 +43,9 @@ def configure_sponsor(id=None):
     if request.method == "POST":
         contacts = _extract_contacts(request.values, forms.EMAIL_BASENAME, forms.NAME_BASENAME)
         form = forms.SponsorForm()
+        
+        print("NAME: \"" + form.name.data + "\"")
+        
         if form.validate_on_submit():
             sponsor = _configure_sponsor(id, form, contacts)
             return redirect(url_for("dealtracker.sponsor_info", id=sponsor.id))

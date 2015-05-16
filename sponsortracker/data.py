@@ -3,6 +3,7 @@ from enum import Enum
 
 class UserType(Enum):
     ADMIN = ("admin")
+    EXEC = ("exec")
     MARKETING = ("marketing")
     MARKETING_ADMIN = ("marketing-admin")
     SALES = ("sales")
