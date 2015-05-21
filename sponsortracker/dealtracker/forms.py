@@ -42,6 +42,12 @@ class SponsorForm(flask_wtf.Form):
     link = StringField("Home page", validators=[URL(), Optional()], filters=[filter_strip])
     description = TextAreaField(validators=[Optional()], filters=[filter_strip])
     notes = TextAreaField(validators=[Optional()], filters=[filter_strip])
+    
+    def __init__(self, new=True, *args, **kwargs):
+        super(SponsorForm, self).__init__(*args, **kwargs)
+        
+        if not new:
+            self.name.validators = validators=[DataRequired()]
 
 class CurrentDealForm(flask_wtf.Form):
     owner = SelectField()

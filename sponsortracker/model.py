@@ -291,7 +291,7 @@ def load_deal(target, context):
     target.received_assets = True
     target.level = data.Level[target.level_name] if target.level_name else None
     if target.level:
-        target.received_assets = all(type in target.assets_by_type for type in target.level.assets) and target.link and target.description
+        target.received_assets = all(type in target.assets_by_type for type in target.level.assets)
 
 @event.listens_for(Contract, 'load')
 def load_contract(target, context):
