@@ -147,7 +147,7 @@ class Asset(Image):
     @staticmethod
     def delete(id):
         asset = model.Asset.query.get(id)
-        deal = asset_model.deal
+        deal = asset.deal
         
         Asset.discard(deal, asset.filename)
         Thumbnail.discard(deal, asset.filename)
