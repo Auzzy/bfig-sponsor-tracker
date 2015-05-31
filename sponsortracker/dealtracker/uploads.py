@@ -3,12 +3,16 @@ import os
 import shutil
 from os.path import basename, join, relpath, splitext
 
+import boto
 import wand.image
 from flask import flash
 from werkzeug.datastructures import FileStorage
 
 from sponsortracker import data, model
 from sponsortracker.dealtracker.app import asset_uploader, preview_uploader, thumb_uploader
+
+s3conn = boto.connect_s3()
+dealtracker_bucket = s3conn.get_bucket("bfig-dealtracker")
 
 class Image(wand.image.Image):
     def __init__(self, name, *args, **kwargs):
@@ -31,31 +35,26 @@ class Image(wand.image.Image):
         if name == "format":
             self.filename = "{file}.{ext}".format(file=splitext(self.filename)[0], ext=self.format.lower())
     
-    def save(self, deal):
+    def stash(self, deal):
         if not hasattr(self, "UPLOADER") or not self.UPLOADER:
             raise AttributeError("To save this image, an uploader must be defined.")
         
-        byte_stream = io.BytesIO()
-        super(Image, self).save(file=byte_stream)
-        byte_stream.seek(0)
-        file_storage = FileStorage(stream=byte_stream, filename=self.filename)
-        return self.UPLOADER.save(file_storage, folder=str(deal.sponsor.id))
+        key = self._s3key(deal, self.filename)
+        key.set_contents_from_string(self.make_blob(), headers={"Content-Type": self.mimetype})
+        return key.key.rsplit('/', 1)[-1]
+    
+    @classmethod
+    def _s3key(cls, deal, filename):
+        key = "{sponsor}/{year}/{cls}/{filename}".format(sponsor=deal.sponsor.name, year=deal.year, cls=cls.__name__.lower(), filename=filename)
+        return boto.s3.key.Key(dealtracker_bucket, key)
     
     @classmethod
     def discard(cls, deal, filename):
-        os.remove(cls.path(deal, filename))
-    
-    @classmethod
-    def path(cls, deal, filename):
-        return cls.UPLOADER.path(cls.relpath(deal, filename))
+        cls._s3key(deal, filename).delete()
     
     @classmethod
     def url(cls, deal, filename):
-        return cls.UPLOADER.url(cls.relpath(deal, filename))
-    
-    @classmethod
-    def relpath(cls, deal, filename):
-        return join(str(deal.sponsor.id), filename)
+        return cls._s3key(deal, filename).generate_url(expires_in=0, query_auth=False)
 
 class Preview(Image):
     UPLOADER = preview_uploader
@@ -64,13 +63,33 @@ class Preview(Image):
         super(Preview, self).__init__(filename, *args, **kwargs)
     
     @staticmethod
-    def stash(deal, type, filename):
+    def keep(deal, type, filename):
         with open(Preview.path(deal, filename), 'rb') as preview_file:
             file_storage = FileStorage(stream=preview_file, filename=filename)
-            asset_filename = Asset.stash(deal, type, file_storage)
-        
-        os.remove(Preview.path(deal, filename))
+            asset_filename = Asset.create(deal, type, file_storage)
+        Preview.discard(deal, filename)
         return asset_filename
+    
+    def stash(self, deal):
+        byte_stream = io.BytesIO()
+        self.save(file=byte_stream)
+        byte_stream.seek(0)
+        
+        filename = "{0}-{1}".format(deal.sponsor.name, self.filename).replace(' ', '-')
+        file_storage = FileStorage(stream=byte_stream, filename=filename)
+        return self.UPLOADER.save(file_storage)
+    
+    @staticmethod
+    def discard(deal, filename):
+        os.remove(Preview.path(deal, filename))
+    
+    @staticmethod
+    def path(deal, filename):
+        return Preview.UPLOADER.path(filename)
+    
+    @staticmethod
+    def url(deal, filename):
+        return Preview.UPLOADER.url(filename)
 
 class Thumbnail(Image):
     DEFAULT_WIDTH = 100
@@ -92,8 +111,7 @@ class Thumbnail(Image):
     def create_from_file(filename, file, deal, size=None):
         thumbnail = Thumbnail(filename, file=file)
         thumbnail._resize(size)
-        # thumbnail.format = data._DigitalFormat.PNG.format
-        return thumbnail.save(deal)
+        return thumbnail.stash(deal)
     
     def _resize(self, size):
         transform = ""
@@ -107,15 +125,6 @@ class Thumbnail(Image):
         else:
             transform = "{0}x{1}!".format(Thumbnail.DEFAULT_WIDTH, Thumbnail.DEFAULT_HEIGHT)
         self.transform(resize=transform)
-    
-    def save(self, deal):
-        self.format = Thumbnail.FORMAT.format
-        return super(Thumbnail, self).save(deal)
-    
-    @classmethod
-    def relpath(cls, deal, filename):
-        filename = "{0}.{1}".format(splitext(filename)[0], Thumbnail.FORMAT.ext)
-        return super(Thumbnail, cls).relpath(deal, filename)
 
 class Asset(Image):
     UPLOADER = asset_uploader
@@ -124,29 +133,25 @@ class Asset(Image):
         super(Asset, self).__init__(filename, *args, **kwargs)
     
     @staticmethod
-    def stash(deal, type, file_storage):
-        asset_filename = Asset.load(file_storage).save(deal)
+    def create(deal, type, file_storage):
+        asset_filename = Asset.load(file_storage).stash(deal)
         Thumbnail.create(file_storage, deal, size={"width": None})
         
         filename = basename(asset_filename)
-        Asset._store(deal, type, filename)
+        deal.assets.append(model.Asset(deal.id, type, filename))
+        model.db.session.commit()
         
         return filename
     
     @staticmethod
-    def _store(deal, type, filename):
-        deal.assets.append(model.Asset(deal.id, type, filename))
-        model.db.session.commit()
-    
-    @staticmethod
     def delete(id):
-        asset_model = model.Asset.query.get(id)
+        asset = model.Asset.query.get(id)
         deal = asset_model.deal
         
-        Asset.discard(deal, asset_model.filename)
-        Thumbnail.discard(deal, asset_model.filename)
+        Asset.discard(deal, asset.filename)
+        Thumbnail.discard(deal, asset.filename)
         
-        model.db.session.delete(asset_model)
+        model.db.session.delete(asset)
         model.db.session.commit()
 
 def verify(deal, form):
@@ -171,8 +176,7 @@ def verify(deal, form):
         pass
     
     if preview.dirty:
-        filename = preview.save(deal)
-        return filename.split('/')[-1]
+        return preview.stash(deal)
     else:
-        Asset.stash(deal, form.type.data, form.asset.data)
+        Asset.create(deal, form.type.data, form.asset.data)
         return None

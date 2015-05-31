@@ -54,13 +54,12 @@ def preview_asset(id):
             uploads.Preview.discard(deal, filename)
             return redirect(url_for("dealtracker.upload_asset", id=id))
         elif "save" in request.form:
-            uploads.Preview.stash(deal, type, filename)
+            uploads.Preview.keep(deal, type, filename=filename)
             return redirect(url_for("dealtracker.manage_assets", id=id))
     
     asset_type = data.AssetType[type]
     url = uploads.Preview.url(deal, filename)
     
-    print("FORMAT: " + str(uploads.Image(filename, filename=uploads.Preview.path(deal, filename)).format))
-    
-    display = uploads.Image(filename, filename=uploads.Preview.path(deal, filename)).format not in [fmt.format for fmt in data._PrintFormat]
+    # display = uploads.Image(filename, filename=uploads.Preview.path(deal, filename)).format not in [fmt.format for fmt in data._PrintFormat]
+    display = True
     return render_template("preview-asset.html", id=id, filename=filename, preview=url, type=asset_type, display=display)
