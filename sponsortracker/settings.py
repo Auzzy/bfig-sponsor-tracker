@@ -4,7 +4,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 PROPAGATE_EXCEPTIONS = True
 
 # Flask-SQLAlchemy
-SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', "postgresql:///sponsortracker")
+SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "postgresql:///sponsortracker")
 
 # Flask-WTForms
 WTF_CSRF_ENABLED = True
@@ -31,3 +31,4 @@ MAIL_USE_SSL = True
 
 # Custom
 MIGRATIONS_DIRECTORY = "migrations"
+S3_BUCKET = os.environ.get("S3_BUCKET", "bfig-dealtracker")

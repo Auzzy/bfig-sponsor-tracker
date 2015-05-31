@@ -9,10 +9,11 @@ from flask import flash
 from werkzeug.datastructures import FileStorage
 
 from sponsortracker import data, model
+from sponsortracker.app import app
 from sponsortracker.dealtracker.app import asset_uploader, preview_uploader, thumb_uploader
 
 s3conn = boto.connect_s3()
-dealtracker_bucket = s3conn.get_bucket("bfig-dealtracker")
+dealtracker_bucket = s3conn.get_bucket(app.config["S3_BUCKET"])
 
 class Image(wand.image.Image):
     def __init__(self, name, *args, **kwargs):
