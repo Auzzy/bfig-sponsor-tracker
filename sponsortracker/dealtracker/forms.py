@@ -7,7 +7,6 @@ from wtforms import HiddenField, IntegerField, SelectField, StringField, TextAre
 from wtforms.validators import DataRequired, Optional, URL, ValidationError
 
 from sponsortracker import data, model
-from sponsortracker.dealtracker.app import asset_uploader
 from sponsortracker.dealtracker import uploads
 
 EMAIL_BASENAME = "email"
@@ -65,7 +64,7 @@ class CurrentDealForm(flask_wtf.Form):
 
 class UploadAssetForm(flask_wtf.Form):
     type = SelectField(validators=[DataRequired("You must select an asset type.")])
-    asset = FileField(validators=[FileRequired(), FileAllowed(asset_uploader, "The uploaded asset must be an image file."), validate_asset])
+    asset = FileField(validators=[FileRequired(), FileAllowed(data.ASSET_FORMATS_EXT, "The uploaded asset must be an image file."), validate_asset])
     
     def __init__(self, asset_types=[], *args, **kwargs):
         super(UploadAssetForm, self).__init__(*args, **kwargs)

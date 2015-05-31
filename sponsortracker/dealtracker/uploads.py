@@ -10,7 +10,7 @@ from werkzeug.datastructures import FileStorage
 
 from sponsortracker import data, model
 from sponsortracker.app import app
-from sponsortracker.dealtracker.app import asset_uploader, preview_uploader, thumb_uploader
+from sponsortracker.dealtracker.app import preview_uploader
 
 s3conn = boto.connect_s3()
 dealtracker_bucket = s3conn.get_bucket(app.config["S3_BUCKET"])
@@ -37,9 +37,6 @@ class Image(wand.image.Image):
             self.filename = "{file}.{ext}".format(file=splitext(self.filename)[0], ext=self.format.lower())
     
     def stash(self, deal):
-        if not hasattr(self, "UPLOADER") or not self.UPLOADER:
-            raise AttributeError("To save this image, an uploader must be defined.")
-        
         key = self._s3key(deal, self.filename)
         key.set_contents_from_string(self.make_blob(), headers={"Content-Type": self.mimetype})
         return key.key.rsplit('/', 1)[-1]
@@ -58,8 +55,6 @@ class Image(wand.image.Image):
         return cls._s3key(deal, filename).generate_url(expires_in=0, query_auth=False)
 
 class Preview(Image):
-    UPLOADER = preview_uploader
-    
     def __init__(self, filename, *args, **kwargs):
         super(Preview, self).__init__(filename, *args, **kwargs)
     
@@ -78,7 +73,7 @@ class Preview(Image):
         
         filename = "{0}-{1}".format(deal.sponsor.name, self.filename).replace(' ', '-')
         file_storage = FileStorage(stream=byte_stream, filename=filename)
-        return self.UPLOADER.save(file_storage)
+        return preview_uploader.save(file_storage)
     
     @staticmethod
     def discard(deal, filename):
@@ -86,18 +81,16 @@ class Preview(Image):
     
     @staticmethod
     def path(deal, filename):
-        return Preview.UPLOADER.path(filename)
+        return preview_uploader.path(filename)
     
     @staticmethod
     def url(deal, filename):
-        return Preview.UPLOADER.url(filename)
+        return preview_uploader.url(filename)
 
 class Thumbnail(Image):
     DEFAULT_WIDTH = 100
     DEFAULT_HEIGHT = 100
     FORMAT = data._DigitalFormat.PNG
-    
-    UPLOADER = thumb_uploader
     
     def __init__(self, filename, *args, **kwargs):
         super(Thumbnail, self).__init__(filename, *args, **kwargs)
@@ -128,8 +121,6 @@ class Thumbnail(Image):
         self.transform(resize=transform)
 
 class Asset(Image):
-    UPLOADER = asset_uploader
-    
     def __init__(self, filename, *args, **kwargs):
         super(Asset, self).__init__(filename, *args, **kwargs)
     
