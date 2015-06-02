@@ -29,7 +29,7 @@ def validate_asset(form, field):
         raise ValidationError("Expected an opaque background.")
 
 def validate_sponsor(form, field):
-    if model.Sponsor.query.filter_by(name=field.data):
+    if model.Sponsor.query.filter_by(name=field.data).first():
         raise ValidationError("A sponsor with that name already exists.")
 
 def filter_strip(value):
@@ -46,7 +46,7 @@ class SponsorForm(flask_wtf.Form):
         super(SponsorForm, self).__init__(*args, **kwargs)
         
         if not new:
-            self.name.validators = validators=[DataRequired()]
+            self.name.validators = [DataRequired()]
 
 class CurrentDealForm(flask_wtf.Form):
     owner = SelectField()
