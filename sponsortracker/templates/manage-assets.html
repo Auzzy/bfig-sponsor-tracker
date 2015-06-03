@@ -23,7 +23,7 @@
 {% block content %}
 <h1>{{ deal.sponsor.name }} Assets</h1>
 
-<a href="{{ url_for('dealtracker.upload_asset', id=deal.sponsor.id) }}">Upload Asset</a><br />
+<a href="{{ url_for('upload_asset', id=deal.sponsor.id) }}">Upload Asset</a><br />
 
 {% for type in deal.level.assets|sort(attribute="label") %}
 <div style="float:left; width:200px;">
@@ -33,7 +33,7 @@
     <div class="asset" style="position:relative; left:50px;">
         <a href="{{ asset.url }}" target="_blank"><img src="{{ asset.thumbnail_url }}" alt="{{ asset.name }}"></img></a>
         <a href="javascript:void(0);" onclick="delete_asset({{ asset.id }})">
-            <img style="vertical-align:top;" src="{{ url_for('dealtracker.static', filename='delete.png') }}"></img>
+            <img style="vertical-align:top;" src="{{ url_for('static', filename='delete.png') }}"></img>
         </a>
     </div>
     <br />
@@ -54,7 +54,7 @@
     <div class="asset" style="position:relative; left:50px;">
         <a href="{{ asset.url }}" target="_blank"><img src="{{ asset.thumbnail_url }}" alt="{{ asset.name }}"></img></a>
         <a href="javascript:void(0);" onclick="delete_asset({{ asset.id }})">
-            <img style="vertical-align:top;" src="{{ url_for('dealtracker.static', filename='delete.png') }}"></img>
+            <img style="vertical-align:top;" src="{{ url_for('static', filename='delete.png') }}"></img>
         </a>
     </div>
     <br />
@@ -71,7 +71,7 @@
 function delete_asset(id) {
     var form = document.createElement("form");
     form.setAttribute("method", "POST");
-    form.setAttribute("action", "{{ url_for('dealtracker.delete_asset', id=deal.sponsor.id) }}");
+    form.setAttribute("action", "{{ url_for('delete_asset', id=deal.sponsor.id) }}");
     
     var csrfField = document.createElement("input");
     csrfField.setAttribute("type", "hidden");

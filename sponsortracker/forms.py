@@ -6,8 +6,7 @@ from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms import HiddenField, IntegerField, SelectField, StringField, TextAreaField
 from wtforms.validators import DataRequired, Optional, URL, ValidationError
 
-from sponsortracker import data, model
-from sponsortracker.dealtracker import uploads
+from sponsortracker import data, model, uploads
 
 EMAIL_BASENAME = "email"
 NAME_BASENAME = "name"

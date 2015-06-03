@@ -1,18 +1,21 @@
 import io
 import os
 import shutil
-from os.path import join, relpath, splitext
+from os.path import basename, join, relpath, splitext
 
+import boto
 import wand.image
 from flask import flash
 from werkzeug.datastructures import FileStorage
 
-from sponsortracker import model
-from sponsortracker.data import AssetType
-from sponsortracker.assettracker.app import asset_uploader, preview_uploader, thumb_uploader
+from sponsortracker import data, model
+from sponsortracker.app import app, preview_uploader
+
+s3conn = boto.connect_s3()
+dealtracker_bucket = s3conn.get_bucket(app.config["S3_BUCKET"])
 
 class Image(wand.image.Image):
-    def __init__(self, filename, *args, **kwargs):
+    def __init__(self, name, *args, **kwargs):
         if "file" in kwargs:
             kwargs["file"].seek(0)
         
@@ -21,7 +24,7 @@ class Image(wand.image.Image):
         if "file" in kwargs:
             kwargs["file"].seek(0)
         
-        self.filename = filename
+        self.filename = name
     
     @classmethod
     def load(cls, file_storage):
@@ -32,61 +35,82 @@ class Image(wand.image.Image):
         if name == "format":
             self.filename = "{file}.{ext}".format(file=splitext(self.filename)[0], ext=self.format.lower())
     
-    def save(self, sponsor_id):
-        if not hasattr(self, "UPLOADER") or not self.UPLOADER:
-            raise AttributeError("To save this image, an uploader must be defined.")
-        
-        byte_stream = io.BytesIO()
-        super(Image, self).save(file=byte_stream)
-        byte_stream.seek(0)
-        file_storage = FileStorage(stream=byte_stream, filename=self.filename)
-        return self.UPLOADER.save(file_storage, folder=str(sponsor_id))
+    def stash(self, deal):
+        key = self._s3key(deal, self.filename)
+        key.set_contents_from_string(self.make_blob(), headers={"Content-Type": self.mimetype})
+        return key.key.rsplit('/', 1)[-1]
     
     @classmethod
-    def url(cls, sponsor_id, filename):
-        return cls.UPLOADER.url(join(str(sponsor_id), filename))
+    def _s3key(cls, deal, filename):
+        key = "{sponsor}/{year}/{cls}/{filename}".format(sponsor=deal.sponsor.name, year=deal.year, cls=cls.__name__.lower(), filename=filename)
+        return boto.s3.key.Key(dealtracker_bucket, key)
     
     @classmethod
-    def _path(cls, sponsor_id, filename):
-        return cls.UPLOADER.path(join(str(sponsor_id), filename))
+    def discard(cls, deal, filename):
+        cls._s3key(deal, filename).delete()
     
     @classmethod
-    def discard(cls, sponsor_id, filename):
-        os.remove(cls._path(sponsor_id, filename))
+    def url(cls, deal, filename):
+        return cls._s3key(deal, filename).generate_url(expires_in=0, query_auth=False)
+    
+    @classmethod
+    def get(cls, deal, filename, dest=None):
+        dest = os.path.join(dest, filename) if dest else filename
+        cls._s3key(deal, filename).get_contents_to_filename(dest)
+        return dest
 
 class Preview(Image):
-    UPLOADER = preview_uploader
-    
     def __init__(self, filename, *args, **kwargs):
         super(Preview, self).__init__(filename, *args, **kwargs)
     
     @staticmethod
-    def stash(sponsor_id, type, filename):
-        with open(Preview._path(sponsor_id, filename), 'rb') as preview_file:
+    def keep(deal, type, filename):
+        with open(Preview.path(deal, filename), 'rb') as preview_file:
             file_storage = FileStorage(stream=preview_file, filename=filename)
-            asset_filename = Asset.stash(sponsor_id, type, file_storage)
-        
-        os.remove(Preview._path(sponsor_id, filename))
+            asset_filename = Asset.create(deal, type, file_storage)
+        Preview.discard(deal, filename)
         return asset_filename
+    
+    def stash(self, deal):
+        byte_stream = io.BytesIO()
+        self.save(file=byte_stream)
+        byte_stream.seek(0)
+        
+        filename = "{0}-{1}".format(deal.sponsor.name, self.filename).replace(' ', '-')
+        file_storage = FileStorage(stream=byte_stream, filename=filename)
+        return preview_uploader.save(file_storage)
+    
+    @staticmethod
+    def discard(deal, filename):
+        os.remove(Preview.path(deal, filename))
+    
+    @staticmethod
+    def path(deal, filename):
+        return preview_uploader.path(filename)
+    
+    @staticmethod
+    def url(deal, filename):
+        return preview_uploader.url(filename)
 
 class Thumbnail(Image):
     DEFAULT_WIDTH = 100
     DEFAULT_HEIGHT = 100
-    
-    UPLOADER = thumb_uploader
+    FORMAT = data._DigitalFormat.PNG
     
     def __init__(self, filename, *args, **kwargs):
         super(Thumbnail, self).__init__(filename, *args, **kwargs)
+        
+        self.format = Thumbnail.FORMAT.format
     
     @staticmethod
-    def create(file_storage, sponsor_id, size=None):
-        return Thumbnail.create_from_file(file_storage.filename, file_storage.stream, sponsor_id, size)
+    def create(file_storage, deal, size=None):
+        return Thumbnail.create_from_file(file_storage.filename, file_storage.stream, deal, size)
         
     @staticmethod
-    def create_from_file(filename, file, sponsor_id, size=None):
+    def create_from_file(filename, file, deal, size=None):
         thumbnail = Thumbnail(filename, file=file)
         thumbnail._resize(size)
-        return thumbnail.save(sponsor_id)
+        return thumbnail.stash(deal)
     
     def _resize(self, size):
         transform = ""
@@ -102,43 +126,34 @@ class Thumbnail(Image):
         self.transform(resize=transform)
 
 class Asset(Image):
-    UPLOADER = asset_uploader
-    
     def __init__(self, filename, *args, **kwargs):
         super(Asset, self).__init__(filename, *args, **kwargs)
     
     @staticmethod
-    def stash(sponsor_id, type, file_storage):
-        asset_filename = Asset.load(file_storage).save(sponsor_id)
-        file_storage.filename = relpath(asset_filename, str(sponsor_id))
-        Thumbnail.create(file_storage, sponsor_id, size={"width": None})
+    def create(deal, type, file_storage):
+        asset_filename = Asset.load(file_storage).stash(deal)
+        Thumbnail.create(file_storage, deal, size={"width": None})
         
-        Asset._store(sponsor_id, type, asset_filename)
-        
-        return asset_filename
-    
-    @staticmethod
-    def _store(sponsor_id, type, filename):
-        asset_model = model.Asset(sponsor_id, type, filename)
-        model.db.session.add(asset_model)
+        filename = basename(asset_filename)
+        deal.assets.append(model.Asset(deal.id, type, filename))
         model.db.session.commit()
+        
+        return filename
     
     @staticmethod
     def delete(id):
-        asset_model = model.Asset.query.get(id)
-        sponsor_id = asset_model.sponsor.id
+        asset = model.Asset.query.get(id)
+        deal = asset.deal
         
-        relfilename = relpath(asset_model.filename, str(sponsor_id))
-        Asset.discard(sponsor_id, relfilename)
-        Thumbnail.discard(sponsor_id, relfilename)
+        Asset.discard(deal, asset.filename)
+        Thumbnail.discard(deal, asset.filename)
         
-        model.db.session.delete(asset_model)
+        model.db.session.delete(asset)
         model.db.session.commit()
 
-
-def verify(sponsor_id, form):
+def verify(deal, form):
     preview = Preview.load(form.asset.data)
-    spec = AssetType[form.type.data].spec
+    spec = data.AssetType[form.type.data].spec
     
     if preview.format not in spec.format_names:
         flash("Image format was {0}. Expected one of the following: {1}.".format(preview.format, ', '.join(spec.format_names)), 'preview')
@@ -158,16 +173,7 @@ def verify(sponsor_id, form):
         pass
     
     if preview.dirty:
-        filename = preview.save(sponsor_id)
-        return filename.split('/')[-1]
+        return preview.stash(deal)
     else:
-        Asset.stash(sponsor_id, form.type.data, form.asset.data)
+        Asset.create(deal, form.type.data, form.asset.data)
         return None
-'''
-def delete_asset(id):
-    asset_model = model.Asset.query.get(id)
-    Asset.delete(asset_model.sponsor.id, asset_model.filename)
-    
-    model.db.session.delete(asset_model)
-    model.db.session.commit()
-'''

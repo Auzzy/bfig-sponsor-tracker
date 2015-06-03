@@ -3,7 +3,7 @@
 {% block content %}
 {# {% from 'contact-field.html' import contact_field %} #}
 
-<form action="{{ url_for('dealtracker.configure_sponsor', id=id) }}" method="POST">
+<form action="{{ url_for('configure_sponsor', id=id) }}" method="POST">
     {% include "render-form.html" %}
     
     <div id="contacts_container"></div>
@@ -14,7 +14,7 @@
     
     <div>
         <input type="submit" value="Save" />
-        <a href="{% if id %}{{ url_for('dealtracker.sponsor_info', id=id) }}{% else %}{{ url_for('dealtracker.my_accounts') }}{% endif %}">
+        <a href="{% if id %}{{ url_for('sponsor_info', id=id) }}{% else %}{{ url_for('my_accounts') }}{% endif %}">
             <input type="button" value="Cancel" />
         </a>
     </div>

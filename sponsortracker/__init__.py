@@ -1,10 +1,15 @@
 from flask.ext.user import SQLAlchemyAdapter, UserManager
+from flaskext.uploads import configure_uploads, UploadSet
 
-from sponsortracker.app import app
-# from sponsortracker.assettracker.app import asset_tracker
-from sponsortracker.dealtracker.app import deal_tracker
-# from sponsortracker import model, model_events, views
-from sponsortracker import model, views
+from sponsortracker import model
+from sponsortracker.app import app, preview_uploader
 
-# app.register_blueprint(asset_tracker, url_prefix="/assettracker")
-app.register_blueprint(deal_tracker, url_prefix="/dealtracker")
+# Patch Flask Uploads lack of spport for Python 3
+class PatchedDict(dict):
+    def itervalues(self):
+        return self.values()
+app.upload_set_config = PatchedDict()
+
+configure_uploads(app, (preview_uploader))
+
+from . import views

@@ -6,38 +6,37 @@ from flask import redirect, render_template, request, url_for
 from flask.ext.login import current_user
 from flask.ext.user import login_required
 
-from sponsortracker import model
+from sponsortracker import forms, model
+from sponsortracker.app import app
 from sponsortracker.data import UserType
-from sponsortracker.dealtracker import forms
-from sponsortracker.dealtracker.app import deal_tracker
 
 
 DATE_FORMAT = "%a %b %d %Y"
 REQUEST_ID = "request-date"
 
-@deal_tracker.route("/")
+@app.route("/")
 @login_required
 def my_accounts():
     if current_user.type != UserType.SALES.type:
-        return redirect(url_for("dealtracker.all"))
+        return redirect(url_for("all"))
         
     deals = model.Deal.query.filter_by(owner=current_user.user_auth.username, year=datetime.datetime.today().year).all()
     sponsors = [deal.sponsor for deal in deals]
     return render_template("sponsor-list.html", sponsors=sponsors)
     
-@deal_tracker.route("/all/")
+@app.route("/all/")
 @login_required
 def all():
     return render_template("sponsor-list.html", sponsors=model.Sponsor.query.all())
 
-@deal_tracker.route("/sponsor/<int:id>/")
+@app.route("/sponsor/<int:id>/")
 @login_required
 def sponsor_info(id):
     sponsor = model.Sponsor.query.get_or_404(id)
     return render_template("sponsor-info.html", sponsor=sponsor, request_id=REQUEST_ID)
 
-@deal_tracker.route("/sponsor/edit/", methods=["GET", "POST"])
-@deal_tracker.route("/sponsor/<int:id>/edit/", methods=["GET", "POST"])
+@app.route("/sponsor/edit/", methods=["GET", "POST"])
+@app.route("/sponsor/<int:id>/edit/", methods=["GET", "POST"])
 @login_required
 def configure_sponsor(id=None):
     if request.method == "POST":
@@ -45,33 +44,33 @@ def configure_sponsor(id=None):
         form = forms.SponsorForm(new=id is None)
         if form.validate_on_submit():
             sponsor = _configure_sponsor(id, form, contacts)
-            return redirect(url_for("dealtracker.sponsor_info", id=sponsor.id))
+            return redirect(url_for("sponsor_info", id=sponsor.id))
     else:
         form = forms.SponsorForm(obj=model.Sponsor.query.get_or_404(id)) if id else forms.SponsorForm()
     contacts = model.Sponsor.query.get_or_404(id).contacts if id else []
     return render_template("configure-sponsor.html", id=id, form=form, contacts=contacts, email_basename=forms.EMAIL_BASENAME, name_basename=forms.NAME_BASENAME)
 
-@deal_tracker.route("/sponsor/<int:id>/edit/current-deal/", methods=["GET", "POST"])
+@app.route("/sponsor/<int:id>/edit/current-deal/", methods=["GET", "POST"])
 @login_required
 def edit_current_deal(id):
     if request.method == "POST":
         form = forms.CurrentDealForm()
         if form.validate_on_submit():
             _configure_deal(id, form)
-            return redirect(url_for("dealtracker.sponsor_info", id=id))
+            return redirect(url_for("sponsor_info", id=id))
     else:
         deal = model.Deal.query.filter_by(sponsor_id=id, year=datetime.date.today().year).first()
         form = forms.CurrentDealForm(obj=deal)
     
-    return render_template("configure-deal.html", id=id, form=form, view="dealtracker.edit_current_deal")
+    return render_template("configure-deal.html", id=id, form=form, view="edit_current_deal")
 
-@deal_tracker.route("/sponsor/delete/", methods=["POST"])
+@app.route("/sponsor/delete/", methods=["POST"])
 @login_required
 def delete_sponsor():
     id = request.form["sponsor-id"]
     model.db.session.delete(model.Sponsor.query.get_or_404(id))
     model.db.session.commit()
-    return redirect(url_for("dealtracker.my_accounts"))
+    return redirect(url_for("my_accounts"))
    
 
 def _extract_contacts(data, email_basename, name_basename):

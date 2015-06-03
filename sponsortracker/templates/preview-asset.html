@@ -30,7 +30,7 @@
 
 <br /><br />
 
-<form action="{{ url_for('dealtracker.preview_asset', id=id) }}" method="POST">
+<form action="{{ url_for('preview_asset', id=id) }}" method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
     
     <input type="hidden" name="filename" value="{{ filename }}" />

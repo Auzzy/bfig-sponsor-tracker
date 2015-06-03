@@ -1,12 +1,10 @@
 from flask import redirect, render_template, request, url_for
 from flask.ext.user import login_required
 
-from sponsortracker import data, model
-from sponsortracker.dealtracker import forms, uploads
-from sponsortracker.dealtracker.app import deal_tracker
+from sponsortracker import data, forms, model, uploads
+from sponsortracker.app import app
 
-
-@deal_tracker.route("/sponsor/<int:id>/assets/")
+@app.route("/sponsor/<int:id>/assets/")
 @login_required
 def manage_assets(id):
     deal = model.Sponsor.query.get_or_404(id).current
@@ -16,7 +14,7 @@ def manage_assets(id):
         other_assets = deal.assets_by_type.keys()
     return render_template("manage-assets.html", deal=deal, other_assets=other_assets)
 
-@deal_tracker.route("/sponsor/<int:id>/assets/upload/", methods=["GET", "POST"])
+@app.route("/sponsor/<int:id>/assets/upload/", methods=["GET", "POST"])
 @login_required
 def upload_asset(id):
     deal = model.Sponsor.query.get_or_404(id).current
@@ -26,36 +24,36 @@ def upload_asset(id):
     if form.validate_on_submit():
         filename = uploads.verify(deal, form)
         if filename:
-            return redirect(url_for("dealtracker.preview_asset", id=id, filename=filename, type=form.type.data))
+            return redirect(url_for("preview_asset", id=id, filename=filename, type=form.type.data))
         else:
-            return redirect(url_for("dealtracker.manage_assets", id=id))
+            return redirect(url_for("manage_assets", id=id))
     
     return render_template("upload-asset.html", id=id, form=form, deal=deal)
 
-@deal_tracker.route("/sponsor/<int:id>/assets/delete/", methods=["POST"])
+@app.route("/sponsor/<int:id>/assets/delete/", methods=["POST"])
 @login_required
 def delete_asset(id):
     asset_id = request.form["asset-id"]
     uploads.Asset.delete(asset_id)
-    return redirect(url_for("dealtracker.manage_assets", id=id))
+    return redirect(url_for("manage_assets", id=id))
 
-@deal_tracker.route("/sponsor/<int:id>/assets/preview/", methods=["GET", "POST"])
+@app.route("/sponsor/<int:id>/assets/preview/", methods=["GET", "POST"])
 @login_required
 def preview_asset(id):
     filename = request.args.get("filename") or request.values.get("filename")
     type = request.args.get("type") or request.values.get("type")
     
     if not filename or type not in data.AssetType.__members__:
-        return redirect(url_for("dealtracker.manage_assets", id=id))
+        return redirect(url_for("manage_assets", id=id))
     
     deal = model.Sponsor.query.get_or_404(id).current
     if request.method == "POST":
         if "cancel" in request.form:
             uploads.Preview.discard(deal, filename)
-            return redirect(url_for("dealtracker.upload_asset", id=id))
+            return redirect(url_for("upload_asset", id=id))
         elif "save" in request.form:
             uploads.Preview.keep(deal, type, filename=filename)
-            return redirect(url_for("dealtracker.manage_assets", id=id))
+            return redirect(url_for("manage_assets", id=id))
     
     asset_type = data.AssetType[type]
     url = uploads.Preview.url(deal, filename)

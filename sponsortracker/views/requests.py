@@ -5,37 +5,37 @@ from flask.ext.login import current_user
 from flask.ext.user import login_required
 
 from sponsortracker import model
-from sponsortracker.dealtracker.app import deal_tracker
+from sponsortracker.app import app
 
 DATE_FORMAT = "%a %b %d %Y"
 REQUEST_ID = "request-date"
 
-@deal_tracker.route("/sponsor/<int:id>/edit/contract-sent/", methods=["POST"])
+@app.route("/sponsor/<int:id>/edit/contract-sent/", methods=["POST"])
 @login_required
 def contract_sent(id):
     return _update_request(id, lambda sponsor, val: setattr(sponsor.current.contract, "sent", val))
 
-@deal_tracker.route("/sponsor/<int:id>/edit/contract-received/", methods=["POST"])
+@app.route("/sponsor/<int:id>/edit/contract-received/", methods=["POST"])
 @login_required
 def contract_received(id):
     return _update_request(id, lambda sponsor, val: setattr(sponsor.current.contract, "received", val))
 
-@deal_tracker.route("/sponsor/<int:id>/edit/invoice-sent/", methods=["POST"])
+@app.route("/sponsor/<int:id>/edit/invoice-sent/", methods=["POST"])
 @login_required
 def invoice_sent(id):
     return _update_request(id, lambda sponsor, val: setattr(sponsor.current.invoice, "sent", val))
 
-@deal_tracker.route("/sponsor/<int:id>/edit/invoice-received/", methods=["POST"])
+@app.route("/sponsor/<int:id>/edit/invoice-received/", methods=["POST"])
 @login_required
 def invoice_received(id):
     return _update_request(id, lambda sponsor, val: setattr(sponsor.current.invoice, "received", val))
 
-@deal_tracker.route("/sponsor/<int:id>/edit/asset-request-sent/", methods=["POST"])
+@app.route("/sponsor/<int:id>/edit/asset-request-sent/", methods=["POST"])
 @login_required
 def asset_request_sent(id):
     return _update_request(id, lambda sponsor, val: setattr(sponsor.current.asset_request, "sent", val))
 
-@deal_tracker.route("/sponsor/<int:id>/edit/asset-request-received/", methods=["POST"])
+@app.route("/sponsor/<int:id>/edit/asset-request-received/", methods=["POST"])
 @login_required
 def asset_request_received(id):
     return _update_request(id, lambda sponsor, val: setattr(sponsor.current.asset_request, "received", val))
@@ -55,4 +55,4 @@ def _update_request(sponsor_id, update_field):
     sponsor.current.asset_request.ready = bool(sponsor.current.level_name) and bool(sponsor.current.contract.received)
     
     model.db.session.commit()
-    return redirect(url_for("dealtracker.sponsor_info", id=sponsor.id))
+    return redirect(url_for("sponsor_info", id=sponsor.id))

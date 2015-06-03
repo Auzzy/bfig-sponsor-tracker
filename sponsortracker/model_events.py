@@ -3,8 +3,7 @@ import datetime
 
 from flask.ext.sqlalchemy import event
 
-from sponsortracker import data, model
-from sponsortracker.dealtracker import uploads
+from sponsortracker import data, model, uploads
 
 _ASSET_REQUEST_OVERDUE_DAYS = 14
 _CONTRACT_OVERDUE_DAYS = 14

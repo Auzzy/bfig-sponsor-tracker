@@ -7,7 +7,7 @@ from os.path import exists, expanduser, join, splitext
 
 from sponsortracker.data import AssetType
 from sponsortracker.model import Sponsor
-from sponsortracker.dealtracker.app import asset_uploader
+# from sponsortracker.dealtracker.app import asset_uploader
 
 ZIPNAME = "sponsortracker-assets"
 
@@ -45,11 +45,18 @@ def _info_to_file(target, sponsor):
 
 def _copy_assets(target, assets):
     for asset in assets:
+        name = '-'.join([asset.deal.sponsor.name.lower(), asset.type.name.lower()])
+        ext = splitext(asset.filename)[-1].lstrip('.')
+        dest = os.path.join(target, "{name}.{ext}".format(name=basename, ext=ext))
+        uploads.Asset.get(asset.deal, asset.filename, dest)
+        
+        '''
         path = asset_uploader.path(asset.filename)
         ext = splitext(asset.filename)[-1].lstrip('.')
         name = '-'.join([asset.sponsor.name.lower(), asset.type.name.lower()])
         shutil.copy(path, _filepath(target, name, ext))
-
+        '''
+'''
 def _filepath(target, basename, ext):
     num = 2
     name = "{name}.{ext}".format(name=basename, ext=ext)
@@ -57,3 +64,4 @@ def _filepath(target, basename, ext):
         name = "{name}_{num}.{ext}".format(name=basename, num=num, ext=ext)
         num += 1
     return join(target, name)
+'''

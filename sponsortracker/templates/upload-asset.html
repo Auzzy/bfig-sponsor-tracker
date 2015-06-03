@@ -1,11 +1,12 @@
-{% extends "assettracker-layout.html" %}
+{% extends "dealtracker-layout.html" %}
 
-{% block title %}Asset Tracker - Upload Asset{% endblock %}
+{% block title %}Upload Asset{% endblock %}
 
 {% block content %}
-<h1>{{ sponsor.name }}</h1>
 
-<form method="POST" enctype="multipart/form-data" action="{{ url_for('assettracker.upload_asset', id=id) }}">
+<h1>{{ deal.sponsor.name }} - Upload Asset</h1>
+
+<form method="POST" enctype="multipart/form-data" action="{{ url_for('upload_asset', id=id) }}">
     {% for field in form %}
     <p>
         {% if field.type not in ("CSRFTokenField", "HiddenField") %}
@@ -24,12 +25,20 @@
     {% endfor %}
     
     <input type="submit" value="Submit" />
+    <a href="{{ url_for('manage_assets', id=id) }}">
+        <input type="button" value="Cancel" />
+    </a>
 </form>
 
 {% endblock %}
 
 {% block js %}
+
+// The idea is to display the required image specs based on the selected type
+/*
 document.getElementById("{{ form.type.id }}").onchange = function(){
     
 };
+*/
+
 {% endblock %}

@@ -223,13 +223,13 @@ class Asset(db.Model):
     
     @property
     def url(self):
-        from sponsortracker.dealtracker import uploads
+        from sponsortracker import uploads
         
         return uploads.Asset.url(self.deal, self.filename)
     
     @property
     def thumbnail_url(self):
-        from sponsortracker.dealtracker import uploads
+        from sponsortracker import uploads
         
         return uploads.Thumbnail.url(self.deal, self.filename)
     

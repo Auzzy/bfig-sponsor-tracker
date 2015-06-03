@@ -1,7 +1,7 @@
 {% extends "dealtracker-layout.html" %}
 
 {% block content %}
-<p><a href="{{ url_for('dealtracker.configure_sponsor') }}">New Sponsor</a></p>
+<p><a href="{{ url_for('configure_sponsor') }}">New Sponsor</a></p>
 
 <table id="sponsor-table" class="sortable zebra">
     <thead>
@@ -18,7 +18,7 @@
     <tbody>
         {% for sponsor in sponsors|sort(attribute="name") %}
         <tr style="text-align:center;">
-            <td style="text-align:left;"><a href="{{ url_for('dealtracker.sponsor_info', id=sponsor.id) }}">{{ sponsor.name }}</a></td>
+            <td style="text-align:left;"><a href="{{ url_for('sponsor_info', id=sponsor.id) }}">{{ sponsor.name }}</a></td>
             <td>{% if sponsor.current.owner %}{{ sponsor.current.owner_name }}{% endif %}</td>
             <td>{% if sponsor.type.value %}{{ sponsor.type.value }}{% endif %}</td>
             {% set request=sponsor.current.contract %}
@@ -29,7 +29,7 @@
             {% include "sponsor-status-request.html" %}
             <td style="background:white;">
                 <a href="javascript:void(0);" onclick="delete_sponsor({{ sponsor.id }})">
-                    <img src="{{ url_for('dealtracker.static', filename='delete.png') }}"></img>
+                    <img src="{{ url_for('static', filename='delete.png') }}"></img>
                 </a>
             </td>
         </tr>
@@ -62,7 +62,7 @@ function delete_sponsor(id) {
 function delete_sponsor_confirmed(id) {
     var form = document.createElement("form");
     form.setAttribute("method", "POST");
-    form.setAttribute("action", "{{ url_for('dealtracker.delete_sponsor') }}");
+    form.setAttribute("action", "{{ url_for('delete_sponsor') }}");
     
     var csrfField = document.createElement("input");
     csrfField.setAttribute("type", "hidden");

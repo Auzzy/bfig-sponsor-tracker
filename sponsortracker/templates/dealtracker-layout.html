@@ -7,7 +7,7 @@ Deal Tracker{% if sponsor %} - {{ sponsor.name }}{% endif %}
 {% block bodytitle %}Deal Tracker{% endblock %}
 
 {% block appnav %}
-<a href="{{ url_for('dealtracker.my_accounts') }}">My Accounts</a>
+<a href="{{ url_for('my_accounts') }}">My Accounts</a>
 &nbsp;&nbsp;
-<a href="{{ url_for('dealtracker.all') }}">All Deals</a>
+<a href="{{ url_for('all') }}">All Deals</a>
 {% endblock %}
