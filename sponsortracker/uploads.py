@@ -55,7 +55,7 @@ class Image(wand.image.Image):
     
     @classmethod
     def get(cls, deal, filename, dest=None):
-        dest = os.path.join(dest, filename) if dest else filename
+        dest = dest or filename
         cls._s3key(deal, filename).get_contents_to_filename(dest)
         return dest
 

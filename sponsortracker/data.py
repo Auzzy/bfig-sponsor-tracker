@@ -118,6 +118,7 @@ class AssetType(Enum):
         self.label = label
         self.spec = spec
 
+_BASE_ASSETS = (AssetType.LOGO, AssetType.DIGITAL_BANNER)
 class Level(Enum):
     INDIE = ("Indie")
     COPPER = ("Copper", AssetType.PROGRAM_QUARTER)
@@ -129,7 +130,7 @@ class Level(Enum):
     
     def __init__(self, label, *assets):
         self.label = label
-        self.assets = set(assets)
+        self.assets = _BASE_ASSETS + assets
 
 class SponsorType(Enum):
     DIGITAL_AAA_DEV = "Digital AAA Dev"
@@ -144,7 +145,3 @@ class SponsorType(Enum):
 
 
 ASSET_FORMATS_EXT = [fmt.ext for fmt in list(_PrintFormat) + list(_DigitalFormat) + list(_LogoFormat)]
-
-_BASE_ASSETS = (AssetType.LOGO, AssetType.DIGITAL_BANNER)
-for level in Level:
-    level.assets.update(_BASE_ASSETS)

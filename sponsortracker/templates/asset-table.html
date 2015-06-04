@@ -1,0 +1,27 @@
+<h3>{{ level.label }}</h3>
+
+{% set asset_types = level.assets %}
+<table id="{{ level.name }}-asset-table" class="sortable zebra">
+    <thead>
+        <tr>
+            <th style="min-width:150px;">Sponsor</th>
+            {% for asset_type in asset_types %}
+            <th>{{ asset_type.label }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for deal in deals %}
+        <tr>
+            <td><a href="{{ url_for('sponsor_info', id=deal.sponsor.id) }}">{{ deal.sponsor.name }}</a></td>
+            {% for asset_type in asset_types %}
+            {% if deal.assets_by_type.get(asset_type) %}
+            <td style="background-color: #00FF00;">Yes</td>
+            {% else %}
+            <td style="background-color: #FF0000;">No</td>
+            {% endif %}
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

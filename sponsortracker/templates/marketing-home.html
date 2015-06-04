@@ -1,0 +1,43 @@
+{% extends "dealtracker-layout.html" %}
+
+{% block content %}
+
+<p>
+    <a href="#downloadModal">Download...</a>
+
+    <div id="downloadModal" class="modalDialog">
+        <div>
+            <h2>Download Options</h2>
+            <a href="#close" title="Close" class="close">X</a>
+            <a href="{{ url_for('download_all') }}">Download All</a><br />
+            <a href="{{ url_for('download_logo_cloud') }}">Logo Cloud</a><br />
+            <a href="javascript:void(0);" id="website-updates">Website Updates</a>
+            <form id="website-updater" action="{{ url_for('download_website_updates') }}" method="GET">
+                <input type="hidden" id="website-updates-date" name="website-updates-date" />
+            </form>
+            <div id="website-updates-calendar"></div>
+        </div>
+    </div>
+</p>
+
+{% for level in deals_by_level %}
+{% set deals = deals_by_level[level] %}
+{% include "asset-table.html" %}
+{% endfor %}
+
+{% endblock %}
+
+{% block js %}
+    window.addEventListener('load', function() {
+        var picker = new Pikaday(
+        {
+            field: document.getElementById('website-updates-date'),
+            trigger: document.getElementById('website-updates'),
+            container: document.getElementById('website-updates-calendar'),
+            yearRange: [{{ year }}, {{ year }}],
+            onSelect: function(date) {
+                document.getElementById("website-updater").submit();
+            }
+        });
+    }, false);
+{% endblock %}

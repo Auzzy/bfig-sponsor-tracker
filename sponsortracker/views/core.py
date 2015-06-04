@@ -1,3 +1,4 @@
+import collections
 import datetime
 import itertools
 from collections import OrderedDict
@@ -16,17 +17,32 @@ REQUEST_ID = "request-date"
 
 @app.route("/")
 @login_required
-def my_accounts():
-    if current_user.type != UserType.SALES.type:
-        return redirect(url_for("all"))
-        
-    deals = model.Deal.query.filter_by(owner=current_user.user_auth.username, year=datetime.datetime.today().year).all()
+def home():
+    if current_user.type == UserType.SALES.type:
+        return sales_home()
+    elif current_user.type == UserType.MARKETING.type:
+        return marketing_home()
+    
+    return redirect(url_for("all_deals"))
+
+def sales_home():
+    year = datetime.datetime.today().year
+    deals = model.Deal.query.filter_by(owner=current_user.user_auth.username, year=year)
     sponsors = [deal.sponsor for deal in deals]
-    return render_template("sponsor-list.html", sponsors=sponsors)
+    return render_template("sponsor-list.html", sponsors=sponsors, year=year)
+
+@app.route("/assets/")
+@login_required
+def marketing_home():
+    deals = model.Deal.query.filter(model.Deal.assets.any(), model.Deal.year == datetime.date.today().year).all()
+    deals_by_level = collections.defaultdict(list)
+    for deal in deals:
+        deals_by_level[deal.level].append(deal)
+    return render_template("marketing-home.html", deals_by_level=deals_by_level)
     
 @app.route("/all/")
 @login_required
-def all():
+def all_deals():
     return render_template("sponsor-list.html", sponsors=model.Sponsor.query.all())
 
 @app.route("/sponsor/<int:id>/")
@@ -70,7 +86,7 @@ def delete_sponsor():
     id = request.form["sponsor-id"]
     model.db.session.delete(model.Sponsor.query.get_or_404(id))
     model.db.session.commit()
-    return redirect(url_for("my_accounts"))
+    return redirect(url_for("home"))
    
 
 def _extract_contacts(data, email_basename, name_basename):

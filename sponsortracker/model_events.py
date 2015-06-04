@@ -66,8 +66,6 @@ def load_asset_request(target, context):
 def load_asset(target, context):
     # For use by the views and controllers - not in the DB
     target.type = data.AssetType[target.type_name]
-    # target.url = asset_uploader.url(target.filename)
-    # target.thumbnail_url = thumb_uploader.url(target.filename)
     target.url = uploads.Asset.url(target.deal, target.filename)
     target.thumbnail_url = uploads.Thumbnail.url(target.deal, target.filename)
     target.name = target.filename.rsplit('/', maxsplit=1)[-1].rsplit('.', maxsplit=1)[0]

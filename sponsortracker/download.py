@@ -5,9 +5,9 @@ import tempfile
 from enum import Enum
 from os.path import exists, expanduser, join, splitext
 
+from sponsortracker import model, uploads
 from sponsortracker.data import AssetType
-from sponsortracker.model import Sponsor
-# from sponsortracker.dealtracker.app import asset_uploader
+
 
 ZIPNAME = "sponsortracker-assets"
 
@@ -15,11 +15,11 @@ def all():
     return download()
 
 def website_updates(start):
-    asset_filter = lambda sponsor: [asset for asset in sponsor.assets_by_type[AssetType.LOGO] if asset.date >= start]
+    asset_filter = lambda deal: [asset for asset in deal.assets_by_type[AssetType.LOGO] if asset.date >= start]
     return download('updates', asset_filter=asset_filter)
 
 def logo_cloud():
-    asset_filter = lambda sponsor: sponsor.assets_by_type[AssetType.LOGO]
+    asset_filter = lambda deal: deal.assets_by_type[AssetType.LOGO]
     return download('logocloud', by_sponsor=False, info=False, asset_filter=asset_filter)
     
 def download(zipname=ZIPNAME, by_sponsor=True, info=True, asset_filter=lambda sponsor: sponsor.assets):
@@ -27,27 +27,29 @@ def download(zipname=ZIPNAME, by_sponsor=True, info=True, asset_filter=lambda sp
         zipdir = join(tempdir, zipname)
         os.makedirs(zipdir)
         
-        for sponsor in Sponsor.query.filter(Sponsor.level_name != ""):
-            target = join(*[zipdir, sponsor.level.name.lower()] + ([sponsor.name] if by_sponsor else []))
+        for deal in model.Deal.query.filter(model.Deal.level_name != ""):
+            target = join(*[zipdir, deal.level.name.lower()] + ([deal.sponsor.name] if by_sponsor else []))
             os.makedirs(target, exist_ok=True)
             
             if info:
-                _info_to_file(target, sponsor)
-            _copy_assets(target, asset_filter(sponsor))
+                _info_to_file(target, deal.sponsor)
+            _copy_assets(target, asset_filter(deal))
         
         return shutil.make_archive(expanduser(join("~", zipname)), "zip", root_dir=tempdir)
 
 def _info_to_file(target, sponsor):
     if sponsor.link or sponsor.description:
         with open(join(target, "info.txt"), 'w') as info_file:
-            data = [sponsor.link, sponsor.description]
-            info_file.write("\n\n".join([field for field in data if field]))
+            if sponsor.link:
+                info_file.write(sponsor.link + "\n\n")
+            if sponsor.description:
+                info_file.write(sponsor.description)
 
 def _copy_assets(target, assets):
     for asset in assets:
         name = '-'.join([asset.deal.sponsor.name.lower(), asset.type.name.lower()])
         ext = splitext(asset.filename)[-1].lstrip('.')
-        dest = os.path.join(target, "{name}.{ext}".format(name=basename, ext=ext))
+        dest = os.path.join(target, "{name}.{ext}".format(name=name, ext=ext))
         uploads.Asset.get(asset.deal, asset.filename, dest)
         
         '''

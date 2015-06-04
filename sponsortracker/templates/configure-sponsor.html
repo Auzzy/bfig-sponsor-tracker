@@ -14,7 +14,7 @@
     
     <div>
         <input type="submit" value="Save" />
-        <a href="{% if id %}{{ url_for('sponsor_info', id=id) }}{% else %}{{ url_for('my_accounts') }}{% endif %}">
+        <a href="{% if id %}{{ url_for('sponsor_info', id=id) }}{% else %}{{ url_for('home') }}{% endif %}">
             <input type="button" value="Cancel" />
         </a>
     </div>
