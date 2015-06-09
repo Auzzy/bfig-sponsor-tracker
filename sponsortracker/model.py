@@ -221,18 +221,6 @@ class Asset(db.Model):
         self.type_name = type_name or self.type_name
         self.filename = filename or self.filename
     
-    @property
-    def url(self):
-        from sponsortracker import uploads
-        
-        return uploads.Asset.url(self.deal, self.filename)
-    
-    @property
-    def thumbnail_url(self):
-        from sponsortracker import uploads
-        
-        return uploads.Thumbnail.url(self.deal, self.filename)
-    
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(50), nullable=False, default='')

@@ -124,6 +124,11 @@ class Thumbnail(Image):
         else:
             transform = "{0}x{1}!".format(Thumbnail.DEFAULT_WIDTH, Thumbnail.DEFAULT_HEIGHT)
         self.transform(resize=transform)
+    
+    @classmethod
+    def url(cls, deal, filename):
+        filename = "{0}.{1}".format(os.path.splitext(filename)[0], Thumbnail.FORMAT.ext)
+        return super(Thumbnail, cls).url(deal, filename)
 
 class Asset(Image):
     def __init__(self, filename, *args, **kwargs):
@@ -132,7 +137,7 @@ class Asset(Image):
     @staticmethod
     def create(deal, type, file_storage):
         asset_filename = Asset.load(file_storage).stash(deal)
-        Thumbnail.create(file_storage, deal, size={"width": None})
+        thumb = Thumbnail.create(file_storage, deal, size={"width": None})
         
         filename = basename(asset_filename)
         deal.assets.append(model.Asset(deal.id, type, filename))

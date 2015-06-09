@@ -1,7 +1,7 @@
 from flask.ext.user import SQLAlchemyAdapter, UserManager
 from flaskext.uploads import configure_uploads, UploadSet
 
-from sponsortracker import model
+from sponsortracker import model, model_events
 from sponsortracker.app import app, preview_uploader
 
 # Patch Flask Uploads lack of spport for Python 3
