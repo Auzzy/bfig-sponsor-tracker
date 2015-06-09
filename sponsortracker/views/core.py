@@ -9,7 +9,7 @@ from flask.ext.user import login_required
 
 from sponsortracker import forms, model
 from sponsortracker.app import app
-from sponsortracker.data import UserType
+from sponsortracker.data import Level, UserType
 
 
 DATE_FORMAT = "%a %b %d %Y"
@@ -34,16 +34,16 @@ def sales_home():
 @app.route("/assets/")
 @login_required
 def marketing_home():
-    deals = model.Deal.query.filter(model.Deal.assets.any(), model.Deal.year == datetime.date.today().year).all()
-    deals_by_level = collections.defaultdict(list)
-    for deal in deals:
-        deals_by_level[deal.level].append(deal)
+    current_query = model.Deal.query.filter_by(year=datetime.date.today().year)
+    deals_by_level = collections.OrderedDict()
+    for level in Level:
+        deals_by_level[level] = current_query.filter_by(level_name=level.name).all()
     return render_template("marketing-home.html", deals_by_level=deals_by_level)
     
 @app.route("/all/")
 @login_required
 def all_deals():
-    return render_template("sponsor-list.html", sponsors=model.Sponsor.query.all())
+    return render_template("sponsor-list.html", sponsors=model.Sponsor.query)
 
 @app.route("/sponsor/<int:id>/")
 @login_required

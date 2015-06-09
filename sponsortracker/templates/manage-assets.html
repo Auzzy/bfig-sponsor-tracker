@@ -45,6 +45,7 @@
 
 <div style="clear:both; width:20px;">&nbsp;</div>
 
+{% if other_assets %}
 <h2>Other Assets</h2>
 
 {% for type in other_assets|sort(attribute="label") %}
@@ -63,6 +64,7 @@
 
 <div style="float:left; width:20px;">&nbsp;</div>
 {% endfor %}
+{% endif %}
 
 {% endblock %}
 
