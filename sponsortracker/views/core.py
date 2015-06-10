@@ -1,6 +1,8 @@
 import collections
 import datetime
 import itertools
+import random
+import string
 from collections import OrderedDict
 
 from flask import redirect, render_template, request, url_for
@@ -44,6 +46,17 @@ def marketing_home():
 @login_required
 def all_deals():
     return render_template("sponsor-list.html", sponsors=model.Sponsor.query)
+
+@app.route("/new-user/", methods=["GET", "POST"])
+@login_required
+def new_user():
+    form = forms.NewUserForm()
+    if request.method == "POST":
+        if form.validate_on_submit():
+            username = form.username.data or form.email.data.split('@')[0]
+            _new_user(form.type_name.data, form.first_name.data, form.last_name.data, form.email.data, username)
+            return redirect(url_for("home"))
+    return render_template("add-user.html", form=form)
 
 @app.route("/sponsor/<int:id>/")
 @login_required
@@ -92,7 +105,7 @@ def delete_sponsor():
 def _extract_contacts(data, email_basename, name_basename):
     emails, names = {}, {}
     for id in data:
-        if id.startswith(email_basename) and forms.validate_email(data[id]):
+        if id.startswith(email_basename) and forms.is_email(data[id]):
             emails[id.split('_')[-1]] = data[id]
         elif id.startswith(name_basename) and data[id] and data[id] != forms.NAME_BASENAME:
             names[id.split('_')[-1]] = data[id]
@@ -125,4 +138,17 @@ def _configure_deal(id, form):
         deal.invoice.ready = deal.cash > 0 or deal.inkind > 0
         deal.asset_request.ready = bool(deal.level_name) and deal.contract.received
         
+    model.db.session.commit()
+
+def _new_user(type, first_name, last_name, email, username):
+    if model.UserAuth.query.filter_by(username=username).all():
+        return
+    
+    password = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(8))
+    
+    email = model.UserEmail(email=email, is_primary=True)
+    auth = model.UserAuth(username=username, password=model.user_manager.hash_password(password))
+    user = model.User(first_name=first_name, last_name=last_name, enabled=True, type_name=type.upper(), user_auth=auth)
+    user.emails.append(email)
+    model.db.session.add(user)
     model.db.session.commit()

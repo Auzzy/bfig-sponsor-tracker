@@ -14,9 +14,14 @@ NAME_BASENAME = "name"
 _EMAIL_RE = re.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$")
 _SPONSOR_LEVEL_CHOICES = [("", "")] + [(level.name, level.label) for level in data.Level]
 _SPONSOR_TYPE_CHOICES = [("", "")] + [(sponsor_type.name, sponsor_type.value) for sponsor_type in data.SponsorType]
+_USER_TYPE_CHOICES = [("", "")] + [(user_type.name, user_type.type) for user_type in data.UserType]
 
-def validate_email(email):
+def is_email(email):
     return bool(_EMAIL_RE.match(email))
+
+def validate_email(form, field):
+    if not is_email(field.data):
+        raise ValidationError("Invalid email address format.")
 
 def validate_asset(form, field):
     image = uploads.Image.load(field.data)
@@ -70,3 +75,11 @@ class UploadAssetForm(flask_wtf.Form):
         
         asset_types = asset_types or list(data.AssetType)
         self.type.choices = [(type.name, type.label) for type in sorted(asset_types, key=lambda type: type.label)]
+
+class NewUserForm(flask_wtf.Form):
+    # def _add_user(type, first_name, last_name, username, email, password=None):
+    first_name = StringField("First Name", validators=[DataRequired()])
+    last_name = StringField("Last Name", validators=[DataRequired()])
+    type_name = SelectField("User Role", choices=_USER_TYPE_CHOICES, validators=[DataRequired()])
+    email = StringField("Email", validators=[DataRequired(), validate_email])
+    username = StringField("Username", validators=[Optional()])
