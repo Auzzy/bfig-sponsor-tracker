@@ -11,30 +11,31 @@ from sponsortracker.data import AssetType
 
 ZIPNAME = "sponsortracker-assets"
 
-def all():
-    return download()
+def all(level=None):
+    return download(level=level)
 
 def website_updates(start):
     asset_filter = lambda deal: [asset for asset in deal.assets_by_type[AssetType.LOGO] if asset.date >= start]
     return download('updates', asset_filter=asset_filter)
 
-def logo_cloud():
+def logo_cloud(level=None):
     asset_filter = lambda deal: deal.assets_by_type[AssetType.LOGO]
-    return download('logocloud', by_sponsor=False, info=False, asset_filter=asset_filter)
+    return download('logocloud', by_sponsor=False, info=False, asset_filter=asset_filter, level=level)
     
-def download(zipname=ZIPNAME, by_sponsor=True, info=True, asset_filter=lambda sponsor: sponsor.assets):
+def download(zipname=ZIPNAME, by_sponsor=True, info=True, asset_filter=lambda deal: deal.assets, level=None):
     with tempfile.TemporaryDirectory() as tempdir:
         zipdir = join(tempdir, zipname)
         os.makedirs(zipdir)
         
         for deal in model.Deal.query.filter(model.Deal.level_name != ""):
-            target = join(*[zipdir, deal.level.name.lower()] + ([deal.sponsor.name] if by_sponsor else []))
-            os.makedirs(target, exist_ok=True)
+            if deal.level_name and deal.level_name == level:
+                target = join(*[zipdir, deal.level.name.lower()] + ([deal.sponsor.name] if by_sponsor else []))
+                os.makedirs(target, exist_ok=True)
+                
+                if info:
+                    _info_to_file(target, deal.sponsor)
+                _copy_assets(target, asset_filter(deal))
             
-            if info:
-                _info_to_file(target, deal.sponsor)
-            _copy_assets(target, asset_filter(deal))
-        
         return shutil.make_archive(expanduser(join("~", zipname)), "zip", root_dir=tempdir)
 
 def _info_to_file(target, sponsor):

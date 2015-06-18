@@ -9,15 +9,17 @@ from sponsortracker.app import app
 UPDATE_DATE_FORMAT = "%a %b %d %Y"
 
 @app.route("/download/all/")
+@app.route("/download/all/<level>/")
 @login_required
-def download_all():
-    zipfilename = download.all()
+def download_all(level=None):
+    zipfilename = download.all(level)
     return send_file(zipfilename, as_attachment=True)
 
 @app.route("/download/logo_cloud/")
+@app.route("/download/logo_cloud/<level>/")
 @login_required
-def download_logo_cloud():
-    zipfilename = download.logo_cloud()
+def download_logo_cloud(level=None):
+    zipfilename = download.logo_cloud(level)
     return send_file(zipfilename, as_attachment=True)
 
 @app.route("/download/website_updates/")

@@ -1,5 +1,18 @@
 <h3>{{ level.label }}</h3>
 
+<p>
+    <a href="#download{{ level.name }}Modal">Download {{ level.label }} Assets...</a>
+    
+    <div id="download{{ level.name }}Modal" class="modalDialog">
+        <div>
+            <h2>Download Options</h2>
+            <a href="#close" title="Close" class="close">X</a>
+            <a href="{{ url_for('download_all', level=level.name) }}">Download All {{ level.label }}</level></a><br />
+            <a href="{{ url_for('download_logo_cloud', level=level.name) }}">{{ level.label }} Logo Cloud</a><br />
+        </div>
+    </div>
+</p>
+
 {% set asset_types = level.assets %}
 <table id="{{ level.name }}-asset-table" class="sortable zebra">
     <thead>
