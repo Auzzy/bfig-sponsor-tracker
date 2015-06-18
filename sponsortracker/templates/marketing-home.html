@@ -2,6 +2,16 @@
 
 {% block content %}
 
+<div>
+    <span style="float:left;">Jump to:&nbsp;&nbsp;</span>
+    {% for level in deals_by_level %}
+    {% if deals_by_level[level] %}
+    <a href="#{{ level.name }}-section">{{ level.label }}</a>
+    <span>&nbsp;</span>
+    {% endif %}
+    {% endfor %}
+</div>
+
 <p>
     <a href="#downloadModal">Download Assets...</a>
 
