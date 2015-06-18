@@ -9,6 +9,7 @@
             <th style="min-width:150px;">Name</th>
             <th style="min-width:150px;">Account Owner</th>
             <th style="width:150px;">Sponsor Type</th>
+            <th style="">Deal Level</th>
             <th style="min-width:150px;">Contract Status</th>
             <th style="min-width:150px;">Invoice Status</th>
             <th style="min-width:150px;">Asset Request Status</th>
@@ -21,6 +22,7 @@
             <td style="text-align:left;"><a href="{{ url_for('sponsor_info', id=sponsor.id) }}">{{ sponsor.name }}</a></td>
             <td>{% if sponsor.current.owner %}{{ sponsor.current.owner_name }}{% endif %}</td>
             <td>{% if sponsor.type.value %}{{ sponsor.type.value }}{% endif %}</td>
+            <td>{% if sponsor.current.level %}{{ sponsor.current.level.label }}{% endif %}</td>
             {% set request=sponsor.current.contract %}
             {% include "sponsor-status-request.html" %}
             {% set request=sponsor.current.invoice %}
