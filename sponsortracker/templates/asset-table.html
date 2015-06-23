@@ -67,6 +67,7 @@
     new Pikaday({
         field: document.getElementById("{{ modal_prefix }}-datepicker-input"),
         bound: false,
-        container: document.getElementById("{{ modal_prefix }}-datepicker")
+        container: document.getElementById("{{ modal_prefix }}-datepicker"),
+        maxDate: new Date()
     });
 </script>
