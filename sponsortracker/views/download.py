@@ -23,8 +23,9 @@ def download_logo_cloud(level=None):
     return send_file(zipfilename, as_attachment=True)
 
 @app.route("/download/website_updates/")
+@app.route("/download/website_updates/<level>")
 @login_required
-def download_website_updates():
-    date = datetime.datetime.strptime(request.args["website-updates-date"], UPDATE_DATE_FORMAT).date()
-    zipfilename = download.website_updates(date)
+def download_website_updates(level=None):
+    date = datetime.datetime.strptime(request.args["date"], UPDATE_DATE_FORMAT).date()
+    zipfilename = download.website_updates(date, level)
     return send_file(zipfilename, as_attachment=True)

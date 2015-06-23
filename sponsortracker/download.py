@@ -14,9 +14,9 @@ ZIPNAME = "sponsortracker-assets"
 def all(level=None):
     return download(level=level)
 
-def website_updates(start):
+def website_updates(start, level=None):
     asset_filter = lambda deal: [asset for asset in deal.assets_by_type[AssetType.LOGO] if asset.date >= start]
-    return download('updates', asset_filter=asset_filter)
+    return download('updates', asset_filter=asset_filter, level=level)
 
 def logo_cloud(level=None):
     asset_filter = lambda deal: deal.assets_by_type[AssetType.LOGO]
@@ -28,7 +28,7 @@ def download(zipname=ZIPNAME, by_sponsor=True, info=True, asset_filter=lambda de
         os.makedirs(zipdir)
         
         for deal in model.Deal.query.filter(model.Deal.level_name != ""):
-            if deal.level_name and deal.level_name == level:
+            if not level or deal.level_name == level:
                 target = join(*[zipdir, deal.level.name.lower()] + ([deal.sponsor.name] if by_sponsor else []))
                 os.makedirs(target, exist_ok=True)
                 

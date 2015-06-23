@@ -1,18 +1,40 @@
 <div id="{{ level.name }}-section">
-    <h3>{{ level.label }}</h3>
+    <h2>{{ level.label }}</h2>
+    
+    {% set modal_prefix = 'download-' ~ level.name %}
     
     <p>
-        <a href="#download{{ level.name }}Modal">Download {{ level.label }} Assets...</a>
+        <a href="#{{ modal_prefix }}-modal">Download {{ level.label }} Assets...</a>
         
-        <div id="download{{ level.name }}Modal" class="modalDialog">
+        <div id="{{ modal_prefix }}-modal" class="modalDialog">
             <div>
                 <h2>Download Options</h2>
                 <a href="#close" title="Close" class="close">X</a>
-                <a href="{{ url_for('download_all', level=level.name) }}">Download All {{ level.label }}</level></a><br />
-                <a href="{{ url_for('download_logo_cloud', level=level.name) }}">{{ level.label }} Logo Cloud</a><br />
+                <a href="{{ url_for('download_all', level=level.name) }}">Download All</level></a><br />
+                <a href="{{ url_for('download_logo_cloud', level=level.name) }}">Logo Cloud</a><br />
+                <a href="#{{ modal_prefix }}-updates-modal">Website Updates</a>
             </div>
         </div>
     </p>
+    
+    <p>
+        <div id="{{ modal_prefix }}-updates-modal" class="modalDialog">
+            <div>
+                <a href="#close" title="Close" class="close">X</a>
+                
+                <p>Please select the first date for which you wish to retrieve website updates:</p>
+                
+                <div id="{{ modal_prefix }}-datepicker" style="width:258px;"></div>
+                <br />
+                
+                <form id="website-updater" action="{{ url_for('download_website_updates', level=level.name) }}" method="GET">
+                    <input type="hidden" id="{{ modal_prefix }}-datepicker-input" name="date" style="display:none;" />
+                    <input type="submit" value="Download" />
+                </form>
+            </div>
+        </div>
+    </p>
+    
     
     {% set asset_types = level.assets %}
     <table id="{{ level.name }}-asset-table" class="sortable zebra">
@@ -40,3 +62,11 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    new Pikaday({
+        field: document.getElementById("{{ modal_prefix }}-datepicker-input"),
+        bound: false,
+        container: document.getElementById("{{ modal_prefix }}-datepicker")
+    });
+</script>

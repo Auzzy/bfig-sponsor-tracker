@@ -13,17 +13,44 @@
 </div>
 
 <p>
-    <a href="#downloadModal">Download Assets...</a>
+    <a href="#download-modal">Download Assets...</a>
 
-    <div id="downloadModal" class="modalDialog">
+    <div id="download-modal" class="modalDialog">
         <div>
             <h2>Download Options</h2>
             <a href="#close" title="Close" class="close">X</a>
             <a href="{{ url_for('download_all') }}">Download All</a><br />
             <a href="{{ url_for('download_logo_cloud') }}">Logo Cloud</a><br />
+            <a href="#download-updates-modal">Website Updates</a>
         </div>
     </div>
 </p>
+
+<p>
+    <div id="download-updates-modal" class="modalDialog">
+        <div>
+            <a href="#close" title="Close" class="close">X</a>
+            
+            <p>Please select the first date for which you wish to retrieve website updates:</p>
+            
+            <div id="download-datepicker" style="width:258px;"></div>
+            <br />
+            
+            <form id="website-updater" action="{{ url_for('download_website_updates') }}" method="GET">
+                <input type="hidden" id="download-datepicker-input" name="date" style="display:none;" />
+                <input type="submit" value="Download" />
+            </form>
+        </div>
+    </div>
+</p>
+
+<script>
+    new Pikaday({
+        field: document.getElementById("download-datepicker-input"),
+        bound: false,
+        container: document.getElementById("download-datepicker")
+    });
+</script>
 
 
 {% for level in deals_by_level %}
