@@ -1,0 +1,11 @@
+{% extends "dealtracker-layout.html" %}
+
+{% block content %}
+<form action="{{ url_for('configure_user', id=id) }}" method="POST">
+    {% include "render-form.html" %}
+    <input type="submit" value="Submit" />
+    <a href="{{ url_for('manage_users') }}">
+        <input type="button" value="Cancel" />
+    </a>
+</form>
+{% endblock %}
