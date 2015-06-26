@@ -230,6 +230,22 @@ class User(db.Model, UserMixin):
     emails = db.relationship("UserEmail", lazy="dynamic")
     user_auth = db.relationship("UserAuth", uselist=False)
     
+    def update_values(self, type_name, first_name, last_name, email, username):
+        self.type_name = type_name or self.type_name
+        self.first_name = first_name or self.first_name
+        self.last_name = last_name or self.last_name
+        
+        self.user_auth.username = username or self.user_auth.username
+        
+        if not self.emails.filter_by(email=email).all():
+            email = model.UserEmail(email=email, is_primary=True)
+            self.emails = [email]
+    
+    def _update_field(self, old_value, new_value, cleared="", unset=None):
+        if new_value is not unset:
+            return unset if new_value == cleared else new_value
+        return old_value
+    
     def is_active(self):
         return self.enabled
 

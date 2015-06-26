@@ -76,10 +76,17 @@ class UploadAssetForm(flask_wtf.Form):
         asset_types = asset_types or list(data.AssetType)
         self.type.choices = [(type.name, type.label) for type in sorted(asset_types, key=lambda type: type.label)]
 
-class NewUserForm(flask_wtf.Form):
-    # def _add_user(type, first_name, last_name, username, email, password=None):
+class UserForm(flask_wtf.Form):
     first_name = StringField("First Name", validators=[DataRequired()])
     last_name = StringField("Last Name", validators=[DataRequired()])
     type_name = SelectField("User Role", choices=_USER_TYPE_CHOICES, validators=[DataRequired()])
     email = StringField("Email", validators=[DataRequired(), validate_email])
     username = StringField("Username", validators=[Optional()])
+    
+    def __init__(self, obj=None, *args, **kwargs):
+        if obj:
+            kwargs["obj"] = obj
+        super(UserForm, self).__init__(*args, **kwargs)
+            
+        if obj:
+            self.email.data = obj.emails[0].email

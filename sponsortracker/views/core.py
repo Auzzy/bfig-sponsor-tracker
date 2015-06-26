@@ -47,7 +47,13 @@ def marketing_home():
 def all_deals():
     return render_template("sponsor-list.html", sponsors=model.Sponsor.query)
 
-@app.route("/new-user/", methods=["GET", "POST"])
+@app.route("/users/manage/")
+@login_required
+def manage_users():
+    return render_template("manage-users.html", users=model.User.query.filter(model.User.type_name != UserType.ADMIN.name))
+
+'''
+@app.route("/users/new/", methods=["GET", "POST"])
 @login_required
 def new_user():
     form = forms.NewUserForm()
@@ -56,7 +62,41 @@ def new_user():
             username = form.username.data or form.email.data.split('@')[0]
             _new_user(form.type_name.data, form.first_name.data, form.last_name.data, form.email.data, username)
             return redirect(url_for("home"))
-    return render_template("add-user.html", form=form)
+    return render_template("new-user.html", form=form)
+
+@app.route("/users/edit/<id>/", methods=["GET", "POST"]):
+@login_required
+def edit_user(id):
+    pass
+'''
+
+
+@app.route("/users/edit/", methods=["GET", "POST"])
+@app.route("/users/edit/<int:id>/", methods=["GET", "POST"])
+@login_required
+def configure_user(id=None):
+    if request.method == "POST":
+        form = forms.UserForm()
+        if form.validate_on_submit():
+            username = form.username.data or form.email.data.split('@')[0]
+            _configure_user(id, form.type_name.data, form.first_name.data, form.last_name.data, form.email.data, username)
+            return redirect(url_for("manage_users"))
+    else:
+        form = forms.UserForm(obj=model.User.query.get_or_404(id)) if id else forms.UserForm()
+    return render_template("configure-user.html", id=id, form=form)
+
+
+
+
+
+
+@app.route("/users/delete/", methods=["POST"])
+@login_required
+def delete_user():
+    id = request.form["user-id"]
+    model.db.session.delete(model.User.query.get_or_404(id))
+    model.db.session.commit()
+    return redirect(url_for("manage_users"))
 
 @app.route("/sponsor/<int:id>/")
 @login_required
@@ -65,7 +105,7 @@ def sponsor_info(id):
     return render_template("sponsor-info.html", sponsor=sponsor, request_id=REQUEST_ID)
 
 @app.route("/sponsor/edit/", methods=["GET", "POST"])
-@app.route("/sponsor/<int:id>/edit/", methods=["GET", "POST"])
+@app.route("/sponsor/edit/<int:id>/", methods=["GET", "POST"])
 @login_required
 def configure_sponsor(id=None):
     if request.method == "POST":
@@ -140,15 +180,21 @@ def _configure_deal(id, form):
         
     model.db.session.commit()
 
-def _new_user(type, first_name, last_name, email, username):
-    if model.UserAuth.query.filter_by(username=username).all():
-        return
+def _configure_user(id, type_name, first_name, last_name, email, username):
+    type_name = type_name.upper()
     
-    password = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(8))
+    if id:
+        user = model.User.query.get_or_404(id)
+        user.update_values(type_name=type_name, first_name=first_name, last_name=last_name, email=email, username=username)
+    else:
+        password = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(12))
+        
+        email = model.UserEmail(email=email, is_primary=True)
+        auth = model.UserAuth(username=username, password=model.user_manager.hash_password(password))
+        user = model.User(first_name=first_name, last_name=last_name, enabled=True, type_name=type_name, user_auth=auth)
+        user.emails.append(email)
+        model.db.session.add(user)
     
-    email = model.UserEmail(email=email, is_primary=True)
-    auth = model.UserAuth(username=username, password=model.user_manager.hash_password(password))
-    user = model.User(first_name=first_name, last_name=last_name, enabled=True, type_name=type.upper(), user_auth=auth)
-    user.emails.append(email)
-    model.db.session.add(user)
     model.db.session.commit()
+    
+    return user

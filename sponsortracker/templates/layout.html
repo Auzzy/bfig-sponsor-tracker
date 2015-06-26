@@ -88,7 +88,7 @@
         <h1 style="display:inline;">{% block bodytitle %}{% endblock %}</h1>
         <div id="usernav" style="float:right;">
             {% block usernav %}
-            {% if current_user.type_name == "ADMIN" %}<a href="{{ url_for('new_user') }}">New User</a>{% endif %}
+            {% if current_user.type_name == "ADMIN" %}<a href="{{ url_for('manage_users') }}">Manage Users</a>{% endif %}
             <a href="{{ url_for('user.change_password') }}">Change Password</a>
             <a href="{{ url_for('user.logout') }}">Sign Out</a>
             {% endblock %}
