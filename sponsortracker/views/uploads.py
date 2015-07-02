@@ -1,4 +1,4 @@
-from flask import redirect, render_template, request, url_for
+from flask import flash, redirect, render_template, request, url_for
 from flask.ext.user import login_required
 
 from sponsortracker import data, forms, model, uploads
@@ -22,11 +22,7 @@ def upload_asset(id):
     asset_types = deal.level.assets if deal.level else list(data.AssetType)
     form = forms.UploadAssetForm(asset_types)
     if form.validate_on_submit():
-        filename = uploads.verify(deal, form)
-        if filename:
-            return redirect(url_for("preview_asset", id=id, filename=filename, type=form.type.data))
-        else:
-            return redirect(url_for("manage_assets", id=id))
+        return handle_upload(deal, form)
     
     return render_template("upload-asset.html", id=id, form=form, deal=deal)
 
@@ -61,3 +57,36 @@ def preview_asset(id):
     # display = uploads.Image(filename, filename=uploads.Preview.path(deal, filename)).format not in [fmt.format for fmt in data._PrintFormat]
     display = True
     return render_template("preview-asset.html", id=id, filename=filename, preview=url, type=asset_type, display=display)
+
+def handle_upload(deal, form):
+    preview = uploads.Preview.load(form.asset.data)
+    spec = data.AssetType[form.type.data].spec
+    
+    if preview.format not in spec.format_names:
+        flash("Image format was {0}. Expected one of the following: {1}.".format(preview.format, ', '.join(spec.format_names)), 'preview')
+        format = spec.formats[0] if len(spec.formats) == 1 else type(spec.formats[0]).preferred()
+        preview.format = format.format
+    
+    if preview.colorspace not in spec.color_mode_names:
+        flash("Image color mode was {0}. Expected one of the following: {1}.".format(preview.colorspace, ', '.join(spec.color_mode_names)), 'preview')
+        preview.colorspace = spec.color_modes[0].value
+    
+    if preview.resolution != (spec.dpi, spec.dpi):
+        flash("Image resolution was {res[0]}x{res[1]}. Expected {spec.dpi}x{spec.dpi}.".format(res=preview.resolution, spec=spec), 'preview')
+        preview.resolution = (spec.dpi, spec.dpi)
+    
+    if preview.width != spec.width or preview.height != spec.height:
+        # Don't do anything about sizes that don't match. Marketing will handle it.
+        pass
+    
+    if spec.transparent and not preview.alpha_channel:
+        preview.alpha_channel = True
+    elif spec.transparent is False and preview.alpha_channel:
+        preview.alpha_channel = False
+    
+    if preview.dirty:
+        filename = preview.stash(deal)
+        return redirect(url_for("preview_asset", id=deal.sponsor.id, filename=filename, type=form.type.data))
+    else:
+        Asset.create(deal, form.type.data, form.asset.data)
+        return redirect(url_for("manage_assets", id=deal.sponsor.id))

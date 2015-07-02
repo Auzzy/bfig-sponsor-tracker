@@ -23,15 +23,6 @@ def validate_email(form, field):
     if not is_email(field.data):
         raise ValidationError("Invalid email address format.")
 
-def validate_asset(form, field):
-    image = uploads.Image.load(field.data)
-    spec = data.AssetType[form.type.data].spec
-    
-    if spec.transparent and not image.alpha_channel:
-        raise ValidationError("Expected a transparent background.")
-    elif spec.transparent is False and image.alpha_channel:
-        raise ValidationError("Expected an opaque background.")
-
 def validate_sponsor(form, field):
     if model.Sponsor.query.filter_by(name=field.data).first():
         raise ValidationError("A sponsor with that name already exists.")
@@ -68,7 +59,7 @@ class CurrentDealForm(flask_wtf.Form):
 
 class UploadAssetForm(flask_wtf.Form):
     type = SelectField(validators=[DataRequired("You must select an asset type.")])
-    asset = FileField(validators=[FileRequired(), FileAllowed(data.ASSET_FORMATS_EXT, "The uploaded asset must be an image file."), validate_asset])
+    asset = FileField(validators=[FileRequired(), FileAllowed(data.ASSET_FORMATS_EXT, "The uploaded asset must be an image file.")])
     
     def __init__(self, asset_types=[], *args, **kwargs):
         super(UploadAssetForm, self).__init__(*args, **kwargs)
