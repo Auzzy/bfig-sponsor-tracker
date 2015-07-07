@@ -204,14 +204,16 @@ class Asset(db.Model):
     date = db.Column(db.Date)
     type_name = db.Column("type", db.Enum(name="AssetType", native_enum=False, *_ASSET_TYPES), nullable=False)
     filename = db.Column(db.String(256), nullable=False)
+    usages = db.Column(db.Integer, nullable=False, default=0)
     
-    def __init__(self, deal_id, type_name, filename, date=datetime.datetime.today().date()):
+    def __init__(self, deal_id, type_name, filename, date=datetime.datetime.today().date(), usages=0):
         super(Asset, self).__init__()
         
         self.date = date
         self.type_name = type_name
         self.filename = filename
         self.deal_id = deal_id
+        self.usages = usages
         
         load_asset(self, None)
     
@@ -220,6 +222,13 @@ class Asset(db.Model):
         self.date = date or self.date
         self.type_name = type_name or self.type_name
         self.filename = filename or self.filename
+    
+    def increment_usage(self):
+        self.usages += 1
+    
+    def decrement_usage(self):
+        if self.usages >= 1:
+            self.usages -= 1
     
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)

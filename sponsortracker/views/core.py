@@ -52,25 +52,6 @@ def all_deals():
 def manage_users():
     return render_template("manage-users.html", users=model.User.query.filter(model.User.type_name != UserType.ADMIN.name))
 
-'''
-@app.route("/users/new/", methods=["GET", "POST"])
-@login_required
-def new_user():
-    form = forms.NewUserForm()
-    if request.method == "POST":
-        if form.validate_on_submit():
-            username = form.username.data or form.email.data.split('@')[0]
-            _new_user(form.type_name.data, form.first_name.data, form.last_name.data, form.email.data, username)
-            return redirect(url_for("home"))
-    return render_template("new-user.html", form=form)
-
-@app.route("/users/edit/<id>/", methods=["GET", "POST"]):
-@login_required
-def edit_user(id):
-    pass
-'''
-
-
 @app.route("/users/edit/", methods=["GET", "POST"])
 @app.route("/users/edit/<int:id>/", methods=["GET", "POST"])
 @login_required
@@ -84,11 +65,6 @@ def configure_user(id=None):
     else:
         form = forms.UserForm(obj=model.User.query.get_or_404(id)) if id else forms.UserForm()
     return render_template("configure-user.html", id=id, form=form)
-
-
-
-
-
 
 @app.route("/users/delete/", methods=["POST"])
 @login_required

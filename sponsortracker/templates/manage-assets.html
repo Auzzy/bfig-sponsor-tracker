@@ -29,12 +29,18 @@
 <div style="float:left; width:200px;">
     {% if type in deal.assets_by_type %} {% set cls="received" %} {% else %} {% set cls="missing" %} {% endif %}
     <p class="{{ cls }}" style="text-align:center; padding-left:5px; padding-right:5px;">{{ type.label }}</p>
-    {% for asset in deal.assets_by_type[type] %}
+    {% for asset in deal.assets_by_type[type]|sort(attribute="name") %}
     <div class="asset" style="position:relative; left:50px;">
         <a href="{{ asset.url }}" target="_blank"><img src="{{ asset.thumbnail_url }}" alt="{{ asset.name }}"></img></a>
         <a href="javascript:void(0);" onclick="delete_asset({{ asset.id }})">
             <img style="vertical-align:top;" src="{{ url_for('static', filename='delete.png') }}"></img>
         </a>
+        <div style="display:block; margin-top:5px;">
+            Usages: {{ asset.usages or 0 }}
+            &nbsp;
+            <a href="javascript:void(0);" onclick="increment('{{ asset.id }}');"><img style="display:inline;" src="{{ url_for('static', filename='plus.png') }}" /></a>
+            <a href="javascript:void(0);" onclick="decrement('{{ asset.id }}');"><img style="display:inline;" src="{{ url_for('static', filename='minus.png') }}" /></a>
+        </div>
     </div>
     <br />
     {% endfor %}
@@ -70,6 +76,7 @@
 
 {% block js %}
 
+/*
 function delete_asset(id) {
     var form = document.createElement("form");
     form.setAttribute("method", "POST");
@@ -85,6 +92,41 @@ function delete_asset(id) {
     hiddenField.setAttribute("type", "hidden");
     hiddenField.setAttribute("name", "asset-id");
     hiddenField.setAttribute("value", id);
+    form.appendChild(hiddenField);
+    
+    document.body.appendChild(form);
+    
+    form.submit();
+}
+*/
+
+function delete_asset(id) {
+    postForm("{{ url_for('delete_asset', id=deal.sponsor.id) }}", id);
+}
+
+function increment(id) {
+    postForm("{{ url_for('increment_asset_usage', id=deal.sponsor.id) }}", id)
+}
+
+function decrement(id) {
+    postForm("{{ url_for('decrement_asset_usage', id=deal.sponsor.id) }}", id)
+}
+
+function postForm(url, assetId) {
+    var form = document.createElement("form");
+    form.setAttribute("method", "POST");
+    form.setAttribute("action", url);
+    
+    var csrfField = document.createElement("input");
+    csrfField.setAttribute("type", "hidden");
+    csrfField.setAttribute("name", "csrf_token");
+    csrfField.setAttribute("value", "{{ csrf_token() }}");
+    form.appendChild(csrfField);
+    
+    var hiddenField = document.createElement("input");
+    hiddenField.setAttribute("type", "hidden");
+    hiddenField.setAttribute("name", "asset-id");
+    hiddenField.setAttribute("value", assetId);
     form.appendChild(hiddenField);
     
     document.body.appendChild(form);

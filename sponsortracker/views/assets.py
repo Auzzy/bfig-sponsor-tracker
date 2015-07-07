@@ -58,6 +58,22 @@ def preview_asset(id):
     display = True
     return render_template("preview-asset.html", id=id, filename=filename, preview=url, type=asset_type, display=display)
 
+@app.route("/sponsor/<int:id>/assets/increment", methods=["POST"])
+@login_required
+def increment_asset_usage(id):
+    asset_id = request.form["asset-id"]
+    model.Asset.query.get_or_404(asset_id).increment_usage()
+    model.db.session.commit()
+    return redirect(url_for("manage_assets", id=id))
+
+@app.route("/sponsor/<int:id>/assets/decrement", methods=["POST"])
+@login_required
+def decrement_asset_usage(id):
+    asset_id = request.form["asset-id"]
+    model.Asset.query.get_or_404(asset_id).decrement_usage()
+    model.db.session.commit()
+    return redirect(url_for("manage_assets", id=id))
+
 def handle_upload(deal, form):
     preview = uploads.Preview.load(form.asset.data)
     spec = data.AssetType[form.type.data].spec
