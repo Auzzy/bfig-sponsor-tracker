@@ -6,6 +6,7 @@ from flask.ext.migrate import Migrate, MigrateCommand
 from flask.ext.script import Manager
 from flask.ext.sqlalchemy import event, SQLAlchemy
 from flask.ext.user import SQLAlchemyAdapter, UserManager, UserMixin
+from sqlalchemy.ext.declarative import declared_attr
 from wtforms.validators import ValidationError
 
 from sponsortracker import data
@@ -25,7 +26,6 @@ _USER_TYPES = [user_type.name for user_type in data.UserType]
 _ASSET_REQUEST_OVERDUE_DAYS = 14
 _CONTRACT_OVERDUE_DAYS = 14
 _INVOICE_OVERDUE_DAYS = 14
-
 
 class Sponsor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -146,57 +146,71 @@ class Deal(db.Model):
         if new_value is not unset:
             return unset if new_value == cleared else new_value
         return old_value
+    
+    def __setattr__(self, name, value):
+        super(Deal, self).__setattr__(name, value)
+        
+        if name in ("cash", "inkind"):
+            self.contract.ready = self.invoice.ready = self.cash > 0 or self.inkind > 0
+        elif name == "level_name":
+            self.asset_request.update_ready()
 
-class Contract(db.Model):
+class RequestBase:
     id = db.Column(db.Integer, primary_key=True)
-    deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'))
     ready = db.Column(db.Boolean, default=False)
     sent = db.Column(db.Date)
     received = db.Column(db.Date)
     
-    def __init__(self, deal_id, ready=False, sent=None, received=None):
-        super(Contract, self).__init__()
-        
-        self.deal_id = deal_id
-        self.ready = ready
-        self.sent = sent
-        self.received = received
-        
-        load_contract(self, None)
-
-class Invoice(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'))
-    ready = db.Column(db.Boolean)
-    sent = db.Column(db.Date)
-    received = db.Column(db.Date)
+    @declared_attr
+    def deal_id(cls):
+        return db.Column(db.Integer, db.ForeignKey('deal.id'))
     
     def __init__(self, deal_id, ready=False, sent=None, received=None):
-        super(Invoice, self).__init__()
-        
         self.deal_id = deal_id
         self.ready = ready
         self.sent = sent
         self.received = received
+    
+    def __setattr__(self, name, value):
+        super(RequestBase, self).__setattr__(name, value)
+        
+        if name == "sent" and not value:
+            self.received = None
+        elif name == "ready" and not value:
+            self.sent = self.received = None
+
+class Contract(db.Model, RequestBase):
+    __tablename__ = "contract"
+    
+    def __init__(self, *args, **kwargs):
+        super(Contract, self).__init__(*args, **kwargs)
+        
+        load_contract(self, None)
+    
+    def __setattr__(self, name, value):
+        super(Contract, self).__setattr__(name, value)
+        
+        if name == "received":
+            self.deal.asset_request.update_ready()
+
+class Invoice(db.Model, RequestBase):
+    __tablename__ = "invoice"
+    
+    def __init__(self, *args, **kwargs):
+        super(Invoice, self).__init__(*args, **kwargs)
         
         load_invoice(self, None)
 
-class AssetRequest(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'))
-    ready = db.Column(db.Boolean)
-    sent = db.Column(db.Date)
-    received = db.Column(db.Date)
+class AssetRequest(db.Model, RequestBase):
+    __tablename__ = "asset_request"
     
-    def __init__(self, deal_id, ready=False, sent=None, received=None):
-        super(AssetRequest, self).__init__()
-        
-        self.deal_id = deal_id
-        self.ready = ready
-        self.sent = sent
-        self.received = received
+    def __init__(self, *args, **kwargs):
+        super(AssetRequest, self).__init__(*args, **kwargs)
         
         load_asset_request(self, None)
+    
+    def update_ready(self):
+        self.ready = bool(self.deal.level_name) and bool(self.deal.contract.received)
 
 class Asset(db.Model):
     id = db.Column(db.Integer, primary_key=True)

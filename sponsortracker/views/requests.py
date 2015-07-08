@@ -45,14 +45,16 @@ def _update_request(sponsor_id, update_field):
     date = datetime.datetime.strptime(request.values[REQUEST_ID], DATE_FORMAT).date() if request.values.get(REQUEST_ID) else None
     update_field(sponsor, date)
     
+    '''
     if sponsor.current.contract.received and not sponsor.current.contract.sent:
         sponsor.current.contract.received = None
     if sponsor.current.invoice.received and not sponsor.current.invoice.sent:
         sponsor.current.invoice.received = None
     if sponsor.current.asset_request.received and not sponsor.current.asset_request.sent:
         sponsor.current.asset_request.received = None
+    '''
     
-    sponsor.current.asset_request.ready = bool(sponsor.current.level_name) and bool(sponsor.current.contract.received)
+    # sponsor.current.asset_request.ready = bool(sponsor.current.level_name) and bool(sponsor.current.contract.received)
     
     model.db.session.commit()
     return redirect(url_for("sponsor_info", id=sponsor.id))
