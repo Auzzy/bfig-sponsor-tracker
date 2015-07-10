@@ -200,6 +200,12 @@ class Invoice(db.Model, RequestBase):
         super(Invoice, self).__init__(*args, **kwargs)
         
         load_invoice(self, None)
+    
+    def __setattr__(self, name, value):
+        super(Invoice, self).__setattr__(name, value)
+        
+        if name == "received":
+            self.deal.asset_request.update_ready()
 
 class AssetRequest(db.Model, RequestBase):
     __tablename__ = "asset_request"
@@ -210,7 +216,7 @@ class AssetRequest(db.Model, RequestBase):
         load_asset_request(self, None)
     
     def update_ready(self):
-        self.ready = bool(self.deal.level_name) and bool(self.deal.contract.received)
+        self.ready = bool(self.deal.level_name) and (bool(self.deal.contract.received) or bool(self.deal.invoice.received))
 
 class Asset(db.Model):
     id = db.Column(db.Integer, primary_key=True)
