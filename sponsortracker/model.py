@@ -151,7 +151,7 @@ class Deal(db.Model):
         super(Deal, self).__setattr__(name, value)
         
         if name in ("cash", "inkind"):
-            self.contract.ready = self.invoice.ready = self.cash > 0 or self.inkind > 0
+            self.contract.ready = self.invoice.ready = (self.cash and self.cash > 0) or (self.inkind and self.inkind > 0)
         elif name == "level_name":
             self.asset_request.update_ready()
 
