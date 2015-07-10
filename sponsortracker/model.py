@@ -147,6 +147,7 @@ class Deal(db.Model):
             return unset if new_value == cleared else new_value
         return old_value
     
+    '''
     def __setattr__(self, name, value):
         super(Deal, self).__setattr__(name, value)
         
@@ -154,7 +155,102 @@ class Deal(db.Model):
             self.contract.ready = self.invoice.ready = (self.cash and self.cash > 0) or (self.inkind and self.inkind > 0)
         elif name == "level_name":
             self.asset_request.update_ready()
+    '''
 
+class RequestBase:
+    id = db.Column(db.Integer, primary_key=True)
+    ready = db.Column(db.Boolean, default=False)
+    sent = db.Column(db.Date)
+    received = db.Column(db.Date)
+    
+    @declared_attr
+    def deal_id(cls):
+        return db.Column(db.Integer, db.ForeignKey('deal.id'))
+    
+    def __init__(self, deal_id, ready=False, sent=None, received=None):
+        self.deal_id = deal_id
+        self.ready = ready
+        self.sent = sent
+        self.received = received
+    
+    def __setattr__(self, name, value):
+        super(RequestBase, self).__setattr__(name, value)
+        
+        if name == "sent" and not value:
+            self.received = None
+        elif name == "ready" and not value:
+            self.sent = self.received = None
+
+class Contract(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ready = db.Column(db.Boolean, default=False)
+    sent = db.Column(db.Date)
+    received = db.Column(db.Date)
+    deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'))
+    
+    def __init__(self, deal_id, ready=False, sent=None, received=None):
+        self.deal_id = deal_id
+        self.ready = ready
+        self.sent = sent
+        self.received = received
+        
+        load_contract(self, None)
+    
+    def __setattr__(self, name, value):
+        super(Contract, self).__setattr__(name, value)
+        
+        if name == "sent" and not value:
+            self.received = None
+        elif name == "ready" and not value:
+            self.sent = self.received = None
+    
+class Invoice(db.Model, RequestBase):
+    id = db.Column(db.Integer, primary_key=True)
+    ready = db.Column(db.Boolean, default=False)
+    sent = db.Column(db.Date)
+    received = db.Column(db.Date)
+    deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'))
+    
+    def __init__(self, deal_id, ready=False, sent=None, received=None):
+        self.deal_id = deal_id
+        self.ready = ready
+        self.sent = sent
+        self.received = received
+        
+        load_invoice(self, None)
+    
+    def __setattr__(self, name, value):
+        super(Invoice, self).__setattr__(name, value)
+        
+        if name == "sent" and not value:
+            self.received = None
+        elif name == "ready" and not value:
+            self.sent = self.received = None
+    
+class AssetRequest(db.Model, RequestBase):
+    id = db.Column(db.Integer, primary_key=True)
+    ready = db.Column(db.Boolean, default=False)
+    sent = db.Column(db.Date)
+    received = db.Column(db.Date)
+    deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'))
+    
+    def __init__(self, deal_id, ready=False, sent=None, received=None):
+        self.deal_id = deal_id
+        self.ready = ready
+        self.sent = sent
+        self.received = received
+        
+        load_asset_request(self, None)
+    
+    def __setattr__(self, name, value):
+        super(AssetRequest, self).__setattr__(name, value)
+        
+        if name == "sent" and not value:
+            self.received = None
+        elif name == "ready" and not value:
+            self.sent = self.received = None
+    
+"""
 class RequestBase:
     id = db.Column(db.Integer, primary_key=True)
     ready = db.Column(db.Boolean, default=False)
@@ -182,17 +278,19 @@ class RequestBase:
 class Contract(db.Model, RequestBase):
     __tablename__ = "contract"
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, deal_id, ready=False, sent=None, received=None):
         super(Contract, self).__init__(*args, **kwargs)
         
         load_contract(self, None)
     
+    '''
     def __setattr__(self, name, value):
         super(Contract, self).__setattr__(name, value)
         
         if name == "received":
             self.deal.asset_request.update_ready()
-
+    '''
+    
 class Invoice(db.Model, RequestBase):
     __tablename__ = "invoice"
     
@@ -201,12 +299,14 @@ class Invoice(db.Model, RequestBase):
         
         load_invoice(self, None)
     
+    '''
     def __setattr__(self, name, value):
         super(Invoice, self).__setattr__(name, value)
         
         if name == "received":
             self.deal.asset_request.update_ready()
-
+    '''
+    
 class AssetRequest(db.Model, RequestBase):
     __tablename__ = "asset_request"
     
@@ -217,6 +317,7 @@ class AssetRequest(db.Model, RequestBase):
     
     def update_ready(self):
         self.ready = bool(self.deal.level_name) and (bool(self.deal.contract.received) or bool(self.deal.invoice.received))
+"""
 
 class Asset(db.Model):
     id = db.Column(db.Integer, primary_key=True)
