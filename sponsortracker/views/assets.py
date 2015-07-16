@@ -104,5 +104,5 @@ def handle_upload(deal, form):
         filename = preview.stash(deal)
         return redirect(url_for("preview_asset", id=deal.sponsor.id, filename=filename, type=form.type.data))
     else:
-        model.Asset.create(deal, form.type.data, form.asset.data)
+        uploads.Asset.create(deal, form.type.data, form.asset.data)
         return redirect(url_for("manage_assets", id=deal.sponsor.id))
