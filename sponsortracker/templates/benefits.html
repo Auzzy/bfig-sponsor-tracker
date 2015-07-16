@@ -1,0 +1,66 @@
+{% extends "dealtracker-layout.html" %}
+
+{% block title %}{{ deal.sponsor.name }} Benefits{% endblock %}
+
+{% block css %}
+{% endblock %}
+
+{% block content %}
+<h2>Assets</h2>
+
+<div id="asset-benefits">
+    {% for asset_type in deal.level.assets|sort(attribute="label") %}
+    {% set benefit = deal.benefit_by_asset_type[asset_type] %}
+    <div>
+        <input type="checkbox" name="{{ asset_type.name }}" {% if benefit.received %}checked="checked"{% endif %} /> {{ asset_type.label }}
+    </div>
+    {% endfor %}
+</div>
+<br />
+
+
+{% endblock %}
+
+{% block js %}
+
+window.onload = function() {
+    var checkboxes = document.getElementById("asset-benefits").getElementsByTagName("input");
+    for (k = 0; k < checkboxes.length; k++) {
+        checkboxes[k].onchange = updateAssetBenefits;
+    }
+};
+
+function updateAssetBenefits() {
+    updateBenefits(this, "asset");
+}
+
+function updateBenefits(checkbox, type) {
+    var args = {};
+    args["type"] = type;
+    args["name"] = checkbox.name;
+    args["received"] = checkbox.checked;
+    update(args);
+}
+
+function update(args) {
+    var xmlhttp;
+    if (window.XMLHttpRequest) {
+        // IE7+, Firefox, Chrome, Opera, Safari
+        xmlhttp = new XMLHttpRequest();
+    } else {
+        // IE6, IE5
+        xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+    }
+    
+    var argStr = "";
+    for (name in args) {
+        argStr += name + "=" + args[name] + "&";
+    }
+    
+    xmlhttp.open("POST", "{{ url_for('update_benefits', id=deal.sponsor.id) }}", true);
+    xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+    xmlhttp.setRequestHeader("X-CSRFToken", "{{ csrf_token() }}");
+    xmlhttp.send(argStr);
+}
+
+{% endblock %}

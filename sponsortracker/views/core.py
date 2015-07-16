@@ -11,7 +11,7 @@ from flask.ext.user import login_required
 
 from sponsortracker import forms, model
 from sponsortracker.app import app
-from sponsortracker.data import Level, UserType
+from sponsortracker.data import AssetType, Level, UserType
 
 
 DATE_FORMAT = "%a %b %d %Y"
@@ -109,6 +109,29 @@ def edit_current_deal(id):
     
     return render_template("configure-deal.html", id=id, form=form, view="edit_current_deal")
 
+@app.route("/sponsor/<int:id>/benefits/")
+def benefits(id):
+    deal = model.Deal.query.filter_by(sponsor_id=id, year=datetime.date.today().year).first()
+    return render_template("benefits.html", deal=deal)
+
+@app.route("/sponsor/<int:id>/benefits/update", methods=["POST"])
+def update_benefits(id):
+    benefit_type = request.form["type"]
+    name = request.form["name"]
+    received = request.form["received"] == "true"
+    
+    deal = model.Deal.query.filter_by(sponsor_id=id, year=datetime.date.today().year).first()
+    if benefit_type == "asset":
+        if name in AssetType.__members__:
+            benefit = deal.benefits.filter_by(name=name).first()
+            if not benefit:
+                benefit = model.Benefit(name=name, deal_id=deal.id)
+                model.db.session.add(benefit)
+            benefit.received = received
+            model.db.session.commit()
+    
+    return redirect(url_for("benefits", id=id))
+
 @app.route("/sponsor/delete/", methods=["POST"])
 @login_required
 def delete_sponsor():
@@ -149,13 +172,20 @@ def _configure_deal(id, form):
     else:
         deal = model.Deal(id, datetime.date.today().year, form.owner.data, form.cash.data, form.inkind.data, form.level_name.data)
     
+    if form.level_name.data:
+        deal.benefits.query.delete()
+    else:
+        benefits = [benefit.name for benefit in deal.benefits]
+        for asset in deal.assets:
+            if asset.type.name not in benefits:
+                model.db.session.add(model.Benefit(name=asset.type.name, deal_id=deal.id))
+        deal.benefits.query.filter((~model.Benefit.name.in_(asset_benefits)) & (model.Benefit.received == False)).delete()
     
     if deal == deal.sponsor.current:
         deal.contract.ready = deal.cash > 0 or deal.inkind > 0
         deal.invoice.ready = deal.cash > 0 or deal.inkind > 0
         deal.asset_request.ready = bool(deal.level_name) and (deal.contract.received or deal.invoice.received)
     
-        
     model.db.session.commit()
 
 def _configure_user(id, type_name, first_name, last_name, email, username):

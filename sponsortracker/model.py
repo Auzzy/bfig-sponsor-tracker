@@ -118,6 +118,7 @@ class Deal(db.Model):
     invoice = db.relationship("Invoice", uselist=False, cascade="all, delete-orphan", passive_updates=False, backref="deal")
     asset_request = db.relationship("AssetRequest", uselist=False, cascade="all, delete-orphan", passive_updates=False, backref="deal")
     assets = db.relationship("Asset", cascade="all, delete-orphan", passive_updates=False, backref="deal", lazy="dynamic")
+    benefits = db.relationship("Benefit", cascade="all, delete-orphan", passive_updates=False, backref="deal", lazy="dynamic")
     
     def __init__(self, sponsor_id, year, owner=None, cash=0, inkind=0, level_name=None):
         super(Deal, self).__init__()
@@ -157,30 +158,6 @@ class Deal(db.Model):
             self.asset_request.update_ready()
     '''
 
-class RequestBase:
-    id = db.Column(db.Integer, primary_key=True)
-    ready = db.Column(db.Boolean, default=False)
-    sent = db.Column(db.Date)
-    received = db.Column(db.Date)
-    
-    @declared_attr
-    def deal_id(cls):
-        return db.Column(db.Integer, db.ForeignKey('deal.id'))
-    
-    def __init__(self, deal_id, ready=False, sent=None, received=None):
-        self.deal_id = deal_id
-        self.ready = ready
-        self.sent = sent
-        self.received = received
-    
-    def __setattr__(self, name, value):
-        super(RequestBase, self).__setattr__(name, value)
-        
-        if name == "sent" and not value:
-            self.received = None
-        elif name == "ready" and not value:
-            self.sent = self.received = None
-
 class Contract(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ready = db.Column(db.Boolean, default=False)
@@ -204,7 +181,7 @@ class Contract(db.Model):
         elif name == "ready" and not value:
             self.sent = self.received = None
     
-class Invoice(db.Model, RequestBase):
+class Invoice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ready = db.Column(db.Boolean, default=False)
     sent = db.Column(db.Date)
@@ -227,7 +204,7 @@ class Invoice(db.Model, RequestBase):
         elif name == "ready" and not value:
             self.sent = self.received = None
     
-class AssetRequest(db.Model, RequestBase):
+class AssetRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ready = db.Column(db.Boolean, default=False)
     sent = db.Column(db.Date)
@@ -249,6 +226,14 @@ class AssetRequest(db.Model, RequestBase):
             self.received = None
         elif name == "ready" and not value:
             self.sent = self.received = None
+
+class Benefit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text())
+    received = db.Column(db.Boolean(), default=False)
+    deal_id = db.Column(db.Integer, db.ForeignKey('deal.id'))
+    __table_args__ = (db.UniqueConstraint('deal_id', 'name', name='_name_dealid_unique'), )
+    
     
 """
 class RequestBase:

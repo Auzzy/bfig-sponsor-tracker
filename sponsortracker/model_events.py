@@ -37,10 +37,19 @@ def load_deal(target, context):
         target.assets_by_type[asset.type].append(asset)
             
     target.received_assets = True
+    target.benefit_by_asset_type = {}
     target.level = data.Level[target.level_name] if target.level_name else None
     if target.level:
         target.received_assets = all(type in target.assets_by_type for type in target.level.assets)
-
+        
+        for asset_type in target.level.assets:
+            # target.benefit_by_asset_type[asset_type] = model.Benefit.query.filter_by(deal_id=target.id, name=str(asset_type.label)).first()
+            target.benefit_by_asset_type[asset_type] = target.benefits.filter_by(name=asset_type.name).first()
+        
+        for benefit in target.benefit_by_asset_type:
+            print(benefit)
+            print(target.benefit_by_asset_type[benefit])
+        
 @event.listens_for(model.Contract, 'load')
 def load_contract(target, context):
     if target.sent:

@@ -31,26 +31,24 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
 
 <h1>{{ sponsor.name }}</h1>
 
-<h2 style="margin-bottom:0px;">Info</h2>
-<div>
-    <span><a href="{{ url_for('configure_sponsor', id=sponsor.id) }}">Edit...</a></span>
-</div>
-<div style="position:relative; left:30px;">
-    <span style="font-weight:bold">Sponsor type</span>
-        <div style="margin-left:25px;">{{ sponsor.type.value or "" }}</div>
-    <span style="font-weight:bold">Contact(s)</span>
-        <div style="margin-left:25px;">
-        {% for contact in sponsor.contacts %}
-        {{ contact.name }} &lt;<a href="mailto:{{ contact.email }}">{{ contact.email }}</a>&gt;<br />
-        {% endfor %}
-        </div>
-    <span style="font-weight:bold">Home page</span>
-        <div style="margin-left:25px;">{% if sponsor.link %}<a href="{{ sponsor.link }}" target="_blank">{{ sponsor.link }}</a>{% endif %}</div>
-    <span style="font-weight:bold">Description</span>
-        <div style="margin-left:25px; width:500px;">{{ sponsor.description or "" }}</div>
-    <span style="font-weight:bold">Notes</span>
-        <div style="margin-left:25px; width:500px;">{{ sponsor.notes or "" }}</div>
-</div>
+<h2 style="display:inline;">Info</h2>
+<span><a href="{{ url_for('configure_sponsor', id=sponsor.id) }}">Edit...</a></span>
+<br />
+
+<span style="font-weight:bold">Sponsor type</span>
+    <div style="margin-left:25px;">{{ sponsor.type.value or "" }}</div>
+<span style="font-weight:bold">Contact(s)</span>
+    <div style="margin-left:25px;">
+    {% for contact in sponsor.contacts %}
+    {{ contact.name }} &lt;<a href="mailto:{{ contact.email }}">{{ contact.email }}</a>&gt;<br />
+    {% endfor %}
+    </div>
+<span style="font-weight:bold">Home page</span>
+    <div style="margin-left:25px;">{% if sponsor.link %}<a href="{{ sponsor.link }}" target="_blank">{{ sponsor.link }}</a>{% endif %}</div>
+<span style="font-weight:bold">Description</span>
+    <div style="margin-left:25px; width:500px;">{{ sponsor.description or "" }}</div>
+<span style="font-weight:bold">Notes</span>
+    <div style="margin-left:25px; width:500px;">{{ sponsor.notes or "" }}</div>
 
 <h2>Status</h2>
 {% include 'sponsor-status.html' %}
@@ -62,6 +60,10 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
     <a href="{{ url_for('edit_current_deal', id=sponsor.id) }}">Edit...</a>
     &nbsp;&nbsp;
     <a href="{{ url_for('manage_assets', id=sponsor.id) }}">Manage Assets...</a>
+    &nbsp;&nbsp;
+    {% if sponsor.current.level %}
+    <a href="{{ url_for('benefits', id=sponsor.id) }}">Manage Benefits...</a>
+    {% endif %}
 </div>
 <div style="position:relative; left:30px;">
     <div style="margin-bottom:0px;">
