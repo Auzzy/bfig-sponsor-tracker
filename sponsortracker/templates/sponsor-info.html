@@ -60,10 +60,6 @@ div.asset a:hover + a.removable, div.asset a.removable:hover {
     <a href="{{ url_for('edit_current_deal', id=sponsor.id) }}">Edit...</a>
     &nbsp;&nbsp;
     <a href="{{ url_for('manage_assets', id=sponsor.id) }}">Manage Assets...</a>
-    &nbsp;&nbsp;
-    {% if sponsor.current.level %}
-    <a href="{{ url_for('benefits', id=sponsor.id) }}">Manage Benefits...</a>
-    {% endif %}
 </div>
 <div style="position:relative; left:30px;">
     <div style="margin-bottom:0px;">

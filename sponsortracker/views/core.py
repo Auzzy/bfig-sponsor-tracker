@@ -109,6 +109,7 @@ def edit_current_deal(id):
     
     return render_template("configure-deal.html", id=id, form=form, view="edit_current_deal")
 
+'''
 @app.route("/sponsor/<int:id>/benefits/")
 def benefits(id):
     deal = model.Deal.query.filter_by(sponsor_id=id, year=datetime.date.today().year).first()
@@ -131,6 +132,7 @@ def update_benefits(id):
             model.db.session.commit()
     
     return redirect(url_for("benefits", id=id))
+'''
 
 @app.route("/sponsor/delete/", methods=["POST"])
 @login_required
