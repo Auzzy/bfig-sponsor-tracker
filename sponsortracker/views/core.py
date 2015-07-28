@@ -175,7 +175,7 @@ def _configure_deal(id, form):
         deal = model.Deal(id, datetime.date.today().year, form.owner.data, form.cash.data, form.inkind.data, form.level_name.data)
     
     if form.level_name.data:
-        deal.benefits.query.delete()
+        deal.benefits.delete()
     else:
         benefits = [benefit.name for benefit in deal.benefits]
         for asset in deal.assets:
