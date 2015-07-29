@@ -181,12 +181,12 @@ def _configure_deal(id, form):
         for asset in deal.assets:
             if asset.type.name not in benefits:
                 model.db.session.add(model.Benefit(name=asset.type.name, deal_id=deal.id))
-        deal.benefits.query.filter((~model.Benefit.name.in_(asset_benefits)) & (model.Benefit.received == False)).delete()
+        deal.benefits.filter((~model.Benefit.name.in_(benefits)) & (model.Benefit.received == False)).delete()
     
     if deal == deal.sponsor.current:
         deal.contract.ready = deal.cash > 0 or deal.inkind > 0
         deal.invoice.ready = deal.cash > 0 or deal.inkind > 0
-        deal.asset_request.ready = bool(deal.level_name) and (deal.contract.received or deal.invoice.received)
+        deal.asset_request.ready = bool(deal.level_name and (deal.contract.received or deal.invoice.received))
     
     model.db.session.commit()
 
