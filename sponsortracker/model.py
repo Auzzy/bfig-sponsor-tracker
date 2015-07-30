@@ -142,6 +142,16 @@ class Deal(db.Model):
         self.cash = self._update_field(self.cash, cash)
         self.inkind = self._update_field(self.inkind, inkind)
         self.level_name = self._update_field(self.level_name, level_name)
+        
+        if level_name:
+            self.contract.ready = self.cash > 0 or self.inkind > 0
+            self.invoice.ready = self.cash > 0 or self.inkind > 0
+            self.asset_request.ready = bool(self.level_name and (self.contract.received or self.invoice.received))
+        else:
+            self.contract.ready = False
+            self.invoice.ready = False
+            self.asset_request.ready = False
+        
     
     def _update_field(self, old_value, new_value, cleared="", unset=None):
         if new_value is not unset:
