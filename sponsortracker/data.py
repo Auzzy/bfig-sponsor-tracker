@@ -118,13 +118,13 @@ class AssetType(Enum):
         self.label = label
         self.spec = spec
 
-_BASE_ASSETS = (AssetType.LOGO, AssetType.DIGITAL_BANNER)
+_BASE_ASSETS = (AssetType.LOGO, )
 class Level(Enum):
     INDIE = ("Indie")
     COPPER = ("Copper", AssetType.PROGRAM_QUARTER)
     SILVER = ("Silver", AssetType.PROGRAM_HALF, AssetType.NEWSLETTER_FOOTER)
-    GOLD = ("Gold", AssetType.PROGRAM_WHOLE, AssetType.NEWSLETTER_SIDEBAR, AssetType.DIGITAL_MENU)
-    PLATINUM = ("Platinum", AssetType.PROGRAM_DOUBLE, AssetType.NEWSLETTER_HEADER, AssetType.DIGITAL_MENU, AssetType.WEBSITE_SIDEBAR)
+    GOLD = ("Gold", AssetType.PROGRAM_WHOLE, AssetType.NEWSLETTER_SIDEBAR)
+    PLATINUM = ("Platinum", AssetType.PROGRAM_DOUBLE, AssetType.NEWSLETTER_HEADER, AssetType.WEBSITE_SIDEBAR)
     SERVICE = ("Service Sponsor")
     CHARITY = ("Charity")
     
