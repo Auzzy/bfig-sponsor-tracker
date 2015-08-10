@@ -54,7 +54,7 @@ def _update_request(sponsor_id, update_field):
         sponsor.current.asset_request.received = None
     '''
     
-    sponsor.current.asset_request.ready = bool(sponsor.current.level_name) and bool(sponsor.current.contract.received)
+    sponsor.current.asset_request.ready = bool(sponsor.current.level_name) and (bool(sponsor.current.contract.received or sponsor.current.invoice.received))
     
     model.db.session.commit()
     return redirect(url_for("sponsor_info", id=sponsor.id))
