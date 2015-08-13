@@ -146,7 +146,7 @@ class Deal(db.Model):
         if level_name:
             self.contract.ready = self.cash > 0 or self.inkind > 0
             self.invoice.ready = self.cash > 0 or self.inkind > 0
-            self.asset_request.ready = bool(self.level_name and (self.contract.received or self.invoice.received))
+            self.asset_request.ready = bool(self.level_name)
         else:
             self.contract.ready = False
             self.invoice.ready = False
