@@ -5,6 +5,8 @@ import tempfile
 from enum import Enum
 from os.path import exists, expanduser, join, splitext
 
+from sqlalchemy import or_
+
 from sponsortracker import model, uploads
 from sponsortracker.data import AssetType
 
@@ -28,13 +30,14 @@ def download(zipname=ZIPNAME, by_sponsor=True, info=True, asset_filter=lambda de
         os.makedirs(zipdir)
         
         for deal in model.Deal.query.filter(model.Deal.level_name != ""):
-            if not level or deal.level_name == level:
-                target = join(*[zipdir, deal.level.name.lower()] + ([deal.sponsor.name] if by_sponsor else []))
-                os.makedirs(target, exist_ok=True)
-                
-                if info:
-                    _info_to_file(target, deal.sponsor)
-                _copy_assets(target, asset_filter(deal))
+            if deal.contract.received != None or deal.invoice.received != None:
+                if not level or deal.level_name == level:
+                    target = join(*[zipdir, deal.level.name.lower()] + ([deal.sponsor.name] if by_sponsor else []))
+                    os.makedirs(target, exist_ok=True)
+                    
+                    if info:
+                        _info_to_file(target, deal.sponsor)
+                    _copy_assets(target, asset_filter(deal))
             
         return shutil.make_archive(expanduser(join("~", zipname)), "zip", root_dir=tempdir)
 
