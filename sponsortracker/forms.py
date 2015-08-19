@@ -26,6 +26,9 @@ def validate_email(form, field):
 def validate_sponsor(form, field):
     if model.Sponsor.query.filter_by(name=field.data).first():
         raise ValidationError("A sponsor with that name already exists.")
+    
+    if '/' in field.data:
+        raise ValidationError("Sponsor names cannot contain a slash (/).")
 
 def filter_strip(value):
     return value.strip() if value else value
