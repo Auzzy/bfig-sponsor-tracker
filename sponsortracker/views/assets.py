@@ -78,27 +78,28 @@ def handle_upload(deal, form):
     preview = uploads.Preview.load(form.asset.data)
     spec = data.AssetType[form.type.data].spec
     
-    if preview.format not in spec.format_names:
-        flash("Image format was {0}. Expected one of the following: {1}.".format(preview.format, ', '.join(spec.format_names)), 'preview')
-        format = spec.formats[0] if len(spec.formats) == 1 else type(spec.formats[0]).preferred()
-        preview.format = format.format
-    
-    if preview.colorspace not in spec.color_mode_names:
-        flash("Image color mode was {0}. Expected one of the following: {1}.".format(preview.colorspace, ', '.join(spec.color_mode_names)), 'preview')
-        preview.colorspace = spec.color_modes[0].value
-    
-    if preview.resolution != (spec.dpi, spec.dpi):
-        flash("Image resolution was {res[0]}x{res[1]}. Expected {spec.dpi}x{spec.dpi}.".format(res=preview.resolution, spec=spec), 'preview')
-        preview.resolution = (spec.dpi, spec.dpi)
-    
-    if preview.width != spec.width or preview.height != spec.height:
-        # Don't do anything about sizes that don't match. Marketing will handle it.
-        pass
-    
-    if spec.transparent and not preview.alpha_channel:
-        preview.alpha_channel = True
-    elif spec.transparent is False and preview.alpha_channel:
-        preview.alpha_channel = False
+    if data.AssetType[form.type.data] == data.AssetType.LOGO:
+        if preview.format not in spec.format_names:
+            flash("Image format was {0}. Expected one of the following: {1}.".format(preview.format, ', '.join(spec.format_names)), 'preview')
+            format = spec.formats[0] if len(spec.formats) == 1 else type(spec.formats[0]).preferred()
+            preview.format = format.format
+        
+        if preview.colorspace not in spec.color_mode_names:
+            flash("Image color mode was {0}. Expected one of the following: {1}.".format(preview.colorspace, ', '.join(spec.color_mode_names)), 'preview')
+            preview.colorspace = spec.color_modes[0].value
+        
+        if preview.resolution != (spec.dpi, spec.dpi):
+            flash("Image resolution was {res[0]}x{res[1]}. Expected {spec.dpi}x{spec.dpi}.".format(res=preview.resolution, spec=spec), 'preview')
+            preview.resolution = (spec.dpi, spec.dpi)
+        
+        if preview.width != spec.width or preview.height != spec.height:
+            # Don't do anything about sizes that don't match. Marketing will handle it.
+            pass
+        
+        if spec.transparent and not preview.alpha_channel:
+            preview.alpha_channel = True
+        elif spec.transparent is False and preview.alpha_channel:
+            preview.alpha_channel = False
     
     if preview.dirty:
         filename = preview.stash(deal)
