@@ -29,6 +29,8 @@ def home():
     
     return redirect(url_for("all_deals"))
 
+@app.route("/")
+@login_required
 def sales_home():
     year = datetime.datetime.today().year
     deals = model.Deal.query.filter_by(owner=current_user.user_auth.username, year=year)
