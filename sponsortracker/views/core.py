@@ -43,6 +43,7 @@ def marketing_home():
     current_query = model.Deal.query.filter_by(year=datetime.date.today().year)
     deals_by_level = collections.OrderedDict()
     for level in Level:
+        print("LEVEL: " + level.name)
         ready = lambda deal: bool(deal.contract.received != None or deal.invoice.received != None) if level == Level.INDIE else lambda deal: bool(deal.asset_request.sent != None)
         deals_by_level[level] = [deal for deal in current_query.filter_by(level_name=level.name) if ready(deal)]
     return render_template("marketing-home.html", deals_by_level=deals_by_level)
