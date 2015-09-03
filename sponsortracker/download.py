@@ -29,8 +29,12 @@ def download(zipname=ZIPNAME, by_sponsor=True, info=True, asset_filter=lambda de
         zipdir = join(tempdir, zipname)
         os.makedirs(zipdir)
         
+        
+        COPPER, SILVER, GOLD, PLATINUM
+        
+        
         for deal in model.Deal.query.filter(model.Deal.level_name != ""):
-            if deal.contract.received != None or deal.invoice.received != None:
+            if deal.level not in (data.Level.COPPER, data.Level.SILVER, data.Level.GOLD, data.Level.PLATINUM) or deal.contract.received != None or deal.invoice.received != None:
                 if not level or deal.level_name == level:
                     target = join(*[zipdir, deal.level.name.lower()] + ([deal.sponsor.name] if by_sponsor else []))
                     os.makedirs(target, exist_ok=True)
