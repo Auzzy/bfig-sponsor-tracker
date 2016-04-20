@@ -8,6 +8,9 @@ from sponsortracker import data
 app = Flask(__name__, template_folder='templates', static_folder='static')
 app.config.from_object("sponsortracker.settings")
 
+print("MAIL")
+print(app.config.get("FLASK_MAIL_PWD"))
+
 csrf = CsrfProtect(app)
 mail = Mail(app)
 

@@ -22,12 +22,13 @@ USER_ENABLE_FORGOT_PASSWORD = True
 
 # Flask-Mail
 MAIL_USERNAME = "sponsors@bostonfig.com"
-MAIL_PASSWORD = "2015bfig!"
-MAIL_DEFAULT_SENDER = ("Boston FIG Sponsor Coordinator", "sponsors@bostonfig.com")
-DEFAULT_MAIL_SENDER = ("Boston FIG Sponsor Coordinator", "sponsors@bostonfig.com")
+MAIL_PASSWORD = os.environ.get("FLASK_MAIL_PWD")
 MAIL_SERVER = "smtp.gmail.com"
 MAIL_PORT = 465
 MAIL_USE_SSL = True
+MAIL_DEFAULT_SENDER = ("Boston FIG Sponsor Coordinator", "sponsors@bostonfig.com")
+DEFAULT_MAIL_SENDER = ("Boston FIG Sponsor Coordinator", "sponsors@bostonfig.com")
+
 
 # Custom
 MIGRATIONS_DIRECTORY = "migrations"
