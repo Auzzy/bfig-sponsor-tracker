@@ -129,6 +129,8 @@ class Level(Enum):
     SERVICE = ("Service Sponsor")
     CHARITY = ("Charity")
     
+    NOT_SPONSORING = ("Not Sponsoring")
+    
     def __init__(self, label, *assets):
         self.label = label
         self.assets = _BASE_ASSETS + assets
