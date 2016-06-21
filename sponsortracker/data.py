@@ -121,7 +121,8 @@ class AssetType(Enum):
 _BASE_ASSETS = (AssetType.LOGO, )
 class Level(Enum):
     INDIE = ("Indie")
-    COPPER = ("Copper", AssetType.PROGRAM_QUARTER)
+    BRONZE = ("Bronze", AssetType.PROGRAM_QUARTER)
+    BRONZE_BENEFITS = ("Bronze Benefits", AssetType.PROGRAM_QUARTER)
     SILVER = ("Silver", AssetType.PROGRAM_HALF, AssetType.NEWSLETTER_FOOTER)
     GOLD = ("Gold", AssetType.PROGRAM_WHOLE, AssetType.NEWSLETTER_SIDEBAR)
     PLATINUM = ("Platinum", AssetType.PROGRAM_DOUBLE, AssetType.NEWSLETTER_HEADER, AssetType.WEBSITE_SIDEBAR)
