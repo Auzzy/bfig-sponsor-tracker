@@ -154,6 +154,7 @@ def _configure_deal(id, form):
         deal.update_values(owner=form.owner.data, cash=form.cash.data, inkind=form.inkind.data, level_name=form.level_name.data)
     else:
         deal = model.Deal(id, datetime.date.today().year, form.owner.data, form.cash.data, form.inkind.data, form.level_name.data)
+        model.db.session.add(deal)
     
     model.db.session.commit()
 
