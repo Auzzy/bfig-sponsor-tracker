@@ -90,11 +90,17 @@ function delete_sponsor_confirmed(id) {
     csrfField.setAttribute("value", "{{ csrf_token() }}");
     form.appendChild(csrfField);
     
-    var hiddenField = document.createElement("input");
-    hiddenField.setAttribute("type", "hidden");
-    hiddenField.setAttribute("name", "sponsor-id");
-    hiddenField.setAttribute("value", id);
-    form.appendChild(hiddenField);
+    var sponsorIdField = document.createElement("input");
+    sponsorIdField.setAttribute("type", "hidden");
+    sponsorIdField.setAttribute("name", "sponsor-id");
+    sponsorIdField.setAttribute("value", id);
+    form.appendChild(sponsorIdField);
+    
+    var pageField = document.createElement("input");
+    pageField.setAttribute("type", "hidden");
+    pageField.setAttribute("name", "pageno");
+    pageField.setAttribute("value", {{ pageno }});
+    form.appendChild(pageField);
     
     document.body.appendChild(form);
     

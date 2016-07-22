@@ -129,9 +129,10 @@ def edit_current_deal(id):
 @login_required
 def delete_sponsor():
     id = request.form["sponsor-id"]
+    pageno = request.form["pageno"]
     model.db.session.delete(model.Sponsor.query.get_or_404(id))
     model.db.session.commit()
-    return redirect(url_for("home"))
+    return redirect(url_for("all_deals", pageno=pageno))
    
 
 def _extract_contacts(data, email_basename, name_basename):
