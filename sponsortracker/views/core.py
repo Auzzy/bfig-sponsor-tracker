@@ -9,7 +9,7 @@ from flask import redirect, render_template, request, url_for
 from flask.ext.login import current_user
 from flask.ext.user import login_required
 
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 
 from sponsortracker import forms, model
 from sponsortracker.app import app
@@ -18,6 +18,7 @@ from sponsortracker.data import AssetType, Level, UserType
 
 DATE_FORMAT = "%a %b %d %Y"
 REQUEST_ID = "request-date"
+SPONSOR_COUNT = 50
 
 @app.route("/")
 @login_required
@@ -51,7 +52,16 @@ def marketing_home():
 @app.route("/all/")
 @login_required
 def all_deals():
-    return render_template("sponsor-list.html", sponsors=model.Sponsor.query)
+    pageno = int(request.args.get("pageno", 1))
+    if pageno < 1:
+        pageno = 1
+    sponsors = model.Sponsor.query.order_by(func.lower(model.Sponsor.name)).offset((pageno - 1) * SPONSOR_COUNT).limit(SPONSOR_COUNT)
+    sponsor_count = model.Sponsor.query.count()
+    last_pageno = sponsor_count / SPONSOR_COUNT
+    if last_pageno - int(last_pageno) != 0:
+        last_pageno += 1
+    last_pageno = int(last_pageno)
+    return render_template("sponsor-list.html", sponsors=sponsors, pageno=pageno, last_pageno=last_pageno, count=SPONSOR_COUNT)
 
 @app.route("/users/manage/")
 @login_required

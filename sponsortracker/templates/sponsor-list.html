@@ -1,7 +1,23 @@
 {% extends "dealtracker-layout.html" %}
 
+{% macro sponsor_nav() %}
+<p style="padding-left:450px;">
+    {% if pageno != 1 %}
+    <a href="{{ url_for('all_deals') }}">First</a> 
+    <a href="{{ url_for('all_deals', pageno=pageno-1) }}">Previous</a> 
+    {% endif %}
+    <strong>Page {{ pageno }}</strong>
+    {% if pageno != last_pageno %}
+    <a href="{{ url_for('all_deals', pageno=pageno+1) }}">Next</a> 
+    <a href="{{ url_for('all_deals', pageno=last_pageno) }}">Last</a>
+    {% endif %}
+</p>
+{% endmacro %}
+
 {% block content %}
 <p><a href="{{ url_for('configure_sponsor') }}">New Sponsor</a></p>
+
+{{ sponsor_nav() }}
 
 <table id="sponsor-table" class="sortable zebra">
     <thead>
@@ -38,6 +54,8 @@
         {% endfor %}
     </tbody>
 </table>
+
+{{ sponsor_nav() }}
 
 <!-- Delete sponsor modal -->
 <div id="deleteModal" class="modalDialog">
