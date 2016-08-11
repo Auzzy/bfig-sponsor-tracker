@@ -136,6 +136,7 @@ def delete_sponsor():
    
 
 def _extract_contacts(data, email_basename, name_basename):
+    print(data)
     emails, names = {}, {}
     for id in data:
         if id.startswith(email_basename) and forms.is_email(data[id]):

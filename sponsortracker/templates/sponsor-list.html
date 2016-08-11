@@ -4,10 +4,18 @@
 <p style="padding-left:450px;">
     {% if pageno != 1 %}
     <a href="{{ url_for('all_deals') }}">First</a> 
-    <a href="{{ url_for('all_deals', pageno=pageno-1) }}">Previous</a> 
+    <a href="{{ url_for('all_deals', pageno=pageno-1) }}">Previous</a>
+    &nbsp;
+    {% for page in range(1, pageno) %}
+    <a href="{{ url_for('all_deals', pageno=page) }}"><strong>Page {{ page }}</strong></a>
+    {% endfor %}
     {% endif %}
     <strong>Page {{ pageno }}</strong>
     {% if pageno != last_pageno %}
+    {% for page in range(pageno + 1, last_pageno + 1) %}
+    <a href="{{ url_for('all_deals', pageno=page) }}"><strong>Page {{ page }}</strong></a>
+    {% endfor %}
+    &nbsp;
     <a href="{{ url_for('all_deals', pageno=pageno+1) }}">Next</a> 
     <a href="{{ url_for('all_deals', pageno=last_pageno) }}">Last</a>
     {% endif %}
