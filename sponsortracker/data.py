@@ -122,12 +122,13 @@ _BASE_ASSETS = (AssetType.LOGO, )
 class Level(Enum):
     INDIE = ("Indie")
     BRONZE = ("Bronze", AssetType.PROGRAM_QUARTER)
-    BRONZE_BENEFITS = ("Bronze Benefits", AssetType.PROGRAM_QUARTER)
+    BRONZE_BENEFITS = ("Indie Plus", AssetType.PROGRAM_QUARTER)
     SILVER = ("Silver", AssetType.PROGRAM_HALF, AssetType.NEWSLETTER_FOOTER)
     GOLD = ("Gold", AssetType.PROGRAM_WHOLE, AssetType.NEWSLETTER_SIDEBAR)
     PLATINUM = ("Platinum", AssetType.PROGRAM_DOUBLE, AssetType.NEWSLETTER_HEADER, AssetType.WEBSITE_SIDEBAR)
     SERVICE = ("Service Sponsor")
     CHARITY = ("Charity")
+    ARTIST = ("Artist")
     
     NOT_SPONSORING = ("Not Sponsoring")
     
